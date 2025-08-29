@@ -1,7 +1,7 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
     <!-- ✅ App theme must inherit from AppCompat -->
-    <style name="Theme.PharmaTracker" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.PharmaTracker" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your theme here -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
