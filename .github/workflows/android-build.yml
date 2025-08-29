@@ -5,26 +5,24 @@ on:
     branches:
       - main
       - release
-      - 'feature/**'   # matches feature/anything
+      - 'feature/**'
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout code
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # Set up JDK 17 (required for modern Android Gradle)
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # Cache Gradle for faster builds
       - name: Cache Gradle
         uses: actions/cache@v3
         with:
@@ -35,33 +33,39 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # Make gradlew executable
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # Build the app
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
-
-      # Rename APK based on branch
-      - name: Rename APK
+      - name: Build APK
         run: |
           BRANCH="${{ github.ref_name }}"
+
           if [ "$BRANCH" == "main" ]; then
-            NEW_NAME="production-app-debug.apk"
+            ./gradlew assembleProductionRelease
+            APK_PATH="app/build/outputs/apk/production/release/app-production-release.apk"
+            NEW_NAME="production-app-release.apk"
+
           elif [ "$BRANCH" == "release" ]; then
-            NEW_NAME="test-app-debug.apk"
+            ./gradlew assembleStagingRelease
+            APK_PATH="app/build/outputs/apk/staging/release/app-staging-release.apk"
+            NEW_NAME="staging-app-release.apk"
+
           elif [[ "$BRANCH" == feature/* ]]; then
+            ./gradlew assembleStagingDebug
+            APK_PATH="app/build/outputs/apk/staging/debug/app-staging-debug.apk"
             USERNAME=$(echo $BRANCH | cut -d'/' -f2)
             NEW_NAME="${USERNAME}-app-debug.apk"
+
           else
+            ./gradlew assembleStagingDebug
+            APK_PATH="app/build/outputs/apk/staging/debug/app-staging-debug.apk"
             NEW_NAME="unknown-app-debug.apk"
           fi
+
           echo "Renaming APK to $NEW_NAME"
-          mv app/build/outputs/apk/debug/app-debug.apk $NEW_NAME
+          mv "$APK_PATH" "$NEW_NAME"
           echo "APK_NAME=$NEW_NAME" >> $GITHUB_ENV
-   
-      # Upload APK
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

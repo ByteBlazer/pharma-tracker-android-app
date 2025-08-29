@@ -27,6 +27,27 @@ android {
             )
         }
     }
+
+    // 🔹 Add product flavors here
+    flavorDimensions += "environment"
+
+    productFlavors {
+
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            buildConfigField("String", "BASE_API_URL", "\"https://staging.pharmatracker.in/\"")
+        }
+        create("production") {
+            dimension = "environment"
+            // no suffix → real app id
+            buildConfigField("String", "BASE_API_URL", "\"https://pharmatracker.in/\"")
+        }
+    }
+
+
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
