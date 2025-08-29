@@ -42,9 +42,11 @@ android {
     }
 
     // ✅ disable production locally
+    //Wrap it in a condition that checks if you’re running inside CI (GitHub Actions sets CI=true in env):
     androidComponents {
         beforeVariants { variantBuilder ->
-            if (variantBuilder.flavorName == "production") {
+            val isCi = System.getenv("CI")?.toBoolean() ?: false
+            if (!isCi && variantBuilder.flavorName == "production") {
                 variantBuilder.enable = false
             }
         }
