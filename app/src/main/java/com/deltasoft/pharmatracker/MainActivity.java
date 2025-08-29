@@ -13,6 +13,6 @@ public class MainActivity extends AppCompatActivity {
 
         // ✅ Show BuildConfig value
         TextView tv = findViewById(R.id.helloText);
-        tv.setText("Hello from Java!\nAPI = " + BuildConfig.BASE_API_URL);
+        tv.setText("Hello from Java!\nAPI = ");
     }
 }
