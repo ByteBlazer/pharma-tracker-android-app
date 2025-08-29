@@ -44,6 +44,14 @@ android {
         }
     }
 
+    androidComponents {
+        beforeVariants { variantBuilder ->
+            if (variantBuilder.name == "productionDebug") {
+                variantBuilder.enable = false
+            }
+        }
+    }
+
 
 
     compileOptions {
