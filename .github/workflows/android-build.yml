@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - release
+      - staging
       - 'feature/**'
   pull_request:
   workflow_dispatch:
@@ -45,7 +45,7 @@ jobs:
             APK_PATH="app/build/outputs/apk/production/release/app-production-release.apk"
             NEW_NAME="production-app-release.apk"
 
-          elif [ "$BRANCH" == "release" ]; then
+          elif [ "$BRANCH" == "staging" ]; then
             ./gradlew assembleStagingRelease
             APK_PATH="app/build/outputs/apk/staging/release/app-staging-release.apk"
             NEW_NAME="staging-app-release.apk"
