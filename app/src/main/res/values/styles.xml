@@ -1,0 +1,30 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Body Large -->
+    <style name="TextAppearance.PharmaTracker.BodyLarge" parent="TextAppearance.MaterialComponents.Body1">
+
+        <item name="android:textSize">16sp</item>
+        <item name="android:lineSpacingExtra">8sp</item> <!-- 24 - 16 -->
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <!-- Title Large -->
+    <style name="TextAppearance.PharmaTracker.TitleLarge" parent="TextAppearance.MaterialComponents.Headline6">
+
+        <item name="android:textSize">22sp</item>
+        <item name="android:lineSpacingExtra">6sp</item> <!-- 28 - 22 -->
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <!-- Label Small -->
+    <style name="TextAppearance.PharmaTracker.LabelSmall" parent="TextAppearance.MaterialComponents.Caption">
+
+        <item name="android:textSize">11sp</item>
+        <item name="android:lineSpacingExtra">5sp</item> <!-- 16 - 11 -->
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+</resources>

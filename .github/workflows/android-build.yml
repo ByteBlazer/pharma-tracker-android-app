@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - release
+      - staging
       - 'feature/**'
   pull_request:
   workflow_dispatch:
@@ -39,31 +39,32 @@ jobs:
       - name: Build APK
         run: |
           BRANCH="${{ github.ref_name }}"
-
+          
           if [ "$BRANCH" == "main" ]; then
             ./gradlew assembleProductionRelease
-            APK_PATH="app/build/outputs/apk/production/release/app-production-release.apk"
+            APK_DIR="app/build/outputs/apk/production/release"
             NEW_NAME="production-app-release.apk"
-
-          elif [ "$BRANCH" == "release" ]; then
+          
+          elif [ "$BRANCH" == "staging" ]; then
             ./gradlew assembleStagingRelease
-            APK_PATH="app/build/outputs/apk/staging/release/app-staging-release.apk"
+            APK_DIR="app/build/outputs/apk/staging/release"
             NEW_NAME="staging-app-release.apk"
-
+          
           elif [[ "$BRANCH" == feature/* ]]; then
             ./gradlew assembleStagingDebug
-            APK_PATH="app/build/outputs/apk/staging/debug/app-staging-debug.apk"
+            APK_DIR="app/build/outputs/apk/staging/debug"
             USERNAME=$(echo $BRANCH | cut -d'/' -f2)
             NEW_NAME="${USERNAME}-app-debug.apk"
-
+          
           else
             ./gradlew assembleStagingDebug
-            APK_PATH="app/build/outputs/apk/staging/debug/app-staging-debug.apk"
+            APK_DIR="app/build/outputs/apk/staging/debug"
             NEW_NAME="unknown-app-debug.apk"
           fi
-
-          echo "Renaming APK to $NEW_NAME"
-          mv "$APK_PATH" "$NEW_NAME"
+          
+          APK_FILE=$(ls $APK_DIR/*.apk | head -n 1)
+          echo "Renaming $APK_FILE to $NEW_NAME"
+          mv "$APK_FILE" "$NEW_NAME"
           echo "APK_NAME=$NEW_NAME" >> $GITHUB_ENV
 
       - name: Upload APK

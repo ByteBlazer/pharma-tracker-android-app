@@ -1,7 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -46,22 +44,32 @@ android {
         }
     }
 
+    // ✅ disable all production variants locally
+    androidComponents {
+        beforeVariants { variantBuilder ->
+            if (variantBuilder.flavorName == "production") {
+                variantBuilder.enable = false
+            }
+        }
+    }
+
 
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
+
     buildFeatures {
-        compose = true
+        viewBinding = true
+        buildConfig = true
     }
 }
 
 dependencies {
-
+    implementation(libs.androidx.appcompat)
+    implementation(libs.google.material)
+    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
