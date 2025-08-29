@@ -11,6 +11,10 @@ on:
 
 jobs:
   build:
+    if: |
+      (github.ref_name == 'main') ||
+      (github.ref_name == 'staging') ||
+      startsWith(github.ref_name, 'feature/')
     runs-on: ubuntu-latest
 
     steps:
