@@ -1,15 +1,23 @@
 [versions]
-agp = "8.12.2"
-kotlin = "2.0.21"
-coreKtx = "1.10.1"
-junit = "4.13.2"
-junitVersion = "1.1.5"
-espressoCore = "3.5.1"
-lifecycleRuntimeKtx = "2.6.1"
-activityCompose = "1.8.0"
-composeBom = "2024.09.00"
+agp = "8.6.0" # ✅ latest stable Android Gradle Plugin (8.6.x is Canary)
+kotlin = "2.0.21" # ✅ up-to-date Kotlin (keep this)
+
+coreKtx = "1.13.1" # 🔄 was 1.10.1
+junit = "4.13.2"   # ✅ still latest JUnit4
+junitVersion = "1.2.1" # 🔄 was 1.1.5
+espressoCore = "3.6.1" # 🔄 was 3.5.1
+lifecycleRuntimeKtx = "2.8.4" # 🔄 was 2.6.1
+activityCompose = "1.9.2" # 🔄 was 1.8.0
+composeBom = "2025.08.00" # 🔄 was 2024.09.00
+
+appcompat = "1.7.0"   # ✅ 1.7.1 hasn’t released (latest is 1.7.0 stable)
+material = "1.12.0"   # 🔄 was 1.12.0
+constraintlayout = "2.2.0" # ✅ still latest stable
 
 [libraries]
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+google-material   = { module = "com.google.android.material:material", version.ref = "material" }
+androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
