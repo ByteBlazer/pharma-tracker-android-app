@@ -43,9 +43,27 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      # Upload APK as workflow artifact
+      # Rename APK based on branch
+      - name: Rename APK
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          if [ "$BRANCH" == "main" ]; then
+            NEW_NAME="production-app-debug.apk"
+          elif [ "$BRANCH" == "release" ]; then
+            NEW_NAME="test-app-debug.apk"
+          elif [[ "$BRANCH" == feature/* ]]; then
+            USERNAME=$(echo $BRANCH | cut -d'/' -f2)
+            NEW_NAME="${USERNAME}-app-debug.apk"
+          else
+            NEW_NAME="unknown-app-debug.apk"
+          fi
+          echo "Renaming APK to $NEW_NAME"
+          mv app/build/outputs/apk/debug/app-debug.apk $NEW_NAME
+          echo "APK_NAME=$NEW_NAME" >> $GITHUB_ENV
+   
+      # Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PharmaTracker-Debug-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: ${{ env.APK_NAME }}
+          path: ${{ env.APK_NAME }}
