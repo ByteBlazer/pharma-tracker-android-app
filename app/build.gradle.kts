@@ -44,9 +44,10 @@ android {
         }
     }
 
+    // ✅ disable all production variants locally
     androidComponents {
         beforeVariants { variantBuilder ->
-            if (variantBuilder.name == "productionDebug") {
+            if (variantBuilder.flavorName == "production") {
                 variantBuilder.enable = false
             }
         }
