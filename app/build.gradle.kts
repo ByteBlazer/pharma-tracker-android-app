@@ -26,11 +26,9 @@ android {
         }
     }
 
-    // 🔹 Add product flavors here
     flavorDimensions += "environment"
 
     productFlavors {
-
         create("staging") {
             dimension = "environment"
             applicationIdSuffix = ".staging"
@@ -39,12 +37,11 @@ android {
         }
         create("production") {
             dimension = "environment"
-            // no suffix → real app id
             buildConfigField("String", "BASE_API_URL", "\"https://pharmatracker.in/\"")
         }
     }
 
-    // ✅ disable all production variants locally
+    // ✅ disable production locally
     androidComponents {
         beforeVariants { variantBuilder ->
             if (variantBuilder.flavorName == "production") {
@@ -52,8 +49,6 @@ android {
             }
         }
     }
-
-
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -72,17 +67,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }
