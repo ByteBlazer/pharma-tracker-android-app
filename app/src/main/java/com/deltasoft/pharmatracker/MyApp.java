@@ -24,8 +24,8 @@ public class MyApp extends Application {
         if (!BuildConfig.DEBUG) {
             // Core Datadog config
             Configuration config = new Configuration.Builder(
-                    "abc",
-                    "xyz"
+                    "pub7c2b17eec3a1e5ef9a3f5ee3d3808803",
+                    "dummyenv"
             ).build();
 
             Datadog.initialize(this, config, TrackingConsent.GRANTED);
