@@ -19,10 +19,13 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")//TODO: Change
+
         }
     }
 
@@ -34,10 +37,14 @@ android {
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
             buildConfigField("String", "BASE_API_URL", "\"https://staging.pharmatracker.in/\"")
+            buildConfigField("String", "DD_APP_ID", "\"staging-pharma-tracker-android\"")
+
         }
         create("production") {
             dimension = "environment"
             buildConfigField("String", "BASE_API_URL", "\"https://pharmatracker.in/\"")
+            buildConfigField("String", "DD_APP_ID", "\"production-pharma-tracker-android\"")
+
         }
     }
 
@@ -69,8 +76,13 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.datadog.core)
+    implementation(libs.datadog.logs)
+    implementation(libs.datadog.rum)
+    implementation(libs.datadog.session.replay)   // ✅ new
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
+

@@ -8,12 +8,17 @@ espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.9.3"
 activityCompose = "1.10.1"
 composeBom = "2025.08.01"
-
+datadog = "2.26.0"
 appcompat = "1.7.1"
 material = "1.12.0"
 constraintlayout = "2.2.1"
 
 [libraries]
+datadog-core           = { module = "com.datadoghq:dd-sdk-android-core", version.ref = "datadog" }
+datadog-logs           = { module = "com.datadoghq:dd-sdk-android-logs", version.ref = "datadog" }
+datadog-rum            = { module = "com.datadoghq:dd-sdk-android-rum", version.ref = "datadog" }
+datadog-session-replay = { module = "com.datadoghq:dd-sdk-android-session-replay", version.ref = "datadog" }
+
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 google-material   = { module = "com.google.android.material:material", version.ref = "material" }
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
