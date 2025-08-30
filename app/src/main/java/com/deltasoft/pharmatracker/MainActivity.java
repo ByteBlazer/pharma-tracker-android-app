@@ -15,7 +15,8 @@ public class MainActivity extends AppCompatActivity {
         TextView tv = findViewById(R.id.helloText);
         tv.setText("Hello from Java!!\nAPI = " + BuildConfig.BASE_API_URL);
 
-        if (!BuildConfig.DEBUG && MyApp.getLogger() != null) {
+        if(true){
+//        if (!BuildConfig.DEBUG && MyApp.getLogger() != null) {
             MyApp.getLogger().addAttribute("apiUrl", BuildConfig.BASE_API_URL);
             MyApp.getLogger().i("MainActivity started");
         }
