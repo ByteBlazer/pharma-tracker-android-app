@@ -34,6 +34,7 @@ public class MyApp extends Application {
         ).build();
 
         Datadog.initialize(this, config, TrackingConsent.GRANTED);
+        setUserInfoOnDataDog();
 
         // Logs
         LogsConfiguration logsConfig = new LogsConfiguration.Builder().build();
@@ -53,13 +54,15 @@ public class MyApp extends Application {
         ).build();
 
         Datadog.initialize(this, config, TrackingConsent.GRANTED);
+        setUserInfoOnDataDog();
+
 
         // RUM
         RumConfiguration rumConfig = new RumConfiguration.Builder("f90cb94e-0022-4e32-b91c-be44d173217b")
                 .trackUserInteractions()
                 .useViewTrackingStrategy(new ActivityViewTrackingStrategy(true)).build();
         Rum.enable(rumConfig);
-        logToDataDog("Datadog initialized with Session Recording");
+        logToDataDog("✅ Datadog initialized with Session Recording");
     }
 
     public static void logToDataDog(String msg) {
@@ -67,4 +70,9 @@ public class MyApp extends Application {
             logger.i(msg);
         }
     }
+
+    public static void setUserInfoOnDataDog() {
+        Datadog.setUserInfo("dummyuser","dummyemail");
+    }
+
 }
