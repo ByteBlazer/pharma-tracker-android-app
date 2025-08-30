@@ -8,11 +8,6 @@ import com.datadog.android.log.Logger;
 import com.datadog.android.log.Logs;
 import com.datadog.android.log.LogsConfiguration;
 import com.datadog.android.privacy.TrackingConsent;
-import com.datadog.android.rum.Rum;
-import com.datadog.android.rum.RumConfiguration;
-import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy;
-import com.datadog.android.sessionreplay.SessionReplay;
-import com.datadog.android.sessionreplay.SessionReplayConfiguration;
 
 public class MyApp extends Application {
 
@@ -27,7 +22,7 @@ public class MyApp extends Application {
             // Core Datadog config
             Configuration config = new Configuration.Builder(
                     "pub7c2b17eec3a1e5ef9a3f5ee3d3808803",
-                    "dummyenv"
+                    BuildConfig.DD_APP_ID
             ).build();
 
             Datadog.initialize(this, config, TrackingConsent.GRANTED);
@@ -37,19 +32,9 @@ public class MyApp extends Application {
             Logs.enable(logsConfig);
 
             logger = new Logger.Builder()
-                    .setService("pharmatracker-android")
+                    .setService(BuildConfig.DD_APP_ID)
                     .setNetworkInfoEnabled(true)
                     .build();
-
-            // RUM
-            RumConfiguration rumConfig = new RumConfiguration.Builder(BuildConfig.DD_APP_ID)
-                    .useViewTrackingStrategy(new ActivityViewTrackingStrategy(true)).build();
-            Rum.enable(rumConfig);
-
-            // Session Replay
-            SessionReplayConfiguration srConfig =
-                    new SessionReplayConfiguration.Builder().build();
-            SessionReplay.enable(srConfig);
 
             logger.i("✅ Datadog initialized with Logs + RUM + Session Replay");
         }
