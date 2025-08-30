@@ -1,7 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -21,39 +19,70 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")//TODO: Change
+
         }
     }
+
+    flavorDimensions += "environment"
+
+    productFlavors {
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            buildConfigField("String", "BASE_API_URL", "\"https://staging.pharmatracker.in/\"")
+            buildConfigField("String", "DD_APP_ID", "\"staging-pharma-tracker-android\"")
+
+        }
+        create("production") {
+            dimension = "environment"
+            buildConfigField("String", "BASE_API_URL", "\"https://pharmatracker.in/\"")
+            buildConfigField("String", "DD_APP_ID", "\"production-pharma-tracker-android\"")
+
+        }
+    }
+
+    // ✅ disable production locally
+    //Wrap it in a condition that checks if you’re running inside CI (GitHub Actions sets CI=true in env):
+    androidComponents {
+        beforeVariants { variantBuilder ->
+            val isCi = System.getenv("CI")?.toBoolean() ?: false
+            if (!isCi && variantBuilder.flavorName == "production") {
+                variantBuilder.enable = false
+            }
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
+
     buildFeatures {
-        compose = true
+        viewBinding = true
+        buildConfig = true
     }
 }
 
 dependencies {
-
+    implementation(libs.androidx.appcompat)
+    implementation(libs.google.material)
+    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
+    implementation(libs.datadog.core)
+    implementation(libs.datadog.logs)
+    implementation(libs.datadog.rum)
+    implementation(libs.datadog.session.replay)   // ✅ new
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }
+
