@@ -36,13 +36,13 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
-            buildConfigField("String", "BASE_API_URL", "\"https://staging.pharmatracker.in/\"")
+            buildConfigField("String", "BASE_API_URL", "\"https://staging.pharmatracker.in/api/\"")
             buildConfigField("String", "DD_APP_ID", "\"staging-pharma-tracker-android\"")
 
         }
         create("production") {
             dimension = "environment"
-            buildConfigField("String", "BASE_API_URL", "\"https://pharmatracker.in/\"")
+            buildConfigField("String", "BASE_API_URL", "\"https://pharmatracker.in/api/\"")
             buildConfigField("String", "DD_APP_ID", "\"production-pharma-tracker-android\"")
 
         }
