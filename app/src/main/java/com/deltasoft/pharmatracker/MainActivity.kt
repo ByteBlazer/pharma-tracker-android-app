@@ -1,24 +1,35 @@
-package com.deltasoft.pharmatracker;
+package com.deltasoft.pharmatracker
 
-import android.os.Bundle;
-import android.widget.TextView;
-import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import com.deltasoft.pharmatracker.navigation.AppNavigation
+import com.deltasoft.pharmatracker.ui.theme.PharmaTrackerAppTheme
 
-public class MainActivity extends AppCompatActivity {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
 
 
-        TextView tv = findViewById(R.id.helloText);
-        tv.setText(String.format("Hello from Java!!\nAPI = %s", BuildConfig.BASE_API_URL));
+        enableEdgeToEdge()
+        setContent {
+            PharmaTrackerAppTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AppNavigation(applicationContext)
+                }
+            }
+        }
 
-        MyApp.logToDataDog("MainActivity has started");
-        MyApp.logToDataDog("The API Base URL is: "+BuildConfig.BASE_API_URL);
-
+        MyApp.logToDataDog("MainActivity has started")
+        MyApp.logToDataDog("The API Base URL is: " + BuildConfig.BASE_API_URL)
     }
-
-
 }
