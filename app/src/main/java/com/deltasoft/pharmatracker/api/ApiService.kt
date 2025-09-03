@@ -1,5 +1,6 @@
 package com.deltasoft.pharmatracker.api
 
+import com.deltasoft.pharmatracker.screens.home.location.LocationData
 import com.deltasoft.pharmatracker.screens.login.LoginRequest
 import com.deltasoft.pharmatracker.screens.otp.OtpRequestBody
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationResponse
@@ -13,4 +14,7 @@ interface ApiService {
 
     @POST("auth/validate-otp")
     suspend fun verifyOtp(@Body otpRequestBody: OtpRequestBody): Response<OtpVerificationResponse>
+
+    @POST("your_api_endpoint") // Replace with your actual API endpoint
+    suspend fun sendLocation(@Body locationData: LocationData): Response<Void>
 }

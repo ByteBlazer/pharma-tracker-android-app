@@ -9,10 +9,19 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
+import com.deltasoft.pharmatracker.screens.home.location.LocationViewModel
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.launch
@@ -70,9 +79,23 @@ fun HomeScreenContent() {
 }
 
 @Composable
-fun LocationScreenContent() {
+fun LocationScreenContent(
+    locationViewModel: LocationViewModel = viewModel()
+) {
+    val context = LocalContext.current
+    val latitude by locationViewModel.latitude.collectAsState()
+    val longitude by locationViewModel.longitude.collectAsState()
+
+    // Register and unregister the receiver with the composable's lifecycle
+    DisposableEffect(locationViewModel) {
+        locationViewModel.registerReceiver(context)
+        onDispose {
+            locationViewModel.unregisterReceiver(context)
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Location Screen", fontSize = 24.sp)
+        LocationScreen(longitude = longitude, latitude = latitude)
     }
 }
 

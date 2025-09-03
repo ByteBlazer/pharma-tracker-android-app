@@ -24,6 +24,7 @@ navigation = "2.7.7"
 accompanist = "0.28.0"
 
 
+playServicesLocation = "21.3.0"
 retrofit = "2.9.0"
 
 [libraries]
@@ -63,6 +64,7 @@ navigation-compose = { module = "androidx.navigation:navigation-compose", versio
 accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanist" }
 accompanist-pager-indicators = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanist" }
 
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 

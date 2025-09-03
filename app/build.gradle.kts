@@ -128,5 +128,7 @@ dependencies {
     implementation(libs.barcode.scanning)
 
     implementation(libs.accompanist.permissions)
+
+    implementation(libs.play.services.location)
 }
 
