@@ -5,6 +5,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,6 +37,10 @@ class OtpVerificationViewModel(application: Application) :  AndroidViewModel(app
         when(code){
             200->{
                 sharedPrefsUtil.saveString(PrefsKey.USER_ACCESS_TOKEN,otpVerificationResponse?.access_token?:"")
+                val tokenPayload = JwtDecodeUtil.decodeJwtPayload(otpVerificationResponse?.access_token?:"")
+                sharedPrefsUtil.saveString(PrefsKey.USER_NAME,tokenPayload?.username?:"")
+                sharedPrefsUtil.saveString(PrefsKey.USER_ID,tokenPayload?.id?:"")
+                sharedPrefsUtil.saveString(PrefsKey.PHONE_NUMBER,tokenPayload?.mobile?:"")
                 Log.d("TAG", "updateOtpVerificationState: "+sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN))
                 _otpVerificationState.value = OtpVerificationState.Success
             }

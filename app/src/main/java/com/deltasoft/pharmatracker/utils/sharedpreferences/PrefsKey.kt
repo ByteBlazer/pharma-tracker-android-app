@@ -7,6 +7,7 @@ package com.deltasoft.pharmatracker.utils.sharedpreferences
 enum class PrefsKey {
     USER_ACCESS_TOKEN,
     USER_ID,
+    USER_NAME,
     IS_LOGGED_IN,
     LAST_LOGIN_TIME,
     PHONE_NUMBER

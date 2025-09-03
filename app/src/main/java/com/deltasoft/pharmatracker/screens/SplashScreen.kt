@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.utils.AppUtils
+import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.delay
@@ -21,6 +22,11 @@ import kotlinx.coroutines.delay
 fun SplashScreen(navController: NavHostController, context: Context) {
     val sharedPrefsUtil = SharedPreferencesUtil(context)
     val token = sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN)
+
+    val tokenPayload = JwtDecodeUtil.decodeJwtPayload(token?:"")
+    sharedPrefsUtil.saveString(PrefsKey.USER_NAME,tokenPayload?.username?:"")
+    sharedPrefsUtil.saveString(PrefsKey.USER_ID,tokenPayload?.id?:"")
+    sharedPrefsUtil.saveString(PrefsKey.PHONE_NUMBER,tokenPayload?.mobile?:"")
     LaunchedEffect(key1 = true) {
         delay(2000)
         if (AppUtils.isValidToken(token)){
