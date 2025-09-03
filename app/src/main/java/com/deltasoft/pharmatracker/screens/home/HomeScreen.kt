@@ -65,7 +65,7 @@ fun HomeScreen(context:Context) {
 @Composable
 fun HomeScreenContent() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Home Screen", fontSize = 24.sp)
+        BarCodeScanner()
     }
 }
 

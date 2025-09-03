@@ -28,7 +28,7 @@ fun SplashScreen(navController: NavHostController, context: Context) {
     sharedPrefsUtil.saveString(PrefsKey.USER_ID,tokenPayload?.id?:"")
     sharedPrefsUtil.saveString(PrefsKey.PHONE_NUMBER,tokenPayload?.mobile?:"")
     LaunchedEffect(key1 = true) {
-        delay(2000)
+        delay(1000)
         if (AppUtils.isValidToken(token)){
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Splash.route) {

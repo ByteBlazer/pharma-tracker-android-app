@@ -118,5 +118,15 @@ dependencies {
     // Retrofit
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
+
+    implementation(libs.androidx.camera.core.v131)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle.v131)
+    implementation(libs.androidx.camera.view.v131)
+
+
+    implementation(libs.barcode.scanning)
+
+    implementation(libs.accompanist.permissions)
 }
 
