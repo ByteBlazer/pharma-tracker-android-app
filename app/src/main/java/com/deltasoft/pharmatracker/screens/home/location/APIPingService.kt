@@ -49,6 +49,8 @@ class APIPingService : Service() {
     private var locationHeartBeatFrequencyInSeconds : Int = 0
     private var token : String = ""
 
+    private var sharedPrefsUtil : SharedPreferencesUtil? = null
+
     companion object {
         const val CHANNEL_ID = "APIPingServiceChannel"
         const val TAG = "APIPingService"
@@ -69,9 +71,10 @@ class APIPingService : Service() {
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val sharedPrefsUtil = SharedPreferencesUtil(this)
-        locationHeartBeatFrequencyInSeconds = sharedPrefsUtil.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS)
-        token = AppUtils.createBearerToken(sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN))
+        sharedPrefsUtil = SharedPreferencesUtil(this)
+        sharedPrefsUtil?.saveBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING,true)
+        locationHeartBeatFrequencyInSeconds = sharedPrefsUtil?.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS)?:0
+        token = AppUtils.createBearerToken(sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN)?:"")
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("API Pinging Service")
             .setContentText("Pinging API and getting location...")
@@ -201,6 +204,7 @@ class APIPingService : Service() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
         serviceScope.cancel() // Cancel all coroutines when the service is destroyed
 
+        sharedPrefsUtil?.saveBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING,false)
         Log.d(TAG, "Service is being destroyed.")
     }
 

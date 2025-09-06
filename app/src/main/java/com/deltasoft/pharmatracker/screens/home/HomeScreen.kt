@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -103,6 +104,14 @@ fun LocationScreenContent(
     locationViewModel: LocationViewModel = viewModel()
 ) {
     val context = LocalContext.current
+
+    val isServiceRunning = remember {
+        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            .getBoolean("is_service_running", false)
+    }
+
+    Log.d("TAG", "LocationScreen: isServiceRunning "+isServiceRunning)
+
     val latitude by locationViewModel.latitude.collectAsState()
     val longitude by locationViewModel.longitude.collectAsState()
 

@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +43,13 @@ fun LocationScreen(
     longitude: Double?
 ) {
     val context = LocalContext.current
+
+    val isServiceRunning = remember {
+        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            .getBoolean("is_service_running", false)
+    }
+
+    Log.d("TAG", "LocationScreen: isServiceRunning "+isServiceRunning)
 
     val locationPermissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
