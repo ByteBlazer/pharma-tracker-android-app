@@ -11,6 +11,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -105,6 +106,8 @@ fun LocationScreenContent(
 ) {
     val context = LocalContext.current
 
+
+
     val isServiceRunning = remember {
         context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
             .getBoolean("is_service_running", false)
@@ -127,7 +130,7 @@ fun LocationScreenContent(
     }
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        LocationScreen(longitude = longitude, latitude = latitude)
+        LocationScreen(longitude = longitude, latitude = latitude, locationViewModel = locationViewModel)
     }
 }
 

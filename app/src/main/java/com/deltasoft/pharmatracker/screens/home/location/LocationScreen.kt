@@ -22,6 +22,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,24 +34,29 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startForegroundService
+import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
+import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 
+private const val TAG = "LocationScreen"
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun LocationScreen(
     latitude: Double?,
-    longitude: Double?
+    longitude: Double?,
+    locationViewModel: LocationViewModel
 ) {
     val context = LocalContext.current
 
+    val sharedPrefsUtil = SharedPreferencesUtil(context)
+
     val isServiceRunning = remember {
-        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            .getBoolean("is_service_running", false)
+        sharedPrefsUtil.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING)
     }
 
-    Log.d("TAG", "LocationScreen: isServiceRunning "+isServiceRunning)
+    Log.d(TAG, "SREEEEENATH: isServiceRunning "+isServiceRunning)
 
     val locationPermissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -57,6 +64,17 @@ fun LocationScreen(
             Manifest.permission.ACCESS_FINE_LOCATION
         )
     )
+
+
+    val isRunning by locationViewModel.isServiceRunning.collectAsState()
+
+    // Check the service status when the composable enters the screen
+    LaunchedEffect(Unit) {
+        locationViewModel.checkServiceStatus(context)
+    }
+
+
+    Log.d(TAG, "LocationScreen: isRunning "+isRunning)
 
 
     Column(
@@ -105,8 +123,13 @@ fun LocationScreen(
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
+                    val message = if (isRunning){
+                        "Please wait for location update."
+                    }else{
+                        "Location not available. Press Start to get location."
+                    }
                     Text(
-                        text =  "Location not available. Press Start to get location.",
+                        text =  message,
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -124,10 +147,13 @@ fun LocationScreen(
                     if (locationPermissionsState.allPermissionsGranted) {
                         // Permissions are granted, start getting location
                         startMyService(context)
+
+                        locationViewModel.checkServiceStatus(context)
                     } else {
                         locationPermissionsState.launchMultiplePermissionRequest()
                     }
-                }
+                },
+                enabled = !isRunning
             ) {
                 Text("Start Location Ping")
             }
@@ -135,7 +161,10 @@ fun LocationScreen(
             Button(
                 onClick = {
                     stopService(context)
-                }
+                    locationViewModel.stopService()
+                    locationViewModel.checkServiceStatus(context)
+                },
+                enabled = isRunning
             ) {
                 Text("Stop Location Ping")
             }

@@ -17,6 +17,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.deltasoft.pharmatracker.api.RetrofitClient
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
@@ -55,7 +56,7 @@ class APIPingService : Service() {
         const val CHANNEL_ID = "APIPingServiceChannel"
         const val TAG = "APIPingService"
 //        const val PING_INTERVAL_MS = 10 * 1000L // 1 minute
-        const val ACTION_LOCATION_UPDATE = "com.example.apipingapp.LOCATION_UPDATE"
+        const val ACTION_LOCATION_UPDATE = "com.deltasoft.pharmatracker.LOCATION_UPDATE"
         const val EXTRA_LATITUDE = "extra_latitude"
         const val EXTRA_LONGITUDE = "extra_longitude"
     }
@@ -73,6 +74,8 @@ class APIPingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         sharedPrefsUtil = SharedPreferencesUtil(this)
         sharedPrefsUtil?.saveBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING,true)
+
+        Log.d(TAG, "SREEEEENATH: "+sharedPrefsUtil?.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING))
         locationHeartBeatFrequencyInSeconds = sharedPrefsUtil?.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS)?:0
         token = AppUtils.createBearerToken(sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN)?:"")
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
@@ -133,7 +136,10 @@ class APIPingService : Service() {
                         putExtra(EXTRA_LATITUDE, it.latitude)
                         putExtra(EXTRA_LONGITUDE, it.longitude)
                     }
-                    sendBroadcast(broadcastIntent)
+                    LocalBroadcastManager.getInstance(this@APIPingService).sendBroadcast(broadcastIntent)
+
+                    Log.d(TAG, "onReceive: latitude "+it.latitude)
+                    Log.d(TAG, "onReceive: longitude "+it.longitude)
 
                     // Ping your API here
                     pingAPIWithLocation(it)
