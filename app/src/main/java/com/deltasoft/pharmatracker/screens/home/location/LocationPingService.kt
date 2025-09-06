@@ -35,10 +35,9 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
-class APIPingService : Service() {
+class LocationPingService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
-    private var currentLocation: Location? = null
 
     // Coroutine scope for network operations
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -55,7 +54,6 @@ class APIPingService : Service() {
     companion object {
         const val CHANNEL_ID = "APIPingServiceChannel"
         const val TAG = "APIPingService"
-//        const val PING_INTERVAL_MS = 10 * 1000L // 1 minute
         const val ACTION_LOCATION_UPDATE = "com.deltasoft.pharmatracker.LOCATION_UPDATE"
         const val EXTRA_LATITUDE = "extra_latitude"
         const val EXTRA_LONGITUDE = "extra_longitude"
@@ -66,7 +64,6 @@ class APIPingService : Service() {
         createNotificationChannel()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         setupLocationCallback()
-
     }
 
 
@@ -75,9 +72,9 @@ class APIPingService : Service() {
         sharedPrefsUtil = SharedPreferencesUtil(this)
         sharedPrefsUtil?.saveBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING,true)
 
-        Log.d(TAG, "SREEEEENATH: "+sharedPrefsUtil?.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING))
         locationHeartBeatFrequencyInSeconds = sharedPrefsUtil?.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS)?:0
         token = AppUtils.createBearerToken(sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN)?:"")
+
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("API Pinging Service")
             .setContentText("Pinging API and getting location...")
@@ -136,10 +133,7 @@ class APIPingService : Service() {
                         putExtra(EXTRA_LATITUDE, it.latitude)
                         putExtra(EXTRA_LONGITUDE, it.longitude)
                     }
-                    LocalBroadcastManager.getInstance(this@APIPingService).sendBroadcast(broadcastIntent)
-
-                    Log.d(TAG, "onReceive: latitude "+it.latitude)
-                    Log.d(TAG, "onReceive: longitude "+it.longitude)
+                    LocalBroadcastManager.getInstance(this@LocationPingService).sendBroadcast(broadcastIntent)
 
                     // Ping your API here
                     pingAPIWithLocation(it)
@@ -148,38 +142,9 @@ class APIPingService : Service() {
         }
     }
 
-
-    private fun requestLocationUpdates() {
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY,
-            (locationHeartBeatFrequencyInSeconds*1000).toLong()
-        )
-            .setWaitForAccurateLocation(false)
-            .build()
-
-        // Check for location permissions at runtime
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // Permissions are not granted. This should be handled in the Activity before starting the service.
-            Log.e(TAG, "Location permissions not granted.")
-            return
-        }
-
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
-    }
-
     private fun pingAPIWithLocation(location: Location) {
         val lat = location.latitude
         val lon = location.longitude
-
-        Toast.makeText(applicationContext,"latitude $lat longitude $lon",Toast.LENGTH_SHORT).show()
-        Log.d(TAG, "Pinging API with Lat: $lat, Lon: $lon")
-        // Your API call logic here, e.g., using a network library
 
         serviceScope.launch {
             try {
@@ -199,11 +164,6 @@ class APIPingService : Service() {
         }
     }
 
-    private fun pingAPI() {
-        // This is where you'd place your API call logic.
-        Log.d(TAG, "API is being pinged at: ${System.currentTimeMillis()}")
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacks(runnable)
@@ -211,7 +171,6 @@ class APIPingService : Service() {
         serviceScope.cancel() // Cancel all coroutines when the service is destroyed
 
         sharedPrefsUtil?.saveBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING,false)
-        Log.d(TAG, "Service is being destroyed.")
     }
 
     override fun onBind(intent: Intent?): IBinder? {

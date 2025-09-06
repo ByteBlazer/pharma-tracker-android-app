@@ -13,7 +13,9 @@ class SharedPreferencesUtil(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
 
-
+    fun getSharedPreference(): SharedPreferences {
+        return prefs
+    }
     /**
      * Saves a string value to SharedPreferences.
      * @param key The key to store the value under.

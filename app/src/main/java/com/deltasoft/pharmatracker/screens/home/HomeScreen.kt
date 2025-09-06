@@ -85,7 +85,7 @@ fun HomeScreen(context:Context,
                     "scan" -> HomeScreenContent()
                     "route_queue" -> RouteQueueScreen()
                     "scheduled_trips" -> ScheduledTripsScreen()
-                    "drive" -> LocationScreenContent()
+                    "drive" -> LocationScreen()
                 }
             }
         }
@@ -97,40 +97,6 @@ fun HomeScreen(context:Context,
 fun HomeScreenContent() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         BarCodeScanner()
-    }
-}
-
-@Composable
-fun LocationScreenContent(
-    locationViewModel: LocationViewModel = viewModel()
-) {
-    val context = LocalContext.current
-
-
-
-    val isServiceRunning = remember {
-        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            .getBoolean("is_service_running", false)
-    }
-
-    Log.d("TAG", "LocationScreen: isServiceRunning "+isServiceRunning)
-
-    val latitude by locationViewModel.latitude.collectAsState()
-    val longitude by locationViewModel.longitude.collectAsState()
-
-    Log.d("TAG", "LocationScreenContent: latitude "+latitude)
-    Log.d("TAG", "LocationScreenContent: longitude "+longitude)
-
-    // Register and unregister the receiver with the composable's lifecycle
-    DisposableEffect(locationViewModel) {
-        locationViewModel.registerReceiver(context)
-        onDispose {
-            locationViewModel.unregisterReceiver(context)
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        LocationScreen(longitude = longitude, latitude = latitude, locationViewModel = locationViewModel)
     }
 }
 

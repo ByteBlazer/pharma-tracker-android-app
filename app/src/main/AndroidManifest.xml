@@ -36,7 +36,7 @@
 
 
         <service
-            android:name=".screens.home.location.APIPingService"
+            android:name=".screens.home.location.LocationPingService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location"/>
