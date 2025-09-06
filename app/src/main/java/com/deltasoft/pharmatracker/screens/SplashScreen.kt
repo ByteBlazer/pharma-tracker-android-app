@@ -23,13 +23,11 @@ fun SplashScreen(navController: NavHostController, context: Context) {
     val sharedPrefsUtil = SharedPreferencesUtil(context)
     val token = sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN)
 
-    val tokenPayload = JwtDecodeUtil.decodeJwtPayload(token?:"")
-    sharedPrefsUtil.saveString(PrefsKey.USER_NAME,tokenPayload?.username?:"")
-    sharedPrefsUtil.saveString(PrefsKey.USER_ID,tokenPayload?.id?:"")
-    sharedPrefsUtil.saveString(PrefsKey.PHONE_NUMBER,tokenPayload?.mobile?:"")
+
     LaunchedEffect(key1 = true) {
         delay(1000)
         if (AppUtils.isValidToken(token)){
+            AppUtils.storePayLoadDetailsToSharedPreferences(sharedPrefsUtil,token)
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Splash.route) {
                     inclusive = true

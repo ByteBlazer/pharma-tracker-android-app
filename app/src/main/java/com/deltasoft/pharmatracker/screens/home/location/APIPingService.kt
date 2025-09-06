@@ -18,6 +18,9 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.deltasoft.pharmatracker.api.RetrofitClient
+import com.deltasoft.pharmatracker.utils.AppUtils
+import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
+import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -43,10 +46,13 @@ class APIPingService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var runnable: Runnable
 
+    private var locationHeartBeatFrequencyInSeconds : Int = 0
+    private var token : String = ""
+
     companion object {
         const val CHANNEL_ID = "APIPingServiceChannel"
         const val TAG = "APIPingService"
-        const val PING_INTERVAL_MS = 10 * 1000L // 1 minute
+//        const val PING_INTERVAL_MS = 10 * 1000L // 1 minute
         const val ACTION_LOCATION_UPDATE = "com.example.apipingapp.LOCATION_UPDATE"
         const val EXTRA_LATITUDE = "extra_latitude"
         const val EXTRA_LONGITUDE = "extra_longitude"
@@ -63,6 +69,9 @@ class APIPingService : Service() {
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val sharedPrefsUtil = SharedPreferencesUtil(this)
+        locationHeartBeatFrequencyInSeconds = sharedPrefsUtil.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS)
+        token = AppUtils.createBearerToken(sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN))
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("API Pinging Service")
             .setContentText("Pinging API and getting location...")
@@ -79,7 +88,7 @@ class APIPingService : Service() {
         runnable = object : Runnable {
             override fun run() {
                 requestSingleLocationUpdate()
-                handler.postDelayed(this, PING_INTERVAL_MS)
+                handler.postDelayed(this, (locationHeartBeatFrequencyInSeconds*1000).toLong())
             }
         }
         handler.post(runnable)
@@ -132,7 +141,9 @@ class APIPingService : Service() {
 
 
     private fun requestLocationUpdates() {
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, PING_INTERVAL_MS)
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY,
+            (locationHeartBeatFrequencyInSeconds*1000).toLong()
+        )
             .setWaitForAccurateLocation(false)
             .build()
 
@@ -163,8 +174,8 @@ class APIPingService : Service() {
 
         serviceScope.launch {
             try {
-                val locationData = LocationData(latitude = lat, longitude = lon)
-                val response = RetrofitClient.apiService.sendLocation(locationData)
+                val locationData = LocationData(latitude = lat.toString(), longitude = lon.toString())
+                val response = RetrofitClient.apiService.sendLocation(token,locationData)
 
                 if (response.isSuccessful) {
                     Log.d(TAG, "Location sent successfully: Lat: $lat, Lon: $lon")

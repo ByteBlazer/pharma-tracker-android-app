@@ -1,7 +1,10 @@
 package com.deltasoft.pharmatracker.utils
 
 import android.util.Log
+import com.deltasoft.pharmatracker.screens.home.UserType
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
+import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
+import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 
 import java.util.Date
 
@@ -42,5 +45,22 @@ object AppUtils {
 
     fun String?.isNotNullOrEmpty(): Boolean {
         return !this.isNullOrEmpty()
+    }
+
+    fun storePayLoadDetailsToSharedPreferences(
+        sharedPrefsUtil: SharedPreferencesUtil,
+        token: String
+    ) {
+        val tokenPayload = JwtDecodeUtil.decodeJwtPayload(token?:"")
+        sharedPrefsUtil.saveString(PrefsKey.USER_NAME,tokenPayload?.username?:"")
+        sharedPrefsUtil.saveString(PrefsKey.USER_ID,tokenPayload?.id?:"")
+        sharedPrefsUtil.saveString(PrefsKey.PHONE_NUMBER,tokenPayload?.mobile?:"")
+        sharedPrefsUtil.saveString(PrefsKey.ROLES,tokenPayload?.roles?:"")
+//        sharedPrefsUtil.saveString(PrefsKey.ROLES,"")
+        sharedPrefsUtil.saveInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS,tokenPayload?.locationHeartBeatFrequencyInSeconds?:0)
+    }
+
+    fun createBearerToken(accessToken: String): String {
+        return "Bearer $accessToken"
     }
 }
