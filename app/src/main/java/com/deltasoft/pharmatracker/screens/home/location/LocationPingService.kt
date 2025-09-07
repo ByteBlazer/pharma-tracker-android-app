@@ -78,7 +78,7 @@ class LocationPingService : Service() {
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("API Pinging Service")
             .setContentText("Pinging API and getting location...")
-//            .setSmallIcon()
+            .setSmallIcon(com.deltasoft.pharmatracker.R.drawable.ic_share_location)
             .build()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
