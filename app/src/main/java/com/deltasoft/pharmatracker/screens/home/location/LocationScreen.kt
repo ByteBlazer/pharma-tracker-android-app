@@ -3,7 +3,10 @@ package com.deltasoft.pharmatracker.screens.home.location
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,22 +36,30 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 
 
 private const val TAG = "LocationScreen"
+
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun LocationScreen(
     locationViewModel: LocationViewModel = viewModel()
 ) {
     val context = LocalContext.current
+//
+//    val locationPermissionsState = rememberMultiplePermissionsState(
+//        permissions = listOf(
+//            Manifest.permission.ACCESS_COARSE_LOCATION,
+//            Manifest.permission.ACCESS_FINE_LOCATION
+//        )
+//    )
 
-    val locationPermissionsState = rememberMultiplePermissionsState(
-        permissions = listOf(
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
+    val locationPermissionState = rememberPermissionState(
+        Manifest.permission.ACCESS_FINE_LOCATION
     )
 
     val latitude by locationViewModel.latitude.collectAsState()
@@ -68,6 +79,23 @@ fun LocationScreen(
 
     val isRunning by locationViewModel.isServiceRunning.collectAsState()
 
+
+    // Check the permission status
+    val allPermissionsGranted = locationPermissionState.status.isGranted
+    val shouldShowRationale = locationPermissionState.status.shouldShowRationale
+
+    val message = if (allPermissionsGranted) {
+        if (isRunning) {
+            "Please wait for location update."
+        } else {
+            "Location not available. Press Start to get location."
+        }
+    } else if (shouldShowRationale)
+        "The app needs this permission to function. Please grant it."
+    else {
+        "Permission is permanently denied. Go to settings to enable it."
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -75,7 +103,7 @@ fun LocationScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom
     ) {
-        if (longitude != null && latitude !=null) {
+        if (longitude != null && latitude != null) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -114,13 +142,9 @@ fun LocationScreen(
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    val message = if (isRunning){
-                        "Please wait for location update."
-                    }else{
-                        "Location not available. Press Start to get location."
-                    }
+
                     Text(
-                        text =  message,
+                        text = message,
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -133,20 +157,37 @@ fun LocationScreen(
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Button(
-                onClick = {
-                    if (locationPermissionsState.allPermissionsGranted) {
-                        // Permissions are granted, start getting location
-                        // Permissions are granted, start getting location
-                        startMyService(context)
-                    } else {
-                        locationPermissionsState.launchMultiplePermissionRequest()
+
+            when {
+                allPermissionsGranted -> {
+//                    Text("Permission granted! You can use the feature.")
+                    Button(
+                        onClick = {
+                            startMyService(context)
+                        },
+                        enabled = !isRunning
+                    ) {
+                        Text("Start Location Ping")
                     }
-                },
-                enabled = !isRunning
-            ) {
-                Text("Start Location Ping")
+                }
+
+                shouldShowRationale -> {
+                    // Show rationale for the second or subsequent denial
+//                    Text("The app needs this permission to function. Please grant it.")
+                    Button(onClick = { locationPermissionState.launchPermissionRequest() }) {
+                        Text("Request Permission")
+                    }
+                }
+
+                else -> {
+                    // Permission permanently denied: ask user to go to settings
+//                    Text("Permission is permanently denied. Go to settings to enable it.")
+                    Button(onClick = { openAppSettings(context) }) {
+                        Text("Open App Settings")
+                    }
+                }
             }
+
 
             Button(
                 onClick = {
@@ -159,6 +200,13 @@ fun LocationScreen(
             }
         }
     }
+}
+
+private fun openAppSettings(context: Context) {
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.fromParts("package", context.packageName, null)
+    }
+    context.startActivity(intent)
 }
 
 private fun startMyService(context: Context) {
