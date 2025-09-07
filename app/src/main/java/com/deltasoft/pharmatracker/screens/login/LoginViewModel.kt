@@ -14,6 +14,8 @@ class LoginViewModel : ViewModel() {
     val loginState = _loginState.asStateFlow()
 
     fun login(phoneNumber: String) {
+
+        _loginState.value = LoginState.Success
         _loginState.value = LoginState.Loading
         try {
             repository.generateOtp(phoneNumber)

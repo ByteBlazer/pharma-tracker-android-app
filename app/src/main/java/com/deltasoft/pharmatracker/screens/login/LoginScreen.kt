@@ -7,11 +7,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
 
 @Composable
@@ -22,6 +28,20 @@ fun LoginScreen(
     var phoneNumber by remember { mutableStateOf("") }
     val loginState by loginViewModel.loginState.collectAsState()
 
+    var isNumberValid by remember { mutableStateOf(true) }
+
+    fun validateNumber(number: String) {
+        val mobileNumberPattern = "^[6-9][0-9]{9}$"
+        isNumberValid = number.matches(mobileNumberPattern.toRegex()) || number.isEmpty()
+    }
+
+    val annotatedMessageString = buildAnnotatedString {
+        append("We will send you an ")
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+            append("One Time Password")
+        }
+        append(" on this mobile number")
+    }
     LaunchedEffect(loginState) {
         if (loginState is LoginState.Success) {
             navController.navigate(Screen.OtpVerification.createRoute(phoneNumber)) {
@@ -39,16 +59,52 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Login Page", style = MaterialTheme.typography.headlineLarge)
+        Text(text = "Login", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(text = annotatedMessageString, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
             value = phoneNumber,
-            onValueChange = { phoneNumber = it },
-            label = { Text("Phone number") },
+            onValueChange = { newText ->
+//                phoneNumber = it
+                // Only allow digits to be entered
+                if (newText.length <= 10 && newText.all { it.isDigit() }) {
+                    phoneNumber = newText
+                }
+                // Validate the number as the user types
+                validateNumber(phoneNumber)
+            },
+            label = { Text("Mobile number") },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            maxLines = 1
+            maxLines = 1,
+            leadingIcon = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+//                    Icon(
+//                        imageVector = Icons.Default.Phone,
+//                        contentDescription = "Phone Icon",
+//                        modifier = Modifier.padding(start = 16.dp, end = 4.dp)
+//                    )
+                    Text(
+                        text = "+91-",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            supportingText = {
+                if (!isNumberValid) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Invalid mobile number",
+                    )
+                }
+            },
+            isError = !isNumberValid,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -60,10 +116,10 @@ fun LoginScreen(
                     onClick = {
                         loginViewModel.login(phoneNumber)
                     },
-                    enabled = loginState !is LoginState.Loading,
+                    enabled = loginState !is LoginState.Loading && isNumberValid && phoneNumber.isNotNullOrEmpty(),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = "Log In")
+                    Text(text = "GET OTP")
                 }
             }
         }

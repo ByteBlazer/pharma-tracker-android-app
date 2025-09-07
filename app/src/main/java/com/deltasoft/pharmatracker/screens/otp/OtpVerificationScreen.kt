@@ -7,7 +7,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -32,6 +39,13 @@ fun OtpVerificationScreen(
             }
         }
     }
+    val annotatedMessageString = buildAnnotatedString {
+        append("Enter the OTP sent to  ")
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+            append("+91-"+phoneNumber)
+        }
+        append(" on this mobile number")
+    }
 
     Column(
         modifier = Modifier
@@ -40,7 +54,9 @@ fun OtpVerificationScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Otp verification Page", style = MaterialTheme.typography.headlineLarge)
+        Text(text = "Otp verification", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(32.dp))
+        Text(text = annotatedMessageString, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
@@ -52,6 +68,24 @@ fun OtpVerificationScreen(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            Text(text = "Don't receive the OTP?", style = MaterialTheme.typography.bodyLarge)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = "RESEND OTP", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+//        OtpTextField(
+//            otpText = otp,
+//            onOtpTextChange = { otpValue ->
+//                otp = otpValue
+//                // You can add validation logic here when the length is 6
+//                if (otp.length == 6) {
+//                    // Do something with the complete OTP
+//                }
+//            }
+//        )
+
 
         when (otpVerificationState) {
             is OtpVerificationState.Loading -> CircularProgressIndicator()
@@ -74,6 +108,70 @@ fun OtpVerificationScreen(
                 text = (otpVerificationState as OtpVerificationState.Error).message,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OtpTextField(
+    otpText: String,
+    onOtpTextChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val length = 6
+    val focusRequesters = remember { List(length) { FocusRequester() } }
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        (0 until length).forEach { index ->
+            val digit = if (index < otpText.length) otpText[index].toString() else ""
+
+            OutlinedTextField(
+                value = digit,
+                onValueChange =  { newValue ->
+                    // We're only interested in single-character changes, either adding or deleting.
+                    if (newValue.length <= 1) {
+                        val newOtpText = otpText.toMutableList()
+
+                        if (newValue.isNotEmpty()) {
+                            // A character was added
+                            if (index < newOtpText.size) {
+                                newOtpText[index] = newValue[0]
+                            } else {
+                                newOtpText.add(index, newValue[0])
+                            }
+                            // Move focus to the next box, unless it's the last one
+                            if (index < length - 1) {
+                                focusRequesters[index + 1].requestFocus()
+                            }
+                        } else {
+                            // A character was deleted
+                            // This is the key change: if the current box is not empty, delete the character in it.
+                            // If the current box is empty, it means the user backspaced from the next box.
+                            if (index < newOtpText.size) {
+                                newOtpText.removeAt(index)
+                            }
+
+                            // Move focus back to the previous box if it exists
+                            if (index > 0) {
+                                focusRequesters[index - 1].requestFocus()
+                            }
+                        }
+                        onOtpTextChange(newOtpText.joinToString(""))
+                    }},
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+                    .focusRequester(focusRequesters[index]),
+                textStyle = LocalTextStyle.current.copy(
+                    textAlign = TextAlign.Center
+                ),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true
             )
         }
     }
