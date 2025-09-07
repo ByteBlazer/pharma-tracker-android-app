@@ -16,7 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
+import com.deltasoft.pharmatracker.screens.home.route.RouteQueueScreen
 import com.deltasoft.pharmatracker.screens.home.scan.ScanScreen
+import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsScreen
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.launch
@@ -86,24 +88,3 @@ fun HomeScreen(context:Context,
         }
     }
 }
-
-@Composable
-fun RouteQueueScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Route queue", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant )
-    }
-}
-
-@Composable
-fun ScheduledTripsScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Scheduled Trips", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant )
-    }
-}
-
-
-//@Preview(showBackground = true)
-//@Composable
-//fun HomeScreenPreview() {
-//    HomeScreen()
-//}

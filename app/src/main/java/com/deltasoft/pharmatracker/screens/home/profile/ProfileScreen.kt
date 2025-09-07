@@ -1,8 +1,7 @@
-package com.deltasoft.pharmatracker.screens.home
+package com.deltasoft.pharmatracker.screens.home.profile
 
 import android.content.Context
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
