@@ -96,6 +96,13 @@ fun LocationScreen(
         "Permission is permanently denied. Go to settings to enable it."
     }
 
+    // This LaunchedEffect will handle the initial request
+    LaunchedEffect(locationPermissionState) {
+        if (!locationPermissionState.status.isGranted && !locationPermissionState.status.shouldShowRationale) {
+            locationPermissionState.launchPermissionRequest()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
