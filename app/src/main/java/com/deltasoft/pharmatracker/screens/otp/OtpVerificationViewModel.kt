@@ -54,4 +54,8 @@ class OtpVerificationViewModel(application: Application) :  AndroidViewModel(app
         }
 
     }
+
+    fun onResendClick(phoneNumber: String) {
+        repository.resendOTP(phoneNumber)
+    }
 }
