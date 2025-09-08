@@ -9,4 +9,5 @@ sealed class Screen(val route: String) {
         fun createRoute(phoneNumber: String) = "otpVerification_screen/$phoneNumber"
     }
     object Home : Screen("home_screen")
+    object Profile : Screen("profile_screen")
 }

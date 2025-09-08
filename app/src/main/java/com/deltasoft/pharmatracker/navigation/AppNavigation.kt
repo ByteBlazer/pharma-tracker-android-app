@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.deltasoft.pharmatracker.screens.SplashScreen
 import com.deltasoft.pharmatracker.screens.home.HomeScreen
+import com.deltasoft.pharmatracker.screens.home.profile.ProfileScreen
 import com.deltasoft.pharmatracker.screens.login.LoginScreen
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationScreen
 
@@ -31,7 +32,10 @@ fun AppNavigation(applicationContext: Context) {
             OtpVerificationScreen(navController,phoneNumber)
         }
         composable(Screen.Home.route) {
-            HomeScreen(applicationContext)
+            HomeScreen(navController,applicationContext)
+        }
+        composable(Screen.Profile.route) {
+            ProfileScreen(navController,applicationContext)
         }
     }
 }
