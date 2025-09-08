@@ -20,8 +20,10 @@ fun AppNavigation(applicationContext: Context) {
         composable(Screen.Splash.route) {
             SplashScreen(navController,applicationContext)
         }
-        composable(Screen.Login.route) {
-            LoginScreen(navController)
+        composable(Screen.Login.route,
+            arguments = listOf(navArgument("phonenumber") { type = NavType.StringType })) {backStackEntry ->
+            val phoneNumber = backStackEntry.arguments?.getString("phonenumber") ?: ""
+            LoginScreen(navController,phoneNumber)
         }
         composable(Screen.OtpVerification.route,
             arguments = listOf(navArgument("phonenumber") { type = NavType.StringType })) {backStackEntry ->

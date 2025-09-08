@@ -41,6 +41,7 @@ import kotlinx.coroutines.delay
 fun SplashScreen(navController: NavHostController, context: Context) {
     val sharedPrefsUtil = SharedPreferencesUtil(context)
     val token = sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN)
+    val phoneNumber = sharedPrefsUtil.getString(PrefsKey.PHONE_NUMBER)
 
 
     LaunchedEffect(key1 = true) {
@@ -53,8 +54,9 @@ fun SplashScreen(navController: NavHostController, context: Context) {
                 }
             }
         }else {
-            navController.navigate(Screen.Login.route) {
-                popUpTo(Screen.Splash.route) {
+            navController.navigate(Screen.Login.createRoute(phoneNumber)) {
+                popUpTo(Screen.Splash
+                    .route) {
                     inclusive = true
                 }
             }

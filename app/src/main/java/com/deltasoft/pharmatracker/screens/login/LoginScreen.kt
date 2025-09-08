@@ -30,9 +30,10 @@ import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 @Composable
 fun LoginScreen(
     navController: NavHostController,
+    prefillPhoneNumber:String="",
     loginViewModel: LoginViewModel = viewModel()
 ) {
-    var phoneNumber by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf(prefillPhoneNumber) }
     val loginState by loginViewModel.loginState.collectAsState()
 
     var isNumberValid by remember { mutableStateOf(true) }
@@ -52,11 +53,8 @@ fun LoginScreen(
     }
     LaunchedEffect(loginState) {
         if (loginState is LoginState.Success) {
-            navController.navigate(Screen.OtpVerification.createRoute(phoneNumber)) {
-                popUpTo(Screen.Login.route) {
-                    inclusive = true
-                }
-            }
+            loginViewModel.clearLoginState()
+            navController.navigate(Screen.OtpVerification.createRoute(phoneNumber))
         }
     }
 
