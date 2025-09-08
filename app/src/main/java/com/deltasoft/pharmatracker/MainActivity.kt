@@ -2,6 +2,7 @@ package com.deltasoft.pharmatracker
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,5 +32,15 @@ class MainActivity : ComponentActivity() {
 
         MyApp.logToDataDog("MainActivity has started")
         MyApp.logToDataDog("The API Base URL is: " + BuildConfig.BASE_API_URL)
+
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Here's your logic to minimize the app
+                moveTaskToBack(true)
+            }
+        }
+
+        // Add the callback to the dispatcher
+        onBackPressedDispatcher.addCallback(this, callback)
     }
 }
