@@ -2,20 +2,25 @@ package com.deltasoft.pharmatracker.screens.login
 
 import android.util.Log
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
@@ -31,16 +36,17 @@ fun LoginScreen(
     var isNumberValid by remember { mutableStateOf(true) }
 
     fun validateNumber(number: String) {
-        val mobileNumberPattern = "^[6-9][0-9]{9}$"
-        isNumberValid = number.matches(mobileNumberPattern.toRegex()) || number.isEmpty()
+//        val mobileNumberPattern = "^[6-9][0-9]{9}$"
+//        isNumberValid = number.matches(mobileNumberPattern.toRegex()) || number.isEmpty()
+        isNumberValid = number.isNotNullOrEmpty() && (number.length == 10)
     }
 
     val annotatedMessageString = buildAnnotatedString {
-        append("We will send you an ")
+        append(stringResource(R.string.login_description_message_part1)+" ")
         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-            append("One Time Password")
+            append(stringResource(R.string.login_description_message_part2_bold))
         }
-        append(" on this mobile number")
+        append(" "+stringResource(R.string.login_description_message_part3))
     }
     LaunchedEffect(loginState) {
         if (loginState is LoginState.Success) {
@@ -55,11 +61,14 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .verticalScroll(rememberScrollState())
+//            .imePadding()
+            .padding(16.dp)
+        ,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Login", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+        Text(text = stringResource(R.string.login_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(text = annotatedMessageString, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
@@ -76,10 +85,14 @@ fun LoginScreen(
                 }
                 // Validate the number as the user types
                 validateNumber(phoneNumber)
+                loginViewModel.clearLoginState()
             },
-            label = { Text("Mobile number") },
+            label = { Text(stringResource(R.string.login_text_field_placeholder)) },
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Phone,
+                imeAction = ImeAction.Done
+            ),
             maxLines = 1,
             leadingIcon = {
                 Row(
@@ -96,15 +109,15 @@ fun LoginScreen(
                     )
                 }
             },
-            supportingText = {
-                if (!isNumberValid) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "Invalid mobile number",
-                    )
-                }
-            },
-            isError = !isNumberValid,
+//            supportingText = {
+//                if (!isNumberValid) {
+//                    Text(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        text = "Invalid mobile number",
+//                    )
+//                }
+//            },
+//            isError = !isNumberValid,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -119,13 +132,12 @@ fun LoginScreen(
                     enabled = loginState !is LoginState.Loading && isNumberValid && phoneNumber.isNotNullOrEmpty(),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = "GET OTP")
+                    Text(text = stringResource(R.string.login_button_text))
                 }
             }
         }
 
         if (loginState is LoginState.Error) {
-            Log.d("TAG", "LoginScreen: "+(loginState as LoginState.Error).message)
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = (loginState as LoginState.Error).message,
