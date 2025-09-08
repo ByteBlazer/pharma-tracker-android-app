@@ -8,13 +8,14 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.deltasoft.pharmatracker.R
 
 sealed class BottomNavItem(
-    val route: String, val icon: ImageVector, val title: String,
+    val route: String, val icon: Int, val title: String,
     val visibleFor: Set<UserType>
 ) {
     object Scan : BottomNavItem(
-        "scan", Icons.Default.Home, "Scan",
+        "scan", R.drawable.ic_barcode_scanner, "Scan",
         setOf(
             UserType.APP_ADMIN,
             UserType.APP_TRIP_CREATOR,
@@ -23,7 +24,7 @@ sealed class BottomNavItem(
     )
 
     object RouteQueue : BottomNavItem(
-        "route_queue", Icons.Default.AccountBox, "Route Queue",
+        "route_queue", R.drawable.ic_format_list_bulleted_add, "Route Queue",
         setOf(
             UserType.APP_ADMIN,
             UserType.APP_TRIP_CREATOR
@@ -31,7 +32,7 @@ sealed class BottomNavItem(
     )
 
     object ScheduledTrips : BottomNavItem(
-        "scheduled_trips", Icons.Default.AddCircle, "Scheduled Trips",
+        "scheduled_trips",  R.drawable.ic_calendar_clock, "Trips",
         setOf(
             UserType.APP_ADMIN,
             UserType.APP_TRIP_CREATOR
@@ -39,7 +40,7 @@ sealed class BottomNavItem(
     )
 
     object Drive : BottomNavItem(
-        "drive", Icons.Default.LocationOn, "Drive",
+        "drive",  R.drawable.ic_local_shipping, "Drive",
         setOf(
             UserType.APP_ADMIN,
             UserType.APP_TRIP_DRIVER
@@ -47,7 +48,7 @@ sealed class BottomNavItem(
     )
 
     object Profile : BottomNavItem(
-        "profile", Icons.Default.Person, "Profile",
+        "profile",  R.drawable.ic_outline_person, "Profile",
         setOf(UserType.APP_ADMIN)
     )
 }

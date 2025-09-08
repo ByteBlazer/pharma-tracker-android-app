@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
 import com.deltasoft.pharmatracker.screens.home.route.RouteQueueScreen
@@ -61,7 +62,7 @@ fun HomeScreen(context:Context,
                 NavigationBar {
                     bottomNavItems.forEachIndexed { index, item ->
                         NavigationBarItem(
-                            icon = { Icon(item.icon, contentDescription = item.title) },
+                            icon = { Icon(painterResource(item.icon) , contentDescription = item.title) },
                             label = { Text(item.title) },
                             selected = pagerState.currentPage == index,
                             onClick = {
