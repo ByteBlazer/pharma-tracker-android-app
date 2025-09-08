@@ -14,7 +14,6 @@ class LoginRepository(var viewModel: LoginViewModel) {
     fun generateOtp(phoneNumber: String){
         val loginRequest = LoginRequest(phoneNumber)
         viewModelScope.launch {
-            delay(5000)
             try {
                 val response = RetrofitClient.apiService.generateOtp(loginRequest)
                 if (response.isSuccessful) {
