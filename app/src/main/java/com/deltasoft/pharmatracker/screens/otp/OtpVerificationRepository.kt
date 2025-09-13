@@ -2,6 +2,7 @@ package com.deltasoft.pharmatracker.screens.otp
 
 import com.deltasoft.pharmatracker.api.ApiResponse
 import com.deltasoft.pharmatracker.api.RetrofitClient
+import com.deltasoft.pharmatracker.screens.login.LoginRequest
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +44,22 @@ class OtpVerificationRepository(var viewModel: OtpVerificationViewModel) {
                 // Handle network errors
                 println("Network error: ${e.message}")
                 viewModel.updateOtpVerificationState(0, "${e.message}")
+            }
+        }
+    }
+
+    fun resendOTP(phoneNumber: String) {
+        val loginRequest = LoginRequest(phoneNumber)
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.generateOtp(loginRequest)
+                if (response.isSuccessful) {
+                } else {
+
+                }
+            } catch (e: Exception) {
+                // Handle network errors
+                println("Network error: ${e.message}")
             }
         }
     }
