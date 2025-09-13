@@ -30,10 +30,10 @@ import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 @Composable
 fun LoginScreen(
     navController: NavHostController,
-    prefillPhoneNumber:String="",
+    prefillPhoneNumber:String?="",
     loginViewModel: LoginViewModel = viewModel()
 ) {
-    var phoneNumber by remember { mutableStateOf(prefillPhoneNumber) }
+    var phoneNumber by remember { mutableStateOf(prefillPhoneNumber?:"") }
     val loginState by loginViewModel.loginState.collectAsState()
 
     var isNumberValid by remember { mutableStateOf(true) }

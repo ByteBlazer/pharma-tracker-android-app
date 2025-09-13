@@ -32,6 +32,7 @@ import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.utils.AppUtils
+import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
@@ -54,7 +55,8 @@ fun SplashScreen(navController: NavHostController, context: Context) {
                 }
             }
         }else {
-            navController.navigate(Screen.Login.createRoute(phoneNumber)) {
+            val phn = if(phoneNumber.isNotNullOrEmpty()) phoneNumber else null
+            navController.navigate(Screen.Login.createRoute(phn)) {
                 popUpTo(Screen.Splash
                     .route) {
                     inclusive = true

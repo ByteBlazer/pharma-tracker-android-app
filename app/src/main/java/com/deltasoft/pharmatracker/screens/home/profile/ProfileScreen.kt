@@ -1,6 +1,7 @@
 package com.deltasoft.pharmatracker.screens.home.profile
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
@@ -40,6 +42,7 @@ import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 
+private const val TAG = "ProfileScreen"
 @Composable
 fun ProfileScreen(
     navController: NavHostController, context: Context) {
@@ -55,8 +58,7 @@ fun ProfileScreen(
         onConfirm = {
             sharedPrefsUtil.saveString(PrefsKey.USER_ACCESS_TOKEN,"")
             navController.navigate(Screen.Login.createRoute(phone)) {
-                popUpTo(Screen.Splash
-                    .route) {
+                popUpTo(navController.graph.id) {
                     inclusive = true
                 }
             }
@@ -148,19 +150,23 @@ fun LogoutConfirmationDialog(
         AlertDialog(
             onDismissRequest = onDismiss,
             title = {
-                Text(text = "Confirm Logout")
+                Text(text = "Confirm Logout", style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             },
             text = {
-                Text(text = "Are you sure you want to log out?")
+                Text(text = "Are you sure you want to log out?", style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface)
             },
             confirmButton = {
                 TextButton(onClick = onConfirm) {
-                    Text("Confirm")
+                    Text("Confirm",
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text("Cancel",
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 }
             }
         )

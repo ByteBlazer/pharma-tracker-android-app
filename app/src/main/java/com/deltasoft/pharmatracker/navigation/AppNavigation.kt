@@ -21,14 +21,20 @@ fun AppNavigation(applicationContext: Context) {
         composable(Screen.Splash.route) {
             SplashScreen(navController,applicationContext)
         }
-        composable(Screen.Login.route,
-            arguments = listOf(navArgument("phonenumber") { type = NavType.StringType })) {backStackEntry ->
-            val phoneNumber = backStackEntry.arguments?.getString("phonenumber") ?: ""
-            LoginScreen(navController,phoneNumber)
+        composable(
+            route = Screen.Login.route,
+            arguments = listOf(navArgument("phoneNumber") {
+                type = NavType.StringType
+                nullable = true // This is the key change!
+                defaultValue = null
+            })
+        ) {backStackEntry ->
+            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber")
+            LoginScreen(navController, phoneNumber)
         }
         composable(Screen.OtpVerification.route,
-            arguments = listOf(navArgument("phonenumber") { type = NavType.StringType })) {backStackEntry ->
-            val phoneNumber = backStackEntry.arguments?.getString("phonenumber") ?: ""
+            arguments = listOf(navArgument("phoneNumber") { type = NavType.StringType })) {backStackEntry ->
+            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: ""
             OtpVerificationScreen(navController,phoneNumber)
         }
         composable(Screen.Home.route) {
