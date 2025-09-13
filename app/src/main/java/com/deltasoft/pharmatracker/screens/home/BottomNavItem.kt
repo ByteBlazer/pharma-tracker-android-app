@@ -24,7 +24,7 @@ sealed class BottomNavItem(
     )
 
     object RouteQueue : BottomNavItem(
-        "route_queue", R.drawable.ic_format_list_bulleted_add, "Route Queue",
+        "route_queue", R.drawable.ic_format_list_bulleted_add, "Dispatch Queue",
         setOf(
             UserType.APP_ADMIN,
             UserType.APP_TRIP_CREATOR
@@ -32,7 +32,7 @@ sealed class BottomNavItem(
     )
 
     object ScheduledTrips : BottomNavItem(
-        "scheduled_trips",  R.drawable.ic_calendar_clock, "Trips",
+        "scheduled_trips",  R.drawable.ic_calendar_clock, "Scheduled Trips",
         setOf(
             UserType.APP_ADMIN,
             UserType.APP_TRIP_CREATOR

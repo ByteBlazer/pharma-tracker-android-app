@@ -17,6 +17,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -72,7 +73,10 @@ fun HomeScreen(
                     bottomNavItems.forEachIndexed { index, item ->
                         NavigationBarItem(
                             icon = { Icon(painterResource(item.icon) , contentDescription = item.title) },
-                            label = { Text(item.title) },
+                            label = { Text(item.title,
+                                modifier = Modifier,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2 ) },
                             selected = pagerState.currentPage == index,
                             onClick = {
                                 coroutineScope.launch {
