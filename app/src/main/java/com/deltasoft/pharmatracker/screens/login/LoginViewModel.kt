@@ -38,5 +38,9 @@ class LoginViewModel : ViewModel() {
             }
         }
     }
+
+    fun clearLoginState() {
+        _loginState.value = LoginState.Idle
+    }
 }
 

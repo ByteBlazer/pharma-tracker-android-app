@@ -32,6 +32,7 @@ import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.utils.AppUtils
+import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
@@ -41,6 +42,7 @@ import kotlinx.coroutines.delay
 fun SplashScreen(navController: NavHostController, context: Context) {
     val sharedPrefsUtil = SharedPreferencesUtil(context)
     val token = sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN)
+    val phoneNumber = sharedPrefsUtil.getString(PrefsKey.PHONE_NUMBER)
 
 
     LaunchedEffect(key1 = true) {
@@ -53,8 +55,10 @@ fun SplashScreen(navController: NavHostController, context: Context) {
                 }
             }
         }else {
-            navController.navigate(Screen.Login.route) {
-                popUpTo(Screen.Splash.route) {
+            val phn = if(phoneNumber.isNotNullOrEmpty()) phoneNumber else null
+            navController.navigate(Screen.Login.createRoute(phn)) {
+                popUpTo(Screen.Splash
+                    .route) {
                     inclusive = true
                 }
             }

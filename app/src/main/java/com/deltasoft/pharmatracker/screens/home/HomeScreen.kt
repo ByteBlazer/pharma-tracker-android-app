@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -14,7 +16,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
 import com.deltasoft.pharmatracker.screens.home.route.RouteQueueScreen
 import com.deltasoft.pharmatracker.screens.home.scan.ScanScreen
@@ -23,9 +31,11 @@ import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(context:Context,
-               homeViewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(
+    navController: NavHostController, context:Context,
+    homeViewModel: HomeViewModel = viewModel()) {
     val sharedPrefsUtil = SharedPreferencesUtil(context)
     val token = sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN)
     val roles = sharedPrefsUtil.getString(PrefsKey.ROLES)
@@ -61,7 +71,7 @@ fun HomeScreen(context:Context,
                 NavigationBar {
                     bottomNavItems.forEachIndexed { index, item ->
                         NavigationBarItem(
-                            icon = { Icon(item.icon, contentDescription = item.title) },
+                            icon = { Icon(painterResource(item.icon) , contentDescription = item.title) },
                             label = { Text(item.title) },
                             selected = pagerState.currentPage == index,
                             onClick = {
@@ -72,6 +82,43 @@ fun HomeScreen(context:Context,
                         )
                     }
                 }
+            },
+            topBar = {
+                val currentPageTitle = bottomNavItems[pagerState.currentPage].title
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = currentPageTitle,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    navigationIcon = {
+                        if (false) {
+                            IconButton(onClick = {
+                                navController.navigate(Screen.Profile.route)
+                            }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_outline_person),
+                                    contentDescription = "profile"
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        if (true) {
+                            IconButton(onClick = {
+                                navController.navigate(Screen.Profile.route)
+                            }) {
+                                Icons.Default.AccountCircle
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_outline_person),
+                                    contentDescription = "profile"
+                                )
+                            }
+                        }
+                    }
+                )
             }
         ) { paddingValues ->
             HorizontalPager(

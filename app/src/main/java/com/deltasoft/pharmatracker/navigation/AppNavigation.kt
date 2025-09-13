@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.deltasoft.pharmatracker.screens.SplashScreen
 import com.deltasoft.pharmatracker.screens.home.HomeScreen
+import com.deltasoft.pharmatracker.screens.home.profile.ProfileScreen
 import com.deltasoft.pharmatracker.screens.login.LoginScreen
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationScreen
 
@@ -20,16 +21,27 @@ fun AppNavigation(applicationContext: Context) {
         composable(Screen.Splash.route) {
             SplashScreen(navController,applicationContext)
         }
-        composable(Screen.Login.route) {
-            LoginScreen(navController)
+        composable(
+            route = Screen.Login.route,
+            arguments = listOf(navArgument("phoneNumber") {
+                type = NavType.StringType
+                nullable = true // This is the key change!
+                defaultValue = null
+            })
+        ) {backStackEntry ->
+            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber")
+            LoginScreen(navController, phoneNumber)
         }
         composable(Screen.OtpVerification.route,
-            arguments = listOf(navArgument("phonenumber") { type = NavType.StringType })) {backStackEntry ->
-            val phoneNumber = backStackEntry.arguments?.getString("phonenumber") ?: ""
+            arguments = listOf(navArgument("phoneNumber") { type = NavType.StringType })) {backStackEntry ->
+            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: ""
             OtpVerificationScreen(navController,phoneNumber)
         }
         composable(Screen.Home.route) {
-            HomeScreen(applicationContext)
+            HomeScreen(navController,applicationContext)
+        }
+        composable(Screen.Profile.route) {
+            ProfileScreen(navController,applicationContext)
         }
     }
 }
