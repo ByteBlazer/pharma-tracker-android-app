@@ -18,7 +18,7 @@ class DispatchQueueRepository(var viewModel: DispatchQueueViewModel) {
                 val response = RetrofitClient.apiService.getDispatchQueueList(token)
                 Log.d(TAG, "getDispatchQueueList: "+response.body().toString())
                 if (response.isSuccessful) {
-                    viewModel.updateDispatchQueueListState(response.code(), response.message())
+                    viewModel.updateDispatchQueueListState(response.code(), response.message(),response?.body())
                 } else {
                     val errorBodyString = response.errorBody()?.string()
                     if (errorBodyString != null) {

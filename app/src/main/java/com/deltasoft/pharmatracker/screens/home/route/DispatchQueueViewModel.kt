@@ -2,11 +2,16 @@ package com.deltasoft.pharmatracker.screens.home.route
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.deltasoft.pharmatracker.screens.home.route.entity.DispatchItem
+import com.deltasoft.pharmatracker.screens.home.route.entity.DispatchQueueResponse
+import com.deltasoft.pharmatracker.screens.home.route.entity.RouteSummaryList
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.ArrayList
 
 class DispatchQueueViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = DispatchQueueRepository(this)
@@ -20,7 +25,7 @@ class DispatchQueueViewModel(application: Application) : AndroidViewModel(applic
         val appContext = getApplication<Application>().applicationContext
         val sharedPrefsUtil = SharedPreferencesUtil(appContext)
         token = AppUtils.createBearerToken(sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN)?:"")
-        getDispatchQueueList()
+//        getDispatchQueueList()
     }
 
     fun getDispatchQueueList() {
@@ -32,10 +37,10 @@ class DispatchQueueViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun updateDispatchQueueListState(code: Int, errorMessage: String){
+    fun updateDispatchQueueListState(code: Int, errorMessage: String,dispatchQueueResponse: DispatchQueueResponse? = null){
         when(code){
             200->{
-                _dispatchQueueState.value = DispatchQueueState.Success
+                _dispatchQueueState.value = DispatchQueueState.Success(dispatchQueueResponse?:DispatchQueueResponse())
             }
             400->{
                 _dispatchQueueState.value = DispatchQueueState.Error(errorMessage)
