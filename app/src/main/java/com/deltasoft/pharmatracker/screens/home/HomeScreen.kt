@@ -21,11 +21,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
-import com.deltasoft.pharmatracker.screens.home.route.RouteQueueScreen
+import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueScreen
 import com.deltasoft.pharmatracker.screens.home.scan.BarCodeScanner
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsScreen
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
@@ -131,7 +130,7 @@ fun HomeScreen(
             ) { page ->
                 when (bottomNavItems[page].route) {
                     "scan" -> BarCodeScanner()
-                    "route_queue" -> RouteQueueScreen()
+                    "route_queue" -> DispatchQueueScreen()
                     "scheduled_trips" -> ScheduledTripsScreen()
                     "drive" -> LocationScreen()
                 }
