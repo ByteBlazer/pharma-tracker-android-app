@@ -25,10 +25,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +42,11 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueState
+import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueViewModel
+import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
+import com.deltasoft.pharmatracker.utils.AppVibratorManager
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -49,19 +56,24 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import kotlinx.coroutines.delay
 import java.util.concurrent.Executors
 
 
+private const val TAG = "BarCodeScanner"
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun BarCodeScanner() {
+fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     val context = LocalContext.current
+
+    // Collect the state from the ViewModel
+    val scanState by scanViewModel.scanDocState.collectAsState()
 
     // State to manage whether scanning is active.
     var isScanning by remember { mutableStateOf(false) }
 
     // State to hold the scanned barcode value.
-    var scannedValue by remember { mutableStateOf("No values available") }
+    var scannedValue by remember { mutableStateOf("") }
 
     // Request camera permission using a launcher.
 //    val launcher = rememberLauncherForActivityResult(
@@ -101,6 +113,46 @@ fun BarCodeScanner() {
         }
     }
 
+    var lastApiCalledValue by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(scannedValue) {
+
+        if (scannedValue.isNotNullOrEmpty()){
+            Log.d(TAG, "BarCodeScanner: value available")
+            if (scannedValue != lastApiCalledValue) {
+                Log.d(TAG, "BarCodeScanner: new value available, calling API")
+                lastApiCalledValue = scannedValue
+                scanViewModel.scanDoc(scannedValue)
+            } else {
+                Log.d(TAG, "BarCodeScanner: same value detected, skipping API call")
+            }
+            AppVibratorManager.vibrate(context)
+        }else{
+            Log.d(TAG, "BarCodeScanner: value not available")
+        }
+    }
+
+    LaunchedEffect(scanState) {
+
+        when (scanState) {
+            is ScanDocState.Idle -> {
+//                CircularProgressIndicator()
+            }
+            is ScanDocState.Loading -> {
+//                CircularProgressIndicator()
+            }
+            is ScanDocState.Success -> {
+                delay(2000)
+                scannedValue = ""
+            }
+            is ScanDocState.Error -> {
+                delay(2000)
+                scannedValue = ""
+                val message = (scanState as ScanDocState.Error).message
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -114,7 +166,7 @@ fun BarCodeScanner() {
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             // Only show the camera preview if scanning is active.
-            if (isScanning) {
+            if (isScanning && scannedValue.isNullOrEmpty()) {
                 CameraPreview(
                     onBarcodeScanned = { value ->
                         scannedValue = value
@@ -126,7 +178,7 @@ fun BarCodeScanner() {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Camera is off",
+                        text = if (scannedValue.isNullOrEmpty()) "Camera is off" else "Scan successful",
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -149,7 +201,7 @@ fun BarCodeScanner() {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = scannedValue,
+                    text = if (scannedValue.isNotNullOrEmpty()) scannedValue else "No values available",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -236,7 +288,7 @@ fun BarCodeScanner() {
             Button(
                 onClick = {
                     isScanning = false
-                    scannedValue = "No values available"
+                    scannedValue = ""
                 },
                 enabled = isScanning
             ) {
@@ -303,7 +355,7 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
                                         if (barcodes.isNotEmpty()) {
                                             val value = barcodes[0].rawValue ?: "No value found"
                                             onBarcodeScanned(value)
-                                            Log.d("BarcodeScanner", "Scanned value: $value")
+//                                            Log.d("BarcodeScanner", "Scanned value: $value")
                                         }
                                     }
                                     .addOnFailureListener { e ->
