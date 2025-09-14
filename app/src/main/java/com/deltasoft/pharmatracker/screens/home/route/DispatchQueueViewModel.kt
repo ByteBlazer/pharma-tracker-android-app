@@ -2,16 +2,12 @@ package com.deltasoft.pharmatracker.screens.home.route
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.deltasoft.pharmatracker.screens.home.route.entity.DispatchItem
 import com.deltasoft.pharmatracker.screens.home.route.entity.DispatchQueueResponse
-import com.deltasoft.pharmatracker.screens.home.route.entity.RouteSummaryList
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.util.ArrayList
 
 class DispatchQueueViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = DispatchQueueRepository(this)

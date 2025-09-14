@@ -96,9 +96,9 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     val shouldShowRationale = cameraPermissionState.status.shouldShowRationale
 
     val message = if (allPermissionsGranted) {
-        if (isScanning){
+        if (isScanning) {
             "Scanning..."
-        }else{
+        } else {
             "Press start to scan."
         }
     } else if (shouldShowRationale)
@@ -117,7 +117,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 
     LaunchedEffect(scannedValue) {
 
-        if (scannedValue.isNotNullOrEmpty()){
+        if (scannedValue.isNotNullOrEmpty()) {
             Log.d(TAG, "BarCodeScanner: value available")
             if (scannedValue != lastApiCalledValue) {
                 Log.d(TAG, "BarCodeScanner: new value available, calling API")
@@ -127,7 +127,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 Log.d(TAG, "BarCodeScanner: same value detected, skipping API call")
             }
             AppVibratorManager.vibrate(context)
-        }else{
+        } else {
             Log.d(TAG, "BarCodeScanner: value not available")
         }
     }
@@ -138,13 +138,16 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
             is ScanDocState.Idle -> {
 //                CircularProgressIndicator()
             }
+
             is ScanDocState.Loading -> {
 //                CircularProgressIndicator()
             }
+
             is ScanDocState.Success -> {
                 delay(2000)
                 scannedValue = ""
             }
+
             is ScanDocState.Error -> {
                 delay(2000)
                 scannedValue = ""
@@ -153,122 +156,123 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Card(
-            modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            // Only show the camera preview if scanning is active.
-            if (isScanning && scannedValue.isNullOrEmpty()) {
-                CameraPreview(
-                    onBarcodeScanned = { value ->
-                        scannedValue = value
+            Card(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                // Only show the camera preview if scanning is active.
+                if (isScanning && scannedValue.isNullOrEmpty()) {
+                    CameraPreview(
+                        onBarcodeScanned = { value ->
+                            scannedValue = value
+                        }
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (scannedValue.isNullOrEmpty()) "Camera is off" else "Scan successful",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                )
-            } else {
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Card to display the scanned barcode value.
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (scannedValue.isNullOrEmpty()) "Camera is off" else "Scan successful",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = if (scannedValue.isNotNullOrEmpty()) scannedValue else "No values available",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Card to display the scanned barcode value.
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+            // Card to display the scanned barcode value.
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Text(
-                    text = if (scannedValue.isNotNullOrEmpty()) scannedValue else "No values available",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
 
-        // Card to display the scanned barcode value.
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+            Spacer(modifier = Modifier.height(16.dp))
+
+
+            // Buttons to control scanning.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
             ) {
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
 
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-        // Buttons to control scanning.
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-
-            when {
-                allPermissionsGranted -> {
+                when {
+                    allPermissionsGranted -> {
 //                    Text("Permission granted! You can use the feature.")
-                    Button(
-                        onClick = {
-                            isScanning = true
-                        },
-                        enabled = !isScanning
-                    ) {
-                        Text("Start Scan")
+                        Button(
+                            onClick = {
+                                isScanning = true
+                            },
+                            enabled = !isScanning
+                        ) {
+                            Text("Start Scan")
+                        }
                     }
-                }
 
-                shouldShowRationale -> {
-                    // Show rationale for the second or subsequent denial
+                    shouldShowRationale -> {
+                        // Show rationale for the second or subsequent denial
 //                    Text("The app needs this permission to function. Please grant it.")
-                    Button(onClick = { cameraPermissionState.launchPermissionRequest() }) {
-                        Text("Request Permission")
+                        Button(onClick = { cameraPermissionState.launchPermissionRequest() }) {
+                            Text("Request Permission")
+                        }
                     }
-                }
 
-                else -> {
-                    // Permission permanently denied: ask user to go to settings
+                    else -> {
+                        // Permission permanently denied: ask user to go to settings
 //                    Text("Permission is permanently denied. Go to settings to enable it.")
-                    Button(onClick = { openAppSettings(context) }) {
-                        Text("Open App Settings")
+                        Button(onClick = { openAppSettings(context) }) {
+                            Text("Open App Settings")
+                        }
                     }
                 }
-            }
 //            Button(
 //                onClick = {
 //                    when (PackageManager.PERMISSION_GRANTED) {
@@ -285,16 +289,18 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 //            ) {
 //                Text("Start Scan")
 //            }
-            Button(
-                onClick = {
-                    isScanning = false
-                    scannedValue = ""
-                },
-                enabled = isScanning
-            ) {
-                Text("Stop Scan")
+                Button(
+                    onClick = {
+                        isScanning = false
+                        scannedValue = ""
+                    },
+                    enabled = isScanning
+                ) {
+                    Text("Stop Scan")
+                }
             }
         }
+
     }
 }
 

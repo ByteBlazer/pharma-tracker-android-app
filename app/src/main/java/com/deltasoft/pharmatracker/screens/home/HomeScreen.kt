@@ -26,7 +26,7 @@ import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
 import com.deltasoft.pharmatracker.screens.home.route.RouteQueueScreen
-import com.deltasoft.pharmatracker.screens.home.scan.ScanScreen
+import com.deltasoft.pharmatracker.screens.home.scan.BarCodeScanner
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsScreen
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
@@ -130,7 +130,7 @@ fun HomeScreen(
                 modifier = Modifier.padding(paddingValues)
             ) { page ->
                 when (bottomNavItems[page].route) {
-                    "scan" -> ScanScreen()
+                    "scan" -> BarCodeScanner()
                     "route_queue" -> RouteQueueScreen()
                     "scheduled_trips" -> ScheduledTripsScreen()
                     "drive" -> LocationScreen()
