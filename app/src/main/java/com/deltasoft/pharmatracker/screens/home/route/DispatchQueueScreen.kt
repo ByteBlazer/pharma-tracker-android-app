@@ -1,10 +1,10 @@
 package com.deltasoft.pharmatracker.screens.home.route
 
+import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
@@ -38,7 +38,9 @@ fun DispatchQueueScreen(
         dispatchQueueViewModel.getDispatchQueueList()
     }
 
-    Box(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
         when (apiState) {
             is DispatchQueueState.Idle -> {
                 CircularProgressIndicator()
@@ -48,7 +50,8 @@ fun DispatchQueueScreen(
             }
             is DispatchQueueState.Success -> {
                 val dispatchQueueResponse = (apiState as DispatchQueueState.Success).dispatchQueueResponse
-                DispatchQueueListCompose(dispatchQueueResponse?.dispatchQueueList?.routeSummaryList?: arrayListOf())
+                dispatchQueueViewModel.updateDispatchQueueList(dispatchQueueResponse?.dispatchQueueList?.routeSummaryList?: arrayListOf())
+                DispatchQueueListCompose(dispatchQueueViewModel)
             }
             is DispatchQueueState.Error -> {
                 val message = (apiState as DispatchQueueState.Error).message
@@ -62,7 +65,8 @@ fun DispatchQueueScreen(
 }
 
 @Composable
-fun DispatchQueueListCompose(routeSummaryLists: ArrayList<RouteSummaryList>) {
+fun DispatchQueueListCompose(dispatchQueueViewModel: DispatchQueueViewModel) {
+    val routeSummaryLists by dispatchQueueViewModel.dispatchQueueList.collectAsState()
     if (routeSummaryLists.isEmpty()){
 
     }else{
@@ -70,7 +74,7 @@ fun DispatchQueueListCompose(routeSummaryLists: ArrayList<RouteSummaryList>) {
             items(routeSummaryLists.size) { index ->
                 if (index in routeSummaryLists.indices) {
                     val route = routeSummaryLists[index]
-                    RouteHeaderComposable(route)
+                    RouteHeaderComposable(route,dispatchQueueViewModel)
                 }
             }
         }
@@ -78,8 +82,16 @@ fun DispatchQueueListCompose(routeSummaryLists: ArrayList<RouteSummaryList>) {
 }
 
 @Composable
-fun RouteItemComposable(item: UserSummaryList) {
-    Card(modifier = Modifier.padding(vertical = 8.dp)) {
+fun RouteItemComposable(
+    item: UserSummaryList,
+    route: String?,
+    dispatchQueueViewModel: DispatchQueueViewModel
+) {
+    Card(modifier = Modifier
+        .padding(vertical = 8.dp)
+        .clickable {
+            item.isChecked.value = !item.isChecked.value
+        }) {
         ListItem(
             headlineContent = {
                 Text(item.scannedByName?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
@@ -96,8 +108,10 @@ fun RouteItemComposable(item: UserSummaryList) {
             },
             trailingContent = {
                 Checkbox(
-                    checked = false,
-                    onCheckedChange = {}
+                    checked = item.isChecked.value,
+                    onCheckedChange = {
+                        item.isChecked.value = it
+                    }
                 )
             },
             colors = ListItemDefaults.colors(
@@ -108,18 +122,22 @@ fun RouteItemComposable(item: UserSummaryList) {
 }
 
 @Composable
-fun RouteHeaderComposable(route: RouteSummaryList) {
+fun RouteHeaderComposable(route: RouteSummaryList, dispatchQueueViewModel: DispatchQueueViewModel) {
     Text(route.route?:"", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant )
-    RouteItemsListComposable(innerItems = route.userSummaryList)
+    RouteItemsListComposable(innerItems = route.userSummaryList, route = route.route,dispatchQueueViewModel)
 }
 
 @Composable
-fun RouteItemsListComposable(innerItems: ArrayList<UserSummaryList>) {
+fun RouteItemsListComposable(
+    innerItems: ArrayList<UserSummaryList>,
+    route: String?,
+    dispatchQueueViewModel: DispatchQueueViewModel
+) {
     Column(
         modifier = Modifier.padding(start = 16.dp)
     ) {
         innerItems.forEach { innerItem ->
-            RouteItemComposable(innerItem)
+            RouteItemComposable(innerItem,route,dispatchQueueViewModel)
         }
     }
 }

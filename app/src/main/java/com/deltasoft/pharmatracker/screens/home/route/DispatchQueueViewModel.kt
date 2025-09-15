@@ -3,11 +3,14 @@ package com.deltasoft.pharmatracker.screens.home.route
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.deltasoft.pharmatracker.screens.home.route.entity.DispatchQueueResponse
+import com.deltasoft.pharmatracker.screens.home.route.entity.RouteSummaryList
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import java.util.ArrayList
 
 class DispatchQueueViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = DispatchQueueRepository(this)
@@ -52,6 +55,25 @@ class DispatchQueueViewModel(application: Application) : AndroidViewModel(applic
 
     fun clearLoginState() {
         _dispatchQueueState.value = DispatchQueueState.Idle
+    }
+
+    private val _dispatchQueueList = MutableStateFlow<ArrayList<RouteSummaryList>>(arrayListOf())
+    val dispatchQueueList = _dispatchQueueList.asStateFlow()
+
+    fun updateDispatchQueueList(dispatchQueueList: ArrayList<RouteSummaryList>){
+        _dispatchQueueList.value = dispatchQueueList
+    }
+
+    fun getSelectedRouteCount(): Int {
+        // Filter the categories to find those with at least one selected item
+        val categoriesWithSelection = _dispatchQueueList.value.filter { item ->
+            item.userSummaryList.any { item ->
+                item.isChecked.value
+            }
+        }
+
+        // Return the count of the filtered list
+        return categoriesWithSelection.size
     }
 }
 
