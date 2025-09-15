@@ -2,9 +2,13 @@ package com.deltasoft.pharmatracker.screens.home.route
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -34,7 +38,7 @@ fun DispatchQueueScreen(
         dispatchQueueViewModel.getDispatchQueueList()
     }
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
         when (apiState) {
             is DispatchQueueState.Idle -> {
                 CircularProgressIndicator()
@@ -75,27 +79,32 @@ fun DispatchQueueListCompose(routeSummaryLists: ArrayList<RouteSummaryList>) {
 
 @Composable
 fun RouteItemComposable(item: UserSummaryList) {
-    ListItem(
-        headlineContent = {
-            Text(item.scannedByName?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
-        },
-        modifier = Modifier,
-        overlineContent = {
-            Text(item.scannedFromLocation?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
-        },
-        supportingContent = {
-            Text(("Count: " + item.count) ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant )
-        },
-        leadingContent = {
+    Card(modifier = Modifier.padding(vertical = 8.dp)) {
+        ListItem(
+            headlineContent = {
+                Text(item.scannedByName?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
+            },
+            modifier = Modifier,
+            overlineContent = {
+                Text(item.scannedFromLocation?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
+            },
+            supportingContent = {
+                Text(("Count: " + item.count) ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant )
+            },
+            leadingContent = {
 
-        },
-        trailingContent = {
-
-        },
-        colors = ListItemDefaults.colors(
-            containerColor = Color.Transparent
+            },
+            trailingContent = {
+                Checkbox(
+                    checked = false,
+                    onCheckedChange = {}
+                )
+            },
+            colors = ListItemDefaults.colors(
+                containerColor = Color.Transparent
+            )
         )
-    )
+    }
 }
 
 @Composable
