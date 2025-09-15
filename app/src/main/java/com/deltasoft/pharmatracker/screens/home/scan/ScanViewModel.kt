@@ -27,7 +27,7 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 repository.scanDoc(token = token, barcode = barcode)
             } catch (e: Exception) {
-                _scanDocState.value = ScanDocState.Error("Login failed: ${e.message}")
+                _scanDocState.value = ScanDocState.Error("Login failed: ${e.message}",0)
             }
         }
     }
@@ -35,16 +35,16 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     fun updateScanDocState(code: Int, errorMessage: String){
         when(code){
             200->{
-                _scanDocState.value = ScanDocState.Success
+                _scanDocState.value = ScanDocState.Success(errorMessage,code)
             }
             400->{
-                _scanDocState.value = ScanDocState.Error(errorMessage)
+                _scanDocState.value = ScanDocState.Error(errorMessage,code)
             }
             500->{
-                _scanDocState.value = ScanDocState.Error(errorMessage)
+                _scanDocState.value = ScanDocState.Error(errorMessage,code)
             }
             else->{
-                _scanDocState.value = ScanDocState.Error(errorMessage)
+                _scanDocState.value = ScanDocState.Error(errorMessage,code)
             }
         }
     }

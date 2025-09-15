@@ -2,6 +2,7 @@ package com.deltasoft.pharmatracker.api
 
 import com.deltasoft.pharmatracker.screens.home.location.LocationData
 import com.deltasoft.pharmatracker.screens.home.route.entity.DispatchQueueResponse
+import com.deltasoft.pharmatracker.screens.home.scan.ScanDocSuccessResponse
 import com.deltasoft.pharmatracker.screens.login.LoginRequest
 import com.deltasoft.pharmatracker.screens.otp.OtpRequestBody
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationResponse
@@ -34,5 +35,5 @@ interface ApiService {
     suspend fun scanDoc(
         @Header("Authorization") token: String,
         @Path("barcode") barcode: String,
-    ): Response<ApiResponse>
+    ): Response<ScanDocSuccessResponse>
 }

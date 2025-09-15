@@ -16,7 +16,7 @@ class ScanRepository(var viewModel: ScanViewModel) {
             try {
                 val response = RetrofitClient.apiService.scanDoc(token = token, barcode = barcode)
                 if (response.isSuccessful) {
-                    viewModel.updateScanDocState(response.code(),response.message())
+                    viewModel.updateScanDocState(response.code(),response.body()?.message?:"")
                 } else {
                     val errorBodyString = response.errorBody()?.string()
                     if (errorBodyString != null) {

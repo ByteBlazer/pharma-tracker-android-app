@@ -12,6 +12,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,10 +23,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,12 +41,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueListCompose
 import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueState
 import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueViewModel
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
@@ -61,7 +68,7 @@ import java.util.concurrent.Executors
 
 
 private const val TAG = "BarCodeScanner"
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     val context = LocalContext.current
@@ -74,6 +81,65 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 
     // State to hold the scanned barcode value.
     var scannedValue by remember { mutableStateOf("") }
+
+    val showDialog = remember { mutableStateOf(false) }
+    val dialogMessage = remember { mutableStateOf("") }
+    val dialogMessageColor = remember { mutableStateOf(Color.Green) }
+    LaunchedEffect(scanState) {
+        when (scanState) {
+            is ScanDocState.Idle -> {
+
+            }
+
+            is ScanDocState.Loading -> {
+            }
+
+            is ScanDocState.Success -> {
+                val message = (scanState as ScanDocState.Success).message
+                val code = (scanState as ScanDocState.Success).code
+                dialogMessage.value = message
+                dialogMessageColor.value = getColorFromCode(code)
+                showDialog.value = true
+                AppVibratorManager.vibrate(context,100L)
+                // Delay for 3 seconds (3000 milliseconds)
+                delay(3000L)
+                // Hide the dialog after the delay
+                showDialog.value = false
+                scannedValue = ""
+            }
+
+            is ScanDocState.Error -> {
+                val message = (scanState as ScanDocState.Error).message
+                val code = (scanState as ScanDocState.Error).code
+                dialogMessage.value = message
+                dialogMessageColor.value = getColorFromCode(code)
+                showDialog.value = true
+                // Delay for 3 seconds (3000 milliseconds)
+                delay(2000L)
+                // Hide the dialog after the delay
+                showDialog.value = false
+                scannedValue = ""
+            }
+        }
+    }
+
+    if (showDialog.value) {
+        // The actual dialog composable
+        BasicAlertDialog(
+            onDismissRequest = {},
+            modifier = Modifier,
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false,usePlatformDefaultWidth = true),
+            content = {
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                            Text(text = dialogMessage.value,style = MaterialTheme.typography.bodyLarge, color = dialogMessageColor.value)
+                        }
+                    }
+                }
+            }
+        )
+    }
 
     // Request camera permission using a launcher.
 //    val launcher = rememberLauncherForActivityResult(
@@ -302,6 +368,27 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
         }
 
     }
+}
+
+fun getColorFromCode(code: Int): Color {
+    when(code){
+        200->{
+            return Color.Green
+        }
+        400->{
+            return Color.Red
+        }
+        500->{
+            return Color.Red
+        }
+        409->{
+            return Color.Yellow
+        }
+        else->{
+            return Color.Yellow
+        }
+    }
+
 }
 
 private fun openAppSettings(context: Context) {
