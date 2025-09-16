@@ -15,7 +15,7 @@ sealed class BottomNavItem(
     val visibleFor: Set<UserType>
 ) {
     object Scan : BottomNavItem(
-        "scan", R.drawable.ic_barcode_scanner, "Scan",
+        "scan", R.drawable.ic_barcode_scanner, "Invoice Scan",
         setOf(
             UserType.APP_ADMIN,
             UserType.APP_TRIP_CREATOR,
@@ -40,7 +40,7 @@ sealed class BottomNavItem(
     )
 
     object Drive : BottomNavItem(
-        "drive",  R.drawable.ic_local_shipping, "Drive",
+        "drive",  R.drawable.ic_local_shipping, "Delivery Trip",
         setOf(
             UserType.APP_ADMIN,
             UserType.APP_TRIP_DRIVER
