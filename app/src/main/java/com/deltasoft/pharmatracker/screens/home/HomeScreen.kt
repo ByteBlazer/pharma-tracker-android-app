@@ -17,15 +17,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
-import com.deltasoft.pharmatracker.screens.home.route.RouteQueueScreen
-import com.deltasoft.pharmatracker.screens.home.scan.ScanScreen
+import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueScreen
+import com.deltasoft.pharmatracker.screens.home.scan.BarCodeScanner
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsScreen
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
@@ -72,7 +72,10 @@ fun HomeScreen(
                     bottomNavItems.forEachIndexed { index, item ->
                         NavigationBarItem(
                             icon = { Icon(painterResource(item.icon) , contentDescription = item.title) },
-                            label = { Text(item.title) },
+                            label = { Text(item.title,
+                                modifier = Modifier,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2 ) },
                             selected = pagerState.currentPage == index,
                             onClick = {
                                 coroutineScope.launch {
@@ -126,8 +129,8 @@ fun HomeScreen(
                 modifier = Modifier.padding(paddingValues)
             ) { page ->
                 when (bottomNavItems[page].route) {
-                    "scan" -> ScanScreen()
-                    "route_queue" -> RouteQueueScreen()
+                    "scan" -> BarCodeScanner()
+                    "route_queue" -> DispatchQueueScreen()
                     "scheduled_trips" -> ScheduledTripsScreen()
                     "drive" -> LocationScreen()
                 }
