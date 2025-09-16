@@ -14,7 +14,7 @@ object AppVibratorManager {
      * @param context The application context.
      * @param duration The duration of the vibration in milliseconds.
      */
-    fun vibrate(context: Context, duration: Long = 50L) {
+    fun vibrate(context: Context, duration: Long = 100L) {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
             vibratorManager.defaultVibrator

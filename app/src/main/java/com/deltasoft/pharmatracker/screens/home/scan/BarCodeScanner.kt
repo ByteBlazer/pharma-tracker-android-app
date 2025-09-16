@@ -52,6 +52,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueListCompose
 import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueState
 import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueViewModel
+import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.AppVibratorManager
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -73,14 +74,13 @@ private const val TAG = "BarCodeScanner"
 fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     val context = LocalContext.current
 
-    // Collect the state from the ViewModel
     val scanState by scanViewModel.scanDocState.collectAsState()
 
-    // State to manage whether scanning is active.
     var isScanning by remember { mutableStateOf(false) }
 
-    // State to hold the scanned barcode value.
     var scannedValue by remember { mutableStateOf("") }
+
+    var lastApiCalledValue by remember { mutableStateOf<String?>(null) }
 
     val showDialog = remember { mutableStateOf(false) }
     val dialogMessage = remember { mutableStateOf("") }
@@ -100,12 +100,15 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 dialogMessage.value = message
                 dialogMessageColor.value = getColorFromCode(code)
                 showDialog.value = true
-                AppVibratorManager.vibrate(context,100L)
-                // Delay for 3 seconds (3000 milliseconds)
+                AppVibratorManager.vibrate(context)
+                AppUtils.playBeep(100)
+
                 delay(3000L)
                 // Hide the dialog after the delay
                 showDialog.value = false
+                delay(500L)
                 scannedValue = ""
+                lastApiCalledValue = ""
             }
 
             is ScanDocState.Error -> {
@@ -114,11 +117,16 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 dialogMessage.value = message
                 dialogMessageColor.value = getColorFromCode(code)
                 showDialog.value = true
-                // Delay for 3 seconds (3000 milliseconds)
+                AppVibratorManager.vibrate(context,500L)
+                AppVibratorManager.vibrate(context)
+                AppUtils.playBeep(500)
+
                 delay(2000L)
                 // Hide the dialog after the delay
                 showDialog.value = false
+                delay(500L)
                 scannedValue = ""
+                lastApiCalledValue = ""
             }
         }
     }
@@ -179,8 +187,6 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
         }
     }
 
-    var lastApiCalledValue by remember { mutableStateOf<String?>(null) }
-
     LaunchedEffect(scannedValue) {
 
         if (scannedValue.isNotNullOrEmpty()) {
@@ -192,7 +198,6 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
             } else {
                 Log.d(TAG, "BarCodeScanner: same value detected, skipping API call")
             }
-            AppVibratorManager.vibrate(context)
         } else {
             Log.d(TAG, "BarCodeScanner: value not available")
         }

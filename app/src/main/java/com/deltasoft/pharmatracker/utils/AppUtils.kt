@@ -1,5 +1,9 @@
 package com.deltasoft.pharmatracker.utils
 
+import android.media.AudioManager
+import android.media.ToneGenerator
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.deltasoft.pharmatracker.screens.home.UserType
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
@@ -62,5 +66,16 @@ object AppUtils {
 
     fun createBearerToken(accessToken: String): String {
         return "Bearer $accessToken"
+    }
+
+    fun playBeep(duration: Int) {
+        val toneGen = ToneGenerator(AudioManager.STREAM_ALARM, 100)
+        toneGen.startTone(ToneGenerator.TONE_DTMF_S, duration)
+        // Release the ToneGenerator to avoid resource leaks
+        // You should do this after the tone has finished playing
+        // A Handler is a good way to delay the release
+        Handler(Looper.getMainLooper()).postDelayed({
+            toneGen.release()
+        }, (duration + 50).toLong())
     }
 }
