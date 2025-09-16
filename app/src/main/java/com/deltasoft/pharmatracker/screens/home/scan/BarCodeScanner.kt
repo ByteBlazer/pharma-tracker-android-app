@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
@@ -103,7 +104,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 AppVibratorManager.vibrate(context)
                 AppUtils.playBeep(100)
 
-                delay(3000L)
+                delay(2000L)
                 // Hide the dialog after the delay
                 showDialog.value = false
                 delay(500L)
@@ -121,7 +122,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 AppVibratorManager.vibrate(context)
                 AppUtils.playBeep(500)
 
-                delay(2000L)
+                delay(3000L)
                 // Hide the dialog after the delay
                 showDialog.value = false
                 delay(500L)
@@ -131,23 +132,23 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
         }
     }
 
-    if (showDialog.value) {
-        // The actual dialog composable
-        BasicAlertDialog(
-            onDismissRequest = {},
-            modifier = Modifier,
-            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false,usePlatformDefaultWidth = true),
-            content = {
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                            Text(text = dialogMessage.value,style = MaterialTheme.typography.bodyLarge, color = dialogMessageColor.value)
-                        }
-                    }
-                }
-            }
-        )
-    }
+//    if (showDialog.value) {
+//        // The actual dialog composable
+//        BasicAlertDialog(
+//            onDismissRequest = {},
+//            modifier = Modifier,
+//            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false,usePlatformDefaultWidth = true),
+//            content = {
+//                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+//                    Card(modifier = Modifier.fillMaxWidth()) {
+//                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+//                            Text(text = dialogMessage.value,style = MaterialTheme.typography.bodyLarge, color = dialogMessageColor.value)
+//                        }
+//                    }
+//                }
+//            }
+//        )
+//    }
 
     // Request camera permission using a launcher.
 //    val launcher = rememberLauncherForActivityResult(
@@ -249,64 +250,74 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                     )
                 } else {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = if (scannedValue.isNullOrEmpty()) "Camera is off" else "Scan successful",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        if (showDialog.value){
+                            Text(
+                                text = dialogMessage.value,
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = dialogMessageColor.value,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        }else {
+                            Text(
+                                text = "Press start to scan",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
+//            // Card to display the scanned barcode value.
+//            Card(
+//                modifier = Modifier.fillMaxWidth(),
+//                shape = RoundedCornerShape(12.dp),
+//                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+//            ) {
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(16.dp),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Text(
+//                        text = if (scannedValue.isNotNullOrEmpty()) scannedValue else "No values available",
+//                        style = MaterialTheme.typography.headlineSmall,
+//                        color = MaterialTheme.colorScheme.primary
+//                    )
+//                }
+//            }
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+
             // Card to display the scanned barcode value.
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = if (scannedValue.isNotNullOrEmpty()) scannedValue else "No values available",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Card to display the scanned barcode value.
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-
-
-            Spacer(modifier = Modifier.height(16.dp))
+//            Card(
+//                modifier = Modifier.fillMaxWidth(),
+//                shape = RoundedCornerShape(12.dp),
+//                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+//            ) {
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(16.dp),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Text(
+//                        text = message,
+//                        style = MaterialTheme.typography.headlineSmall,
+//                        color = MaterialTheme.colorScheme.primary
+//                    )
+//                }
+//            }
+//
+//
+//            Spacer(modifier = Modifier.height(16.dp))
 
 
             // Buttons to control scanning.
