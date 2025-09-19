@@ -109,11 +109,21 @@ fun HomeScreen(
                         }
                     },
                     actions = {
+                        val isDispatchQueues = bottomNavItems[pagerState.currentPage].route == "route_queue"
                         if (true) {
+                            if (isDispatchQueues) {
+                                IconButton(onClick = {
+                                    homeViewModel?.onDispatchQueueReloadButtonClick()
+                                }) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_refresh),
+                                        contentDescription = "dispatch queue reload"
+                                    )
+                                }
+                            }
                             IconButton(onClick = {
                                 navController.navigate(Screen.Profile.route)
                             }) {
-                                Icons.Default.AccountCircle
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_outline_person),
                                     contentDescription = "profile"
@@ -130,7 +140,7 @@ fun HomeScreen(
             ) { page ->
                 when (bottomNavItems[page].route) {
                     "scan" -> BarCodeScanner()
-                    "route_queue" -> DispatchQueueScreen()
+                    "route_queue" -> DispatchQueueScreen(homeViewModel = homeViewModel)
                     "scheduled_trips" -> ScheduledTripsScreen()
                     "drive" -> LocationScreen()
                 }

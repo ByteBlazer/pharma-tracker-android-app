@@ -6,6 +6,7 @@ import com.deltasoft.pharmatracker.api.RetrofitClient
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val TAG = "DispatchQueueRepository"
@@ -16,7 +17,6 @@ class DispatchQueueRepository(var viewModel: DispatchQueueViewModel) {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.apiService.getDispatchQueueList(token)
-                Log.d(TAG, "getDispatchQueueList: "+response.body().toString())
                 if (response.isSuccessful) {
                     viewModel.updateDispatchQueueListState(response.code(), response.message(),response?.body())
                 } else {

@@ -1,6 +1,7 @@
 package com.deltasoft.pharmatracker.screens.home.scan
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
@@ -9,7 +10,11 @@ import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+private const val TAG = "ScanViewModel"
 class ScanViewModel(application: Application) : AndroidViewModel(application) {
+    init {
+
+    }
     private val repository = ScanRepository(this)
     var token = ""
     init {
