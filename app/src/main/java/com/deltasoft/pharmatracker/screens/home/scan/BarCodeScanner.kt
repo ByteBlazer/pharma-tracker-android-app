@@ -295,7 +295,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                     ) {
                         Row (Modifier.fillMaxWidth().padding(16.dp),horizontalArrangement = Arrangement.SpaceBetween){
-                            Text(dialogMessage.value, modifier = Modifier)
+                            Text(dialogMessage.value, modifier = Modifier.weight(1f))
                             Spacer(Modifier.width(4.dp))
                             IconButton(onClick = {
                                 showDialog.value = false
