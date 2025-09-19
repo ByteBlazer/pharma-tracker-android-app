@@ -12,6 +12,8 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +32,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,6 +55,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.AppVibratorManager
@@ -74,14 +78,11 @@ private const val TAG = "BarCodeScanner"
 fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        scanViewModel.clearScanDocState()
-    }
+
 
     var isPermissionCheckedOnce by remember { mutableStateOf(false) }
     var buttonText by remember { mutableStateOf("Press start to scan") }
 
-    val scanState by scanViewModel.scanDocState.collectAsState()
 
     var isScanning by remember { mutableStateOf(false) }
 
@@ -92,16 +93,30 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     val showDialog = remember { mutableStateOf(false) }
     val dialogMessage = remember { mutableStateOf("") }
     val dialogMessageColor = remember { mutableStateOf(Color.Green) }
+
+    LaunchedEffect(Unit) {
+        scannedValue =""
+        lastApiCalledValue = ""
+        showDialog.value = false
+        scanViewModel.clearScanDocState()
+    }
+
+    val scanState by scanViewModel.scanDocState.collectAsState()
+
     LaunchedEffect(scanState) {
         when (scanState) {
             is ScanDocState.Idle -> {
+                Log.d(TAG, "BarCodeScanner: ScanDocState.Idle")
 
             }
 
             is ScanDocState.Loading -> {
+                Log.d(TAG, "BarCodeScanner: ScanDocState.Loading")
+                showDialog.value = false
             }
 
             is ScanDocState.Success -> {
+                Log.d(TAG, "BarCodeScanner: ScanDocState.Success")
                 val message = (scanState as ScanDocState.Success).message
                 val code = (scanState as ScanDocState.Success).code
                 dialogMessage.value = message
@@ -112,13 +127,14 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 
                 delay(2000L)
                 // Hide the dialog after the delay
-                showDialog.value = false
+//                showDialog.value = false
                 delay(500L)
                 scannedValue = ""
                 lastApiCalledValue = ""
             }
 
             is ScanDocState.Error -> {
+                Log.d(TAG, "BarCodeScanner: ScanDocState.Error")
                 val message = (scanState as ScanDocState.Error).message
                 val code = (scanState as ScanDocState.Error).code
                 dialogMessage.value = message
@@ -130,7 +146,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 
                 delay(3000L)
                 // Hide the dialog after the delay
-                showDialog.value = false
+//                showDialog.value = false
                 delay(500L)
                 scannedValue = ""
                 lastApiCalledValue = ""
@@ -265,11 +281,35 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
+            Column {
+                if (showDialog.value) {
+                    Card(
+                        modifier = Modifier.padding(16.dp),
+                        border = BorderStroke(1.dp, dialogMessageColor.value),
+                        shape = CardDefaults.outlinedShape,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    ) {
+                        Row (Modifier.fillMaxWidth().padding(16.dp),horizontalArrangement = Arrangement.SpaceBetween){
+                            Text(dialogMessage.value, modifier = Modifier)
+                            Spacer(Modifier.width(4.dp))
+                            IconButton(onClick = {
+                                showDialog.value = false
+                            }, modifier = Modifier) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_close),
+                                    contentDescription = "close"
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            Column(Modifier.padding(bottom = 48.dp)) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -291,25 +331,36 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (showDialog.value){
+                        if (!isScanning) {
                             Text(
-                                text = dialogMessage.value,
+                                text = "Press start to scan",
                                 style = MaterialTheme.typography.headlineMedium,
-                                color = dialogMessageColor.value,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                        }else {
-                            if (!isScanning) {
-                                Text(
-                                    text = "Press start to scan",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }else{
-                                CircularProgressIndicator()
-                            }
+                        }else{
+                            CircularProgressIndicator()
                         }
+//                        if (showDialog.value){
+////                            Text(
+////                                text = dialogMessage.value,
+////                                style = MaterialTheme.typography.headlineMedium,
+////                                color = dialogMessageColor.value,
+////                                modifier = Modifier.fillMaxWidth(),
+////                                textAlign = TextAlign.Center
+////                            )
+//
+//                            CircularProgressIndicator()
+//                        }else {
+//                            if (!isScanning) {
+//                                Text(
+//                                    text = "Press start to scan",
+//                                    style = MaterialTheme.typography.headlineMedium,
+//                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                                )
+//                            }else{
+//                                CircularProgressIndicator()
+//                            }
+//                        }
                     }
                 }
             }
@@ -373,6 +424,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                             // 2. If the permission is granted, show the camera preview or button
                             cameraPermissionState.status.isGranted -> {
                                 isScanning = !isScanning
+                                showDialog.value = false
                             }
 
                             // 3. If the user has denied the permission, show a rationale
@@ -501,6 +553,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 //                ) {
 //                    Text("Stop Scan")
 //                }
+            }
             }
         }
 
