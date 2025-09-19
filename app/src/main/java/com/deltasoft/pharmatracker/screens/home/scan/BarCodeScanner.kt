@@ -82,6 +82,10 @@ private const val TAG = "BarCodeScanner"
 fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     val context = LocalContext.current
 
+    LaunchedEffect(Unit) {
+        scanViewModel.clearScanDocState()
+    }
+
     var isPermissionCheckedOnce by remember { mutableStateOf(false) }
     var buttonText by remember { mutableStateOf("Press start to scan") }
 
@@ -275,7 +279,9 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
             verticalArrangement = Arrangement.Center
         ) {
             Card(
-                modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {

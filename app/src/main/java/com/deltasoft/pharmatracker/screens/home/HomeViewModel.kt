@@ -3,7 +3,9 @@ package com.deltasoft.pharmatracker.screens.home
 import androidx.lifecycle.ViewModel
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.UUID
 
 class HomeViewModel : ViewModel() {
     private val _userRoles = MutableStateFlow<Set<UserType>>(emptySet())
@@ -28,5 +30,12 @@ class HomeViewModel : ViewModel() {
             "app-trip-driver" -> UserType.APP_TRIP_DRIVER
             else -> null
         }
+    }
+
+    private val _dispatchQueueClickEvent = MutableStateFlow(UUID.randomUUID())
+    val dispatchQueueClickEvent: StateFlow<UUID> = _dispatchQueueClickEvent.asStateFlow()
+
+    fun onDispatchQueueReloadButtonClick() {
+        _dispatchQueueClickEvent.value = UUID.randomUUID()
     }
 }
