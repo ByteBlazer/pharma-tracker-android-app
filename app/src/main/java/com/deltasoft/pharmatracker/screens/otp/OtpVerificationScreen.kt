@@ -1,6 +1,7 @@
 package com.deltasoft.pharmatracker.screens.otp
 
 
+import android.content.IntentFilter
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -10,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -18,12 +20,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.login.OTPTextField
 import com.deltasoft.pharmatracker.screens.login.OtpTextFieldDefaults
+import com.deltasoft.pharmatracker.utils.SmsBroadcastReceiver
+import com.google.android.gms.auth.api.phone.SmsRetriever
 import kotlinx.coroutines.delay
 
 
@@ -33,6 +38,9 @@ fun OtpVerificationScreen(
     phoneNumber: String,
     otpVerificationViewModel: OtpVerificationViewModel = viewModel()
 ) {
+
+    val context = LocalContext.current
+
     var otp by remember { mutableStateOf("") }
     val otpVerificationState by otpVerificationViewModel.otpVerificationState.collectAsState()
 
@@ -66,6 +74,43 @@ fun OtpVerificationScreen(
         append("Enter the OTP sent to  ")
         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
             append("+91-"+phoneNumber)
+        }
+    }
+
+    val smsBroadcastReceiver = remember { SmsBroadcastReceiver() }
+    // Start SMS Retriever and register/unregister the receiver
+    DisposableEffect(Unit) {
+        // Create an instance of the SMS Retriever client
+        val client = SmsRetriever.getClient(context)
+
+        // Start the SMS Retriever, which will listen for an incoming SMS
+        val task = client.startSmsRetriever()
+
+        task.addOnSuccessListener {
+            // SMS retriever started successfully.
+        }
+
+        task.addOnFailureListener {
+            // SMS retriever failed to start.
+        }
+
+        // Set the callback for the receiver to update the UI
+        smsBroadcastReceiver.onSmsReceived = { otpCode ->
+            otp = otpCode // Update the state with the received OTP
+        }
+
+        // Register the broadcast receiver
+        val intentFilter = IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION)
+        ContextCompat.registerReceiver(
+            context,
+            smsBroadcastReceiver,
+            intentFilter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
+        // Clean up: unregister the receiver when the composable is disposed
+        onDispose {
+            context.unregisterReceiver(smsBroadcastReceiver)
         }
     }
 
