@@ -1,5 +1,6 @@
 package com.deltasoft.pharmatracker.screens.home.route
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,26 +14,36 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.route.entity.RouteSummaryList
 import com.deltasoft.pharmatracker.screens.home.route.entity.UserSummaryList
@@ -43,6 +54,9 @@ fun DispatchQueueScreen(
     homeViewModel: HomeViewModel,
     dispatchQueueViewModel: DispatchQueueViewModel = viewModel()
 ) {
+
+    val context = LocalContext.current
+
     val apiState by dispatchQueueViewModel.dispatchQueueState.collectAsState()
 
 
@@ -57,27 +71,74 @@ fun DispatchQueueScreen(
         dispatchQueueViewModel.getDispatchQueueList()
     }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
-        when (apiState) {
-            is DispatchQueueState.Idle -> {
-                CircularProgressIndicator()
-            }
-            is DispatchQueueState.Loading -> {
-                CircularProgressIndicator()
-            }
-            is DispatchQueueState.Success -> {
-                val dispatchQueueResponse = (apiState as DispatchQueueState.Success).dispatchQueueResponse
-                dispatchQueueViewModel.updateDispatchQueueList(dispatchQueueResponse?.dispatchQueueList?.routeSummaryList?: arrayListOf())
-                DispatchQueueListCompose(dispatchQueueViewModel,dispatchQueueResponse?.message)
-            }
-            is DispatchQueueState.Error -> {
-                val message = (apiState as DispatchQueueState.Error).message
-                Text(text = message)
+    val dispatchQueueList by dispatchQueueViewModel.dispatchQueueList.collectAsState()
+
+    // Use a derived state to calculate if any item is selected
+    val anyItemSelected by remember {
+        derivedStateOf {
+            dispatchQueueList.any { routeSummary ->
+                routeSummary.userSummaryList.any { userSummary ->
+                    userSummary.isChecked.value
+                }
             }
         }
     }
+
+    Scaffold(
+        floatingActionButton = {
+            if (anyItemSelected) {
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        if (dispatchQueueViewModel.getSelectedRouteCount() > 1) {
+                            Toast.makeText(context,"You can not mix routes. Please select from only a single route.",Toast.LENGTH_LONG).show()
+                        } else {
+
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add"
+                        )
+                    },
+                    text = {
+                        Text(text = "Schedule Trip")
+                    }
+                )
+            }
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Box(modifier = Modifier
+                .fillMaxSize(), contentAlignment = Alignment.Center) {
+                when (apiState) {
+                    is DispatchQueueState.Idle -> {
+                        CircularProgressIndicator()
+                    }
+                    is DispatchQueueState.Loading -> {
+                        CircularProgressIndicator()
+                    }
+                    is DispatchQueueState.Success -> {
+                        val dispatchQueueResponse = (apiState as DispatchQueueState.Success).dispatchQueueResponse
+                        dispatchQueueViewModel.updateDispatchQueueList(dispatchQueueResponse?.dispatchQueueList?.routeSummaryList?: arrayListOf())
+                        DispatchQueueListCompose(dispatchQueueViewModel,dispatchQueueResponse?.message)
+                    }
+                    is DispatchQueueState.Error -> {
+                        val message = (apiState as DispatchQueueState.Error).message
+                        Text(text = message)
+                    }
+                }
+            }
+        }
+    }
+
 //    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 //        Text("Route queue", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant )
 //    }
@@ -93,11 +154,14 @@ fun DispatchQueueListCompose(dispatchQueueViewModel: DispatchQueueViewModel, mes
 
     val pullRefreshState = rememberPullRefreshState(isRefreshing, { dispatchQueueViewModel.getDispatchQueueList() })
 
-    Box(Modifier.fillMaxSize()
+    Box(Modifier
+        .fillMaxSize()
         .pullRefresh(pullRefreshState), contentAlignment = Alignment.TopCenter) {
         if (routeSummaryLists.isEmpty()){
             val noDataMessage = message?:"No data found"
-            Column(Modifier.fillMaxSize().padding(16.dp)
+            Column(Modifier
+                .fillMaxSize()
+                .padding(16.dp)
                 .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(noDataMessage, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant , textAlign = TextAlign.Center)
             }
