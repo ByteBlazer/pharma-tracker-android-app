@@ -78,9 +78,9 @@ fun DispatchQueueScreen(
             }
         }
     }
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Route queue", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant )
-    }
+//    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+//        Text("Route queue", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant )
+//    }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
