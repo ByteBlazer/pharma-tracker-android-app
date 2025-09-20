@@ -56,6 +56,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.BorderSide
+import com.deltasoft.pharmatracker.screens.drawOneSideBorder
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.AppVibratorManager
@@ -289,21 +291,33 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
             Column {
                 if (showDialog.value) {
                     Card(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(0.dp),
                         border = BorderStroke(1.dp, dialogMessageColor.value),
                         shape = CardDefaults.outlinedShape,
                         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                     ) {
-                        Row (Modifier.fillMaxWidth().padding(16.dp),horizontalArrangement = Arrangement.SpaceBetween){
-                            Text(dialogMessage.value, modifier = Modifier.weight(1f))
-                            Spacer(Modifier.width(4.dp))
-                            IconButton(onClick = {
-                                showDialog.value = false
-                            }, modifier = Modifier) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_close),
-                                    contentDescription = "close"
-                                )
+                        Card(
+                            modifier = Modifier.drawOneSideBorder(
+                                16.dp,
+                                side = BorderSide.LEFT,
+                                color = dialogMessageColor.value
+                            ).padding(16.dp),
+                            shape = CardDefaults.outlinedShape,
+                        ) {
+                            Row(
+                                Modifier.fillMaxWidth().padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(dialogMessage.value, modifier = Modifier.weight(1f))
+                                Spacer(Modifier.width(4.dp))
+                                IconButton(onClick = {
+                                    showDialog.value = false
+                                }, modifier = Modifier) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_close),
+                                        contentDescription = "close"
+                                    )
+                                }
                             }
                         }
                     }

@@ -7,8 +7,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.lerp
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
@@ -36,4 +47,52 @@ fun App_CommonTopBar(title : String="", onBackClick: () -> Unit ={},backButtonVi
             }
         }
     )
+}
+
+fun Modifier.drawOneSideBorder(
+    width: Dp,
+    color: Color,
+    side: BorderSide,
+    shape: Shape = RectangleShape
+) = this
+    .clip(shape)
+    .drawWithContent {
+        val widthPx = width.toPx()
+        drawContent()
+
+        val start = when (side) {
+            BorderSide.LEFT -> Offset(widthPx / 2, 0f)
+            BorderSide.RIGHT -> Offset(size.width - widthPx / 2, 0f)
+        }
+        val end = when (side) {
+            BorderSide.LEFT -> Offset(widthPx / 2, size.height)
+            BorderSide.RIGHT -> Offset(size.width - widthPx / 2, size.height)
+        }
+
+        drawLine(
+            color = color,
+            start = start,
+            end = end,
+            strokeWidth = widthPx
+        )
+    }
+
+
+val Int.nonScaledSp
+    @Composable
+    get() = (this / LocalDensity.current.fontScale).sp
+
+
+fun Color.blendWith(other: Color, ratio: Float): Color {
+    return Color(
+        red = lerp(this.red, other.red, ratio),
+        green = lerp(this.green, other.green, ratio),
+        blue = lerp(this.blue, other.blue, ratio),
+        alpha = this.alpha
+    )
+}
+
+
+enum class BorderSide {
+    LEFT, RIGHT
 }
