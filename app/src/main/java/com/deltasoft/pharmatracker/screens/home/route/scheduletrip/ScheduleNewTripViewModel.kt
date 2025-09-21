@@ -2,6 +2,7 @@ package com.deltasoft.pharmatracker.screens.home.route.scheduletrip
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.Driver
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.DriverListResponse
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.ScheduleNewTripResponse
 import com.deltasoft.pharmatracker.utils.AppUtils
@@ -12,19 +13,20 @@ import kotlinx.coroutines.flow.asStateFlow
 
 private const val TAG = "ScanViewModel"
 class ScheduleNewTripViewModel(application: Application) : AndroidViewModel(application) {
-    init {
-
-    }
     private val repository = ScheduleNewTripRepository(this)
     var token = ""
+
+    private val _driverListState = MutableStateFlow<DriverListState>(DriverListState.Idle)
+    val driverListState = _driverListState.asStateFlow()
+
     init {
         val appContext = getApplication<Application>().applicationContext
         val sharedPrefsUtil = SharedPreferencesUtil(appContext)
         token = AppUtils.createBearerToken(sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN)?:"")
+
+        getDriverList()
     }
 
-    private val _driverListState = MutableStateFlow<DriverListState>(DriverListState.Idle)
-    val driverListState = _driverListState.asStateFlow()
 
     fun getDriverList() {
         _driverListState.value = DriverListState.Loading
@@ -88,5 +90,17 @@ class ScheduleNewTripViewModel(application: Application) : AndroidViewModel(appl
 
     fun clearScheduleNewTripState() {
         _scheduleNewTripState.value = ScheduleNewTripState.Idle
+    }
+
+    private val _driverList = MutableStateFlow<ArrayList<Driver>>(arrayListOf())
+    val driverList = _driverList.asStateFlow()
+
+    fun updateDriverList(drivers: ArrayList<Driver>) {
+        _driverList.value = drivers
+    }
+    private val _selectedDriver = MutableStateFlow<String>("")
+    val selectedDriver = _selectedDriver.asStateFlow()
+    fun updateSelectedDriver(driverId: String, clear: Boolean) {
+        _selectedDriver.value = if (clear ) "" else driverId
     }
 }
