@@ -120,7 +120,9 @@ fun DriverListCompose(scheduleNewTripViewModel: ScheduleNewTripViewModel, messag
     val dispatchQueueState by scheduleNewTripViewModel.driverListState.collectAsState()
     val isRefreshing = dispatchQueueState.let { it is DriverListState.Loading }
 
-    val pullRefreshState = rememberPullRefreshState(isRefreshing, { scheduleNewTripViewModel.getDriverList() })
+    val pullRefreshState = rememberPullRefreshState(isRefreshing, {
+//        scheduleNewTripViewModel.getDriverList()
+    })
 
     Box(Modifier
         .fillMaxSize()
