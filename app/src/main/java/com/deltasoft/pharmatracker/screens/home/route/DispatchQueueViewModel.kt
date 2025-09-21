@@ -4,13 +4,15 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.deltasoft.pharmatracker.screens.home.route.entity.DispatchQueueResponse
 import com.deltasoft.pharmatracker.screens.home.route.entity.RouteSummaryList
+import com.deltasoft.pharmatracker.screens.home.route.entity.UserDetails
+import com.deltasoft.pharmatracker.screens.home.route.entity.UserDetailsList
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
-import java.util.ArrayList
+import kotlin.collections.ArrayList
 
 class DispatchQueueViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = DispatchQueueRepository(this)
@@ -74,6 +76,30 @@ class DispatchQueueViewModel(application: Application) : AndroidViewModel(applic
 
         // Return the count of the filtered list
         return categoriesWithSelection.size
+    }
+    fun getSelectedRoute(): String {
+        val categoriesWithSelection = _dispatchQueueList.value.filter { item ->
+            item.userSummaryList.any { item ->
+                item.isChecked.value
+            }
+        }
+        return categoriesWithSelection?.first()?.route?:""
+    }
+
+    fun getSelectedUsersDetsils(): String {
+        val categoriesWithSelection = _dispatchQueueList.value.filter { item ->
+            item.userSummaryList.any { item ->
+                item.isChecked.value
+            }
+        }
+        val allSelectedUsers = categoriesWithSelection.flatMap { it.userSummaryList }.filter { it.isChecked.value }
+        val allUsers = allSelectedUsers.map { UserDetails(
+            scannedByUserId = it.scannedByUserId,
+            scannedByName = it.scannedByName,
+            scannedFromLocation = it.scannedFromLocation,
+            count = it.count) }
+        val userDetailsList = UserDetailsList(allUsers as ArrayList<UserDetails>)
+        return Gson().toJson(userDetailsList)
     }
 }
 

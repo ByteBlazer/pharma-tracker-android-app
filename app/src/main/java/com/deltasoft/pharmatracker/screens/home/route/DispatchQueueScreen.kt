@@ -1,7 +1,6 @@
 package com.deltasoft.pharmatracker.screens.home.route
 
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,7 +22,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -43,7 +41,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.deltasoft.pharmatracker.screens.App_CommonTopBar
+import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.route.entity.RouteSummaryList
 import com.deltasoft.pharmatracker.screens.home.route.entity.UserSummaryList
@@ -51,6 +50,7 @@ import java.util.ArrayList
 
 @Composable
 fun DispatchQueueScreen(
+    navController: NavHostController,
     homeViewModel: HomeViewModel,
     dispatchQueueViewModel: DispatchQueueViewModel = viewModel()
 ) {
@@ -92,7 +92,14 @@ fun DispatchQueueScreen(
                         if (dispatchQueueViewModel.getSelectedRouteCount() > 1) {
                             Toast.makeText(context,"You can not mix routes. Please select from only a single route.",Toast.LENGTH_LONG).show()
                         } else {
-
+                            val route = dispatchQueueViewModel.getSelectedRoute()
+                            val userListJson = dispatchQueueViewModel.getSelectedUsersDetsils()
+                            navController.navigate(
+                                Screen.ScheduleNewTrip.createRoute(
+                                    route = route,
+                                    userList = userListJson
+                                )
+                            )
                         }
                     },
                     icon = {
