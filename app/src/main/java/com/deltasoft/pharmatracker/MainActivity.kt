@@ -33,6 +33,23 @@ class MainActivity : ComponentActivity() {
         MyApp.logToDataDog("MainActivity has started")
         MyApp.logToDataDog("The API Base URL is: " + BuildConfig.BASE_API_URL)
 
+//        val list = AppSignatureHashHelper(applicationContext).appSignatures
+//
+//        Log.d("TAG", "AppSignatureHelper "+list)
+//
+//        val appSignatureHelper = AppSignatureHelper(this)
+//        val appCodes = appSignatureHelper.getAppSignatures()
+//        Log.d("AppHash", "AppSignatureHelper New: $appCodes")
+//
+//        // Use the AppSignatureHelper to get the hash
+//        val appSignatures = AppSignatureHelper(this).getAppSignatures()
+//
+//        // Log the hash to your console
+//        if (appSignatures.isNotEmpty()) {
+//            val hash = appSignatures[0]
+//            Log.d("AppSignature", "AppSignatureHelper SMS Retriever Hash: ${hash.uppercase(Locale.getDefault())}")
+//        }
+
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 // Here's your logic to minimize the app

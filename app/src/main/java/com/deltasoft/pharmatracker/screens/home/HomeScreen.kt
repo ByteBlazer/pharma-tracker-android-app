@@ -140,7 +140,7 @@ fun HomeScreen(
             ) { page ->
                 when (bottomNavItems[page].route) {
                     "scan" -> BarCodeScanner()
-                    "route_queue" -> DispatchQueueScreen(homeViewModel = homeViewModel)
+                    "route_queue" -> DispatchQueueScreen(navController = navController, homeViewModel = homeViewModel)
                     "scheduled_trips" -> ScheduledTripsScreen()
                     "drive" -> LocationScreen()
                 }

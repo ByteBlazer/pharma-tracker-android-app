@@ -130,5 +130,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
     implementation(libs.play.services.location)
+
+    implementation("com.google.android.gms:play-services-auth-api-phone:18.0.1")
 }
 
