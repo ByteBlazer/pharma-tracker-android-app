@@ -125,12 +125,9 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 dialogMessageColor.value = getColorFromCode(code)
                 showDialog.value = true
                 AppVibratorManager.vibrate(context)
-                AppUtils.playBeep(100)
+                AppUtils.playMediaSound(context,R.raw.positive_beep_1)
 
                 delay(2000L)
-                // Hide the dialog after the delay
-//                showDialog.value = false
-                delay(500L)
                 scannedValue = ""
                 lastApiCalledValue = ""
             }
@@ -143,13 +140,9 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 dialogMessageColor.value = getColorFromCode(code)
                 showDialog.value = true
                 AppVibratorManager.vibrate(context,500L)
-                AppVibratorManager.vibrate(context)
-                AppUtils.playBeep(500)
+                AppUtils.playMediaSound(context,R.raw.negative_beep)
 
                 delay(3000L)
-                // Hide the dialog after the delay
-//                showDialog.value = false
-                delay(500L)
                 scannedValue = ""
                 lastApiCalledValue = ""
             }
@@ -305,11 +298,11 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                             shape = CardDefaults.outlinedShape,
                         ) {
                             Row(
-                                Modifier.fillMaxWidth().padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                Modifier.fillMaxWidth().padding(start = 16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(dialogMessage.value, modifier = Modifier.weight(1f))
-                                Spacer(Modifier.width(4.dp))
                                 IconButton(onClick = {
                                     showDialog.value = false
                                 }, modifier = Modifier) {

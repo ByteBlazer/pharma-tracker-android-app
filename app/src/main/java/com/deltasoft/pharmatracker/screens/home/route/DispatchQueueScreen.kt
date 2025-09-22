@@ -86,11 +86,11 @@ fun DispatchQueueScreen(
 
     Scaffold(
         floatingActionButton = {
-            if (anyItemSelected) {
                 ExtendedFloatingActionButton(
                     onClick = {
+                        if (anyItemSelected) {
                         if (dispatchQueueViewModel.getSelectedRouteCount() > 1) {
-                            Toast.makeText(context,"You can not mix routes. Please select from only a single route.",Toast.LENGTH_LONG).show()
+                            Toast.makeText(context,"You cannot mix routes. Please select from only a single route.",Toast.LENGTH_LONG).show()
                         } else {
                             val route = dispatchQueueViewModel.getSelectedRoute()
                             val userListJson = dispatchQueueViewModel.getSelectedUsersDetsils()
@@ -100,6 +100,8 @@ fun DispatchQueueScreen(
                                     userList = userListJson
                                 )
                             )
+                        }}else{
+                            Toast.makeText(context,"Please select a route",Toast.LENGTH_LONG).show()
                         }
                     },
                     icon = {
@@ -112,7 +114,6 @@ fun DispatchQueueScreen(
                         Text(text = "Schedule Trip")
                     }
                 )
-            }
         }
     ) { paddingValues ->
         Column(
