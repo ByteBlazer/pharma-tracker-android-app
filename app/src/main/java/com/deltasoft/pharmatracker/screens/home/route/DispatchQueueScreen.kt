@@ -90,7 +90,7 @@ fun DispatchQueueScreen(
                     onClick = {
                         if (anyItemSelected) {
                         if (dispatchQueueViewModel.getSelectedRouteCount() > 1) {
-                            Toast.makeText(context,"You cannot mix routes. Please select from only a single route.",Toast.LENGTH_LONG).show()
+                            Toast.makeText(context,"You cannot mix routes. Please select from only a single route.",Toast.LENGTH_SHORT).show()
                         } else {
                             val route = dispatchQueueViewModel.getSelectedRoute()
                             val userListJson = dispatchQueueViewModel.getSelectedUsersDetsils()
@@ -101,7 +101,7 @@ fun DispatchQueueScreen(
                                 )
                             )
                         }}else{
-                            Toast.makeText(context,"Please select a route",Toast.LENGTH_LONG).show()
+                            Toast.makeText(context,"Please select a route",Toast.LENGTH_SHORT).show()
                         }
                     },
                     icon = {
