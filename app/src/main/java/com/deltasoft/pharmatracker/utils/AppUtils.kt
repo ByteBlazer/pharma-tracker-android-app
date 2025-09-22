@@ -1,6 +1,9 @@
 package com.deltasoft.pharmatracker.utils
 
+import android.content.Context
+import android.media.AudioAttributes
 import android.media.AudioManager
+import android.media.MediaPlayer
 import android.media.ToneGenerator
 import android.os.Handler
 import android.os.Looper
@@ -22,6 +25,8 @@ object AppUtils {
                 Log.d(TAG,"ID: ${decodedPayload.id}")
                 Log.d(TAG,"Username: ${decodedPayload.username}")
                 Log.d(TAG,"Mobile: ${decodedPayload.mobile}")
+                Log.d(TAG,"iat: ${decodedPayload.iat}")
+                Log.d(TAG,"exp: ${decodedPayload.exp}")
 
                 // Convert the Unix timestamps to a readable Date format
                 val issuedAtDate = Date(decodedPayload.iat * 1000)
@@ -77,5 +82,46 @@ object AppUtils {
         Handler(Looper.getMainLooper()).postDelayed({
             toneGen.release()
         }, (duration + 50).toLong())
+    }
+
+    fun playMediaSound(context: Context, resId: Int) {
+        // A MediaPlayer is used to control playback of audio files.
+        // It's a good practice to declare it as nullable to handle cleanup.
+        var mediaPlayer: MediaPlayer? = null
+
+        try {
+            // Create a new MediaPlayer instance from the raw resource.
+            mediaPlayer = MediaPlayer.create(context, resId)
+
+            // The critical step: setting the audio attributes.
+            // For modern Android APIs (21+), we use AudioAttributes to specify the stream type.
+            // Using `CONTENT_TYPE_MUSIC` and `USAGE_MEDIA` links this audio to the
+            // device's media volume control.
+            val audioAttributes = AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .build()
+
+            mediaPlayer?.setAudioAttributes(audioAttributes)
+
+            // For older Android APIs (before 21), you would use this deprecated method:
+            // mediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
+
+            // Start playing the sound.
+            mediaPlayer?.start()
+
+            // It is important to release the MediaPlayer resources when the sound has
+            // finished playing to prevent memory leaks. We can use a listener for this.
+            mediaPlayer?.setOnCompletionListener { mp ->
+                mp.release()
+                mediaPlayer = null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // In a real application, you would handle this error more gracefully,
+            // for example, by showing a Toast message to the user.
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
     }
 }
