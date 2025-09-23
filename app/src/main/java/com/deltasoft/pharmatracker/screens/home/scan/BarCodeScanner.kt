@@ -302,7 +302,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(dialogMessage.value, modifier = Modifier.weight(1f))
+                                Text(dialogMessage.value, modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelMedium)
                                 IconButton(onClick = {
                                     showDialog.value = false
                                 }, modifier = Modifier) {
