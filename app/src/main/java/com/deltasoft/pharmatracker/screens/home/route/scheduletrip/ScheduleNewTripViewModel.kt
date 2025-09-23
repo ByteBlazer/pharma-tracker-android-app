@@ -93,7 +93,7 @@ class ScheduleNewTripViewModel(application: Application) : AndroidViewModel(appl
 
     fun updateScheduleNewTripState(code: Int, errorMessage: String,scheduleNewTripResponse: ScheduleNewTripResponse? = null){
         when(code){
-            200->{
+            201->{
                 _scheduleNewTripState.value = ScheduleNewTripState.Success(scheduleNewTripResponse?:ScheduleNewTripResponse())
             }
             400->{

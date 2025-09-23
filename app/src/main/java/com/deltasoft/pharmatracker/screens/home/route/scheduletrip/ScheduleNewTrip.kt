@@ -1,5 +1,7 @@
 package com.deltasoft.pharmatracker.screens.home.route.scheduletrip
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,9 +54,16 @@ import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.screens.home.route.entity.UserDetailsList
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.Driver
+import com.deltasoft.pharmatracker.screens.home.scan.ScanDocState
+import com.deltasoft.pharmatracker.screens.home.scan.getColorFromCode
+import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
+import com.deltasoft.pharmatracker.utils.AppVibratorManager
 import com.google.gson.Gson
+import kotlinx.coroutines.delay
 
+
+private const val TAG = "ScheduleNewTrip"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleNewTrip(
@@ -83,6 +92,29 @@ fun ScheduleNewTrip(
         driverId = selectedDriver?.userId?:""
     }
 
+
+    LaunchedEffect(scheduleNewTripState) {
+        when (scheduleNewTripState) {
+            is ScheduleNewTripState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is ScheduleNewTripState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is ScheduleNewTripState.Success -> {
+                val message = (scheduleNewTripState as ScheduleNewTripState.Success).scheduleNewTripResponse.message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "State: Success - Message: $message")
+                navController.popBackStack()
+            }
+            is ScheduleNewTripState.Error -> {
+                val message = (scheduleNewTripState as ScheduleNewTripState.Error).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "State: Error - Message: $message")
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -104,7 +136,9 @@ fun ScheduleNewTrip(
                         modifier = Modifier,
                         shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                     ) {
-                        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp)) {
+                        Column(Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 12.dp)) {
                             OutlinedTextField(
                                 value = vehicleNumber,
                                 onValueChange = { newText ->

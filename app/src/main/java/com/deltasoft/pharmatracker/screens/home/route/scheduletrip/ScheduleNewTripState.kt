@@ -5,6 +5,6 @@ import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.Schedu
 sealed class ScheduleNewTripState {
     object Idle : ScheduleNewTripState()
     object Loading : ScheduleNewTripState()
-    data class Success(val driverListResponse: ScheduleNewTripResponse) : ScheduleNewTripState()
+    data class Success(val scheduleNewTripResponse: ScheduleNewTripResponse) : ScheduleNewTripState()
     data class Error(val message: String) : ScheduleNewTripState()
 }
