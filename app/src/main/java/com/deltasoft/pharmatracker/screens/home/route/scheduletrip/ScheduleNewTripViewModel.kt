@@ -74,18 +74,23 @@ class ScheduleNewTripViewModel(application: Application) : AndroidViewModel(appl
     ) {
         _scheduleNewTripState.value = ScheduleNewTripState.Loading
         try {
-            if (vehicleNumber.isNotNullOrEmpty()){
-                val scheduleNewTripRequest = ScheduleNewTripRequest(
-                    route = route,
-                    userIds = userIds.toMutableList() as ArrayList<String>,
-                    driverId = driverId,
-                    vehicleNbr = vehicleNumber
-                )
-                repository.scheduleNewTrip(token = token,scheduleNewTripRequest)
-            }else{
-//                Toast.makeText(context,"Please enter vehicle number",Toast.LENGTH_SHORT).show()
-                _scheduleNewTripState.value = ScheduleNewTripState.Error("Please enter vehicle number")
+            if (driverId.isNullOrEmpty()) {
+                _scheduleNewTripState.value =
+                    ScheduleNewTripState.Error("Please select a driver")
+                return
             }
+            if (vehicleNumber.isNullOrEmpty()) {
+                _scheduleNewTripState.value =
+                    ScheduleNewTripState.Error("Please enter vehicle number")
+                return
+            }
+            val scheduleNewTripRequest = ScheduleNewTripRequest(
+                route = route,
+                userIds = userIds.toMutableList() as ArrayList<String>,
+                driverId = driverId,
+                vehicleNbr = vehicleNumber
+            )
+            repository.scheduleNewTrip(token = token, scheduleNewTripRequest)
         } catch (e: Exception) {
             _scheduleNewTripState.value = ScheduleNewTripState.Error("Login failed: ${e.message}")
         }

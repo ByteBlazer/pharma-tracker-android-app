@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.home.route.entity.UserDetailsList
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.Driver
 import com.deltasoft.pharmatracker.screens.home.scan.ScanDocState
@@ -112,6 +113,7 @@ fun ScheduleNewTrip(
                 val message = (scheduleNewTripState as ScheduleNewTripState.Error).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "State: Error - Message: $message")
+                scheduleNewTripViewModel.clearScheduleNewTripState()
             }
         }
     }
@@ -119,15 +121,16 @@ fun ScheduleNewTrip(
     Scaffold(
         modifier = Modifier.imePadding(),
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = route?:"",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            )
+            App_CommonTopBar(title = route?:"", onBackClick = {  navController.popBackStack() })
+//            CenterAlignedTopAppBar(
+//                title = {
+//                    Text(
+//                        text = route?:"",
+//                        maxLines = 1,
+//                        overflow = TextOverflow.Ellipsis
+//                    )
+//                }
+//            )
         },
         bottomBar = {
 //            if (selectedDriverId.isNotNullOrEmpty()) {
@@ -272,22 +275,24 @@ fun DriverListItem(
                 Text(
                     driver.driverName ?: "",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = if (driver.sameLocation == true)FontWeight.Bold else FontWeight.Normal
                 )
             },
             modifier = Modifier,
             overlineContent = {
-                Text(driver.baseLocationName ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(driver.baseLocationName ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (driver.sameLocation == true)FontWeight.Bold else FontWeight.Normal)
             },
             supportingContent = {
                 Text(
                     (driver.vehicleNumber) ?: "",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (driver.sameLocation == true)FontWeight.Bold else FontWeight.Normal
                 )
             },
-            leadingContent = {
-
-            },
+//            leadingContent = {
+//
+//            },
             trailingContent = {
                 Checkbox(
                     checked = selected,
