@@ -1,11 +1,14 @@
 package com.deltasoft.pharmatracker.screens.home.route.scheduletrip
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.Driver
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.DriverListResponse
+import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.ScheduleNewTripRequest
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.ScheduleNewTripResponse
 import com.deltasoft.pharmatracker.utils.AppUtils
+import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,10 +65,27 @@ class ScheduleNewTripViewModel(application: Application) : AndroidViewModel(appl
     private val _scheduleNewTripState = MutableStateFlow<ScheduleNewTripState>(ScheduleNewTripState.Idle)
     val scheduleNewTripState = _scheduleNewTripState.asStateFlow()
 
-    fun scheduleNewTrip() {
+    fun scheduleNewTrip(
+        route: String,
+        userIds: Array<String>,
+        vehicleNumber: String,
+        driverId: String,
+        context: Context
+    ) {
         _scheduleNewTripState.value = ScheduleNewTripState.Loading
         try {
-            repository.scheduleNewTrip(token = token)
+            if (vehicleNumber.isNotNullOrEmpty()){
+                val scheduleNewTripRequest = ScheduleNewTripRequest(
+                    route = route,
+                    userIds = userIds.toMutableList() as ArrayList<String>,
+                    driverId = driverId,
+                    vehicleNbr = vehicleNumber
+                )
+                repository.scheduleNewTrip(token = token,scheduleNewTripRequest)
+            }else{
+//                Toast.makeText(context,"Please enter vehicle number",Toast.LENGTH_SHORT).show()
+                _scheduleNewTripState.value = ScheduleNewTripState.Error("Please enter vehicle number")
+            }
         } catch (e: Exception) {
             _scheduleNewTripState.value = ScheduleNewTripState.Error("Login failed: ${e.message}")
         }

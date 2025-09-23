@@ -40,11 +40,10 @@ class ScheduleNewTripRepository(var viewModel: ScheduleNewTripViewModel) {
         }
     }
 
-    fun scheduleNewTrip(token: String) {
+    fun scheduleNewTrip(token: String, scheduleNewTripRequest: ScheduleNewTripRequest) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.scheduleNewTrip(token, ScheduleNewTripRequest("",
-                    arrayListOf(), "",""))
+                val response = RetrofitClient.apiService.scheduleNewTrip(token, scheduleNewTripRequest)
                 if (response.isSuccessful) {
                     viewModel.updateScheduleNewTripState(response.code(), response.message(),response?.body())
                 } else {

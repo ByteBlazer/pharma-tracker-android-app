@@ -9,4 +9,8 @@
     <string name="login_text_field_placeholder">Mobile number</string>
     <string name="login_button_text">GET OTP</string>
 
+
+    <!--Schedule New trip-->
+    <string name="schedule_new_trip_text_field_placeholder">Vehicle Number</string>
+    <string name="schedule_new_trip_text_field_placeholder2">Enter Vehicle Number</string>
 </resources>

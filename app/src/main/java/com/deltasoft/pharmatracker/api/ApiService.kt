@@ -45,7 +45,7 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<DriverListResponse>
 
-    @POST("doc/scan-and-add/{barcode}")
+    @POST("/trip")
     suspend fun scheduleNewTrip(
         @Header("Authorization") token: String,
         @Body scheduleNewTripRequest: ScheduleNewTripRequest,
