@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.activity_main)
 
 
-        enableEdgeToEdge()
+//        enableEdgeToEdge()
         setContent {
             PharmaTrackerAppTheme {
                 Surface(
