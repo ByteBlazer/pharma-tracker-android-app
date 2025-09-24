@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,6 +31,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -121,7 +123,7 @@ fun ScheduleNewTrip(
     Scaffold(
         modifier = Modifier.imePadding(),
         topBar = {
-            App_CommonTopBar(title = route?:"", onBackClick = {  navController.popBackStack() })
+            App_CommonTopBar(title = (route?:"")+" : New Trip", onBackClick = {  navController.popBackStack() })
 //            CenterAlignedTopAppBar(
 //                title = {
 //                    Text(
@@ -143,7 +145,7 @@ fun ScheduleNewTrip(
                     ) {
                         Column(Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 12.dp)) {
+                            .padding(horizontal = 16.dp, vertical = 16.dp)) {
                             OutlinedTextField(
                                 value = vehicleNumber,
                                 onValueChange = { newText ->
@@ -241,11 +243,15 @@ fun DriverListCompose(scheduleNewTripViewModel: ScheduleNewTripViewModel, messag
                 Text(noDataMessage, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant , textAlign = TextAlign.Center)
             }
         }else{
-            LazyColumn {
-                items(driverList.size) { index ->
-                    if (index in driverList.indices) {
-                        val driver = driverList[index]
-                        DriverListItem(driver,scheduleNewTripViewModel,selectedDriverId.equals(driver.userId))
+            Column {
+                Text("Select a driver for this trip", color = MaterialTheme.colorScheme.onSurfaceVariant )
+                Spacer(Modifier.height(16.dp))
+                LazyColumn {
+                    items(driverList.size) { index ->
+                        if (index in driverList.indices) {
+                            val driver = driverList[index]
+                            DriverListItem(driver,scheduleNewTripViewModel,selectedDriverId.equals(driver.userId))
+                        }
                     }
                 }
             }
@@ -294,15 +300,24 @@ fun DriverListItem(
 //
 //            },
             trailingContent = {
-                Checkbox(
-                    checked = selected,
-                    onCheckedChange = {
+                RadioButton(
+                    selected = selected,
+                    onClick = {
                         scheduleNewTripViewModel.updateSelectedDriver(
                             driver.userId ?: "",
                             clear = selected
                         )
-                    }
+                    },
                 )
+//                Checkbox(
+//                    checked = selected,
+//                    onCheckedChange = {
+//                        scheduleNewTripViewModel.updateSelectedDriver(
+//                            driver.userId ?: "",
+//                            clear = selected
+//                        )
+//                    }
+//                )
             },
             colors = ListItemDefaults.colors(
                 containerColor = Color.Transparent
