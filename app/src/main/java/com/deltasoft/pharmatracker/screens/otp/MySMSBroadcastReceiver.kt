@@ -1,4 +1,4 @@
-package com.deltasoft.pharmatracker.utils
+package com.deltasoft.pharmatracker.screens.otp
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -8,28 +8,33 @@ import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.common.api.Status
 import java.util.regex.Pattern
 
-class SmsBroadcastReceiver : BroadcastReceiver() {
+class MySMSBroadcastReceiver : BroadcastReceiver() {
 
-    var onSmsReceived: ((String) -> Unit)? = null
+    private var listener: Listener? = null
+
+    fun initListener(listener: Listener) {
+        this.listener = listener
+    }
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (SmsRetriever.SMS_RETRIEVED_ACTION == intent?.action) {
+        if(intent?.action==SmsRetriever.SMS_RETRIEVED_ACTION){
             val extras = intent.extras
-            val status = extras?.get(SmsRetriever.EXTRA_STATUS) as? Status
+            val smsRetrieverStatus = extras?.get(SmsRetriever.EXTRA_STATUS) as Status
+            when(smsRetrieverStatus.statusCode){
+                CommonStatusCodes.SUCCESS->{
+//                    val sms = extras.getString(SmsRetriever.EXTRA_SMS_MESSAGE)
+//                    val otp = parseOtp(sms)
+//                    listener?.onOtpReceived(otp)
 
-            when (status?.statusCode) {
-                CommonStatusCodes.SUCCESS -> {
                     val message = extras.getString(SmsRetriever.EXTRA_SMS_MESSAGE)
                     message?.let {
                         val otp = extractOtpFromMessage(it)
                         otp?.let { receivedOtp ->
-                            onSmsReceived?.invoke(receivedOtp)
+                            listener?.onOtpReceived(otp)
                         }
                     }
                 }
-                CommonStatusCodes.TIMEOUT -> {
-                    // OTP not received within 5 minutes. Handle this case (e.g., show a manual entry button).
-                }
+                else -> {}
             }
         }
     }
@@ -44,5 +49,13 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
         } else {
             null
         }
+    }
+
+    private fun parseOtp(sms: String?): String? {
+        return sms?.substring(0,6)
+    }
+
+    interface Listener {
+        fun onOtpReceived(value: String?)
     }
 }

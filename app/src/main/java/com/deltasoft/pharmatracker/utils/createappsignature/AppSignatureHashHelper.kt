@@ -1,6 +1,5 @@
 package com.deltasoft.pharmatracker.utils.createappsignature
 
-
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.PackageManager
@@ -13,7 +12,7 @@ import java.util.*
 
 class AppSignatureHashHelper(context: Context?) :
     ContextWrapper(context) {// Get all package details
-
+ 
     val appSignatures: ArrayList<String>
         get() {
             val appSignaturesHashs = ArrayList<String>()
