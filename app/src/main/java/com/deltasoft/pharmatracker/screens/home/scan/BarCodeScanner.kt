@@ -83,6 +83,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 
 
     var isPermissionCheckedOnce by remember { mutableStateOf(false) }
+    var isCameraPermissionClicked by remember { mutableStateOf(false) }
     var buttonText by remember { mutableStateOf("Press start to scan") }
 
 
@@ -182,6 +183,18 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     val cameraPermissionState = rememberPermissionState(
         Manifest.permission.CAMERA
     )
+
+    // NEW LaunchedEffect to react to permission status changes
+    LaunchedEffect(cameraPermissionState.status) {
+        if (cameraPermissionState.status.isGranted && isCameraPermissionClicked) {
+            Log.d(TAG, "Camera permission GRANTED.")
+            isScanning = true
+            showDialog.value = false
+            isCameraPermissionClicked = false
+        } else {
+            Log.d(TAG, "Camera permission DENIED or not yet requested.")
+        }
+    }
 
     // Check the permission status
     val allPermissionsGranted = cameraPermissionState.status.isGranted
@@ -290,15 +303,19 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                     ) {
                         Card(
-                            modifier = Modifier.drawOneSideBorder(
-                                16.dp,
-                                side = BorderSide.LEFT,
-                                color = dialogMessageColor.value
-                            ).padding(16.dp),
+                            modifier = Modifier
+                                .drawOneSideBorder(
+                                    16.dp,
+                                    side = BorderSide.LEFT,
+                                    color = dialogMessageColor.value
+                                )
+                                .padding(16.dp),
                             shape = CardDefaults.outlinedShape,
                         ) {
                             Row(
-                                Modifier.fillMaxWidth().padding(start = 16.dp),
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -432,11 +449,13 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                             cameraPermissionState.status.isGranted -> {
                                 isScanning = !isScanning
                                 showDialog.value = false
+                                isCameraPermissionClicked = false
                             }
 
                             // 3. If the user has denied the permission, show a rationale
                             //    or guide them to settings.
                             cameraPermissionState.status.shouldShowRationale -> {
+                                isCameraPermissionClicked = true
                                 cameraPermissionState.launchPermissionRequest()
                                 isPermissionCheckedOnce = true
                             }
@@ -444,6 +463,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                             // 4. If it's the first time or they've denied permanently,
                             //    show a button to request permission.
                             else -> {
+                                isCameraPermissionClicked = true
                                 if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
                                     openAppSettings(context)
                                 } else {
