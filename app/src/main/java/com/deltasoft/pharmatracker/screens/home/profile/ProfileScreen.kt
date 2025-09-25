@@ -141,7 +141,7 @@ fun SingleRowItem(key: String, value: String?) {
 }
 
 @Composable
-fun LogoutConfirmationDialog(
+private fun LogoutConfirmationDialog(
     showDialog: Boolean,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit

@@ -6,6 +6,7 @@ import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.Driver
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.ScheduleNewTripRequest
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.ScheduleNewTripResponse
 import com.deltasoft.pharmatracker.screens.home.scan.ScanDocSuccessResponse
+import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTripsResponse
 import com.deltasoft.pharmatracker.screens.login.LoginRequest
 import com.deltasoft.pharmatracker.screens.otp.OtpRequestBody
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationResponse
@@ -50,4 +51,15 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body scheduleNewTripRequest: ScheduleNewTripRequest,
     ): Response<ScheduleNewTripResponse>
+
+    @GET("trip/scheduled-trips-same-location")
+    suspend fun getScheduledList(
+        @Header("Authorization") token: String
+    ): Response<ScheduledTripsResponse>
+
+    @POST("trip/cancel/{tripId}")
+    suspend fun cancelScheduledTrip(
+        @Header("Authorization") token: String,
+        @Path("tripId") tripId: String,
+    ): Response<ApiResponse>
 }
