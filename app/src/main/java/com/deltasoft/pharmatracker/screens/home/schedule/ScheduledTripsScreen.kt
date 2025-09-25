@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun ScheduledTripsScreen(
@@ -43,6 +47,62 @@ fun ScheduledTripsScreen(
     val apiState by scheduledTripsViewModel.scheduledTripsState.collectAsState()
 
     val refreshClickEvent by homeViewModel.dispatchQueueClickEvent.collectAsState()
+
+
+    val cancelScheduleApiState by scheduledTripsViewModel.cancelScheduleState.collectAsState()
+
+    var isDialogOpen by remember { mutableStateOf(false) }
+    var cancelApiResponseDialogMessage by remember { mutableStateOf("") }
+
+    // CoroutineScope to launch the timed action
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(cancelScheduleApiState) {
+        when (cancelScheduleApiState) {
+            is CancelScheduleState.Idle -> {
+            }
+            is CancelScheduleState.Loading -> {
+            }
+            is CancelScheduleState.Success -> {
+                val message = (cancelScheduleApiState as CancelScheduleState.Success).message
+                cancelApiResponseDialogMessage = message
+                // 1. Show the dialog
+                isDialogOpen = true
+
+                delay(2000L)
+                isDialogOpen = false
+
+                cancelApiResponseDialogMessage = ""
+                scheduledTripsViewModel.clearCancelScheduleState()
+                scheduledTripsViewModel.getScheduledTripsList()
+            }
+            is CancelScheduleState.Error -> {
+                val message = (cancelScheduleApiState as CancelScheduleState.Error).message
+                cancelApiResponseDialogMessage = message
+                isDialogOpen = true
+
+
+                delay(2000L)
+                isDialogOpen = false
+
+                cancelApiResponseDialogMessage = ""
+                scheduledTripsViewModel.clearCancelScheduleState()
+            }
+        }
+    }
+
+    if (isDialogOpen) {
+        AlertDialog(
+            onDismissRequest = {
+                isDialogOpen = false
+            },
+            text = {
+                Text(cancelApiResponseDialogMessage, color = MaterialTheme.colorScheme.onSurface)
+            },
+            confirmButton = {}
+        )
+    }
+
 
     // LaunchedEffect triggers whenever clickEvent changes
     LaunchedEffect(refreshClickEvent) {
@@ -100,6 +160,19 @@ fun ScheduledTripsScreen(
     }
 
 
+}
+
+fun showSnackbar(
+    scope: CoroutineScope,
+    snackbarHostState: SnackbarHostState,
+    message: String
+) {
+    scope.launch {
+        snackbarHostState.showSnackbar(
+            message = message,
+            duration = SnackbarDuration.Long // Use Long for more reading time
+        )
+    }
 }
 @Composable
 private fun ScheduleCancelConfirmationDialog(

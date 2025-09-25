@@ -63,6 +63,26 @@ class ScheduledTripsViewModel(application: Application) : AndroidViewModel(appli
     }
 
     fun cancelScheduledTrip(tripId: String, context: Context) {
-        repository?.cancelScheduledTrip(token,tripId,context)
+        _cancelScheduleState.value = CancelScheduleState.Loading
+        try {
+            repository?.cancelScheduledTrip(token,tripId,context)
+        } catch (e: Exception) {
+            _cancelScheduleState.value = CancelScheduleState.Error("Cancel failed: ${e.message}")
+        }
+    }
+
+
+    private val _cancelScheduleState = MutableStateFlow<CancelScheduleState>(CancelScheduleState.Idle)
+    val cancelScheduleState = _cancelScheduleState.asStateFlow()
+    fun updateCancelScheduleState(message: String,success: Boolean = false) {
+        if (success){
+            _cancelScheduleState.value = CancelScheduleState.Success(message)
+        }else{
+            _cancelScheduleState.value = CancelScheduleState.Error(message)
+        }
+    }
+
+    fun clearCancelScheduleState() {
+        _cancelScheduleState.value = CancelScheduleState.Idle
     }
 }
