@@ -248,8 +248,8 @@ fun DriverListCompose(scheduleNewTripViewModel: ScheduleNewTripViewModel, messag
                 Text(noDataMessage, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant , textAlign = TextAlign.Center)
             }
         }else{
-            Column {
-                Text("Select a driver for this trip", color = MaterialTheme.colorScheme.onSurfaceVariant )
+            Column(Modifier.fillMaxWidth()) {
+                Text("Select a driver for this trip", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
                 Spacer(Modifier.height(16.dp))
                 LazyColumn {
                     items(driverList.size) { index ->
