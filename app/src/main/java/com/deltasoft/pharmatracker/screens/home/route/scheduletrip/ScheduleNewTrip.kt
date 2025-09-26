@@ -176,7 +176,7 @@ fun ScheduleNewTrip(
                     }
                 }
                 Button(modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth().height(56.dp)
 //                    .navigationBarsPadding()
                     , onClick = {
                         scheduleNewTripViewModel.scheduleNewTrip(route,userIds?: arrayOf(),vehicleNumber,driverId,context)

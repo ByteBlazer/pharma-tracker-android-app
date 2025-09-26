@@ -22,7 +22,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.navigation.NavConstants
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.home.MyTrips.MyTripsScreen
 import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
 import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueScreen
 import com.deltasoft.pharmatracker.screens.home.scan.BarCodeScanner
@@ -109,11 +111,21 @@ fun HomeScreen(
                         }
                     },
                     actions = {
-                        val isDispatchQueues = bottomNavItems[pagerState.currentPage].route == "route_queue"
+                        val isNeedToShowReloadButton = bottomNavItems[pagerState.currentPage].route != NavConstants.ROUTE_SCAN_SCREEN
                         if (true) {
-                            if (isDispatchQueues) {
+                            if (isNeedToShowReloadButton) {
                                 IconButton(onClick = {
-                                    homeViewModel?.onDispatchQueueReloadButtonClick()
+                                    when(bottomNavItems[pagerState.currentPage].route ){
+                                        NavConstants.ROUTE_ROUTE_SCREEN->{
+                                            homeViewModel?.onDispatchQueueReloadButtonClick()
+                                        }
+                                        NavConstants.ROUTE_SCHEDULED_TRIPS_SCREEN->{
+                                            homeViewModel?.onScheduledReloadButtonClick()
+                                        }
+                                        NavConstants.ROUTE_MY_TRIPS_SCREEN->{
+                                            homeViewModel?.onMyTripsReloadButtonClick()
+                                        }
+                                    }
                                 }) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_refresh),
@@ -139,10 +151,10 @@ fun HomeScreen(
                 modifier = Modifier.padding(paddingValues)
             ) { page ->
                 when (bottomNavItems[page].route) {
-                    "scan" -> BarCodeScanner()
-                    "route_queue" -> DispatchQueueScreen(navController = navController, homeViewModel = homeViewModel)
-                    "scheduled_trips" -> ScheduledTripsScreen()
-                    "drive" -> LocationScreen()
+                    NavConstants.ROUTE_SCAN_SCREEN -> BarCodeScanner()
+                    NavConstants.ROUTE_ROUTE_SCREEN -> DispatchQueueScreen(navController = navController, homeViewModel = homeViewModel)
+                    NavConstants.ROUTE_SCHEDULED_TRIPS_SCREEN -> ScheduledTripsScreen(homeViewModel = homeViewModel)
+                    NavConstants.ROUTE_MY_TRIPS_SCREEN -> MyTripsScreen(homeViewModel = homeViewModel)
                 }
             }
         }

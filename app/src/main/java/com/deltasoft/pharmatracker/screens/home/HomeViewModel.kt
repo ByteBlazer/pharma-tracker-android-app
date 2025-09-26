@@ -38,4 +38,22 @@ class HomeViewModel : ViewModel() {
     fun onDispatchQueueReloadButtonClick() {
         _dispatchQueueClickEvent.value = UUID.randomUUID()
     }
+
+
+
+    private val _scheduledListRefreshClickEvent = MutableStateFlow(UUID.randomUUID())
+    val scheduledListRefreshClickEvent: StateFlow<UUID> = _scheduledListRefreshClickEvent.asStateFlow()
+
+    fun onScheduledReloadButtonClick() {
+        _scheduledListRefreshClickEvent.value = UUID.randomUUID()
+    }
+
+
+
+    private val _myTripsListRefreshClickEvent = MutableStateFlow(UUID.randomUUID())
+    val myTripsListRefreshClickEvent: StateFlow<UUID> = _myTripsListRefreshClickEvent.asStateFlow()
+
+    fun onMyTripsReloadButtonClick() {
+        _myTripsListRefreshClickEvent.value = UUID.randomUUID()
+    }
 }

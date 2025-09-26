@@ -55,7 +55,7 @@ class DispatchQueueViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun clearLoginState() {
+    fun clearState() {
         _dispatchQueueState.value = DispatchQueueState.Idle
     }
 
