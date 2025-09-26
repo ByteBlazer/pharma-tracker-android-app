@@ -46,7 +46,7 @@ fun ScheduledTripsScreen(
 
     val apiState by scheduledTripsViewModel.scheduledTripsState.collectAsState()
 
-    val refreshClickEvent by homeViewModel.dispatchQueueClickEvent.collectAsState()
+    val refreshClickEvent by homeViewModel.scheduledListRefreshClickEvent.collectAsState()
 
 
     val cancelScheduleApiState by scheduledTripsViewModel.cancelScheduleState.collectAsState()
@@ -220,7 +220,7 @@ private fun ScheduleCancelConfirmationDialog(
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ScheduledTripListCompose(scheduledTripsViewModel: ScheduledTripsViewModel, message: String?,onItemClick: (scheduledTrip: ScheduledTrip) -> Unit = { a->}) {
+private fun ScheduledTripListCompose(scheduledTripsViewModel: ScheduledTripsViewModel, message: String?,onItemClick: (scheduledTrip: ScheduledTrip) -> Unit = { a->}) {
     val scheduledTripList by scheduledTripsViewModel.scheduledTripList.collectAsState()
 
     val scheduledTripsState by scheduledTripsViewModel.scheduledTripsState.collectAsState()
@@ -258,7 +258,7 @@ fun ScheduledTripListCompose(scheduledTripsViewModel: ScheduledTripsViewModel, m
 }
 
 @Composable
-fun SingleScheduledRowItem(key: String, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal) {
+private fun SingleScheduledRowItem(key: String, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = key,
@@ -285,7 +285,7 @@ fun SingleScheduledRowItem(key: String, value: String, style: TextStyle, color: 
 }
 
 @Composable
-fun SingleScheduledTripCompose(scheduledTrip: ScheduledTrip,onItemClick: (scheduledTrip: ScheduledTrip) -> Unit = { a->}) {
+private fun SingleScheduledTripCompose(scheduledTrip: ScheduledTrip,onItemClick: (scheduledTrip: ScheduledTrip) -> Unit = { a->}) {
     Card(
         modifier = Modifier
             .padding(vertical = 8.dp)

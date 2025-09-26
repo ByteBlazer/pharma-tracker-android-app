@@ -47,4 +47,13 @@ class HomeViewModel : ViewModel() {
     fun onScheduledReloadButtonClick() {
         _scheduledListRefreshClickEvent.value = UUID.randomUUID()
     }
+
+
+
+    private val _myTripsListRefreshClickEvent = MutableStateFlow(UUID.randomUUID())
+    val myTripsListRefreshClickEvent: StateFlow<UUID> = _myTripsListRefreshClickEvent.asStateFlow()
+
+    fun onMyTripsReloadButtonClick() {
+        _myTripsListRefreshClickEvent.value = UUID.randomUUID()
+    }
 }

@@ -9,8 +9,15 @@ object NavConstants {
     const val ROUTE_PROFILE_SCREEN = "profile_screen"
     const val ROUTE_SCHEDULE_NEW_TRIP_SCREEN = "schedule_new_trip_screen"
 
+    /*Home screen bottom navigation routes*/
+    const val ROUTE_SCAN_SCREEN = "scan"
+    const val ROUTE_ROUTE_SCREEN = "route_queue"
+    const val ROUTE_SCHEDULED_TRIPS_SCREEN = "scheduled_trips"
+    const val ROUTE_MY_TRIPS_SCREEN = "drive"
+
     // Arguments
     const val ARG_PHONE_NUMBER = "phoneNumber"
     const val ARG_ROUTE = "routeWithUsers"
     const val ARG_USER_LIST = "userList"
+
 }
