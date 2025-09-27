@@ -17,15 +17,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.navigation.NavConstants
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.home.MyTrips.MyTripsScreen
 import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
-import com.deltasoft.pharmatracker.screens.home.route.RouteQueueScreen
-import com.deltasoft.pharmatracker.screens.home.scan.ScanScreen
+import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueScreen
+import com.deltasoft.pharmatracker.screens.home.scan.BarCodeScanner
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsScreen
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
@@ -72,7 +74,10 @@ fun HomeScreen(
                     bottomNavItems.forEachIndexed { index, item ->
                         NavigationBarItem(
                             icon = { Icon(painterResource(item.icon) , contentDescription = item.title) },
-                            label = { Text(item.title) },
+                            label = { Text(item.title,
+                                modifier = Modifier,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2 ) },
                             selected = pagerState.currentPage == index,
                             onClick = {
                                 coroutineScope.launch {
@@ -106,11 +111,31 @@ fun HomeScreen(
                         }
                     },
                     actions = {
+                        val isNeedToShowReloadButton = bottomNavItems[pagerState.currentPage].route != NavConstants.ROUTE_SCAN_SCREEN
                         if (true) {
+                            if (isNeedToShowReloadButton) {
+                                IconButton(onClick = {
+                                    when(bottomNavItems[pagerState.currentPage].route ){
+                                        NavConstants.ROUTE_ROUTE_SCREEN->{
+                                            homeViewModel?.onDispatchQueueReloadButtonClick()
+                                        }
+                                        NavConstants.ROUTE_SCHEDULED_TRIPS_SCREEN->{
+                                            homeViewModel?.onScheduledReloadButtonClick()
+                                        }
+                                        NavConstants.ROUTE_MY_TRIPS_SCREEN->{
+                                            homeViewModel?.onMyTripsReloadButtonClick()
+                                        }
+                                    }
+                                }) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_refresh),
+                                        contentDescription = "dispatch queue reload"
+                                    )
+                                }
+                            }
                             IconButton(onClick = {
                                 navController.navigate(Screen.Profile.route)
                             }) {
-                                Icons.Default.AccountCircle
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_outline_person),
                                     contentDescription = "profile"
@@ -126,10 +151,10 @@ fun HomeScreen(
                 modifier = Modifier.padding(paddingValues)
             ) { page ->
                 when (bottomNavItems[page].route) {
-                    "scan" -> ScanScreen()
-                    "route_queue" -> RouteQueueScreen()
-                    "scheduled_trips" -> ScheduledTripsScreen()
-                    "drive" -> LocationScreen()
+                    NavConstants.ROUTE_SCAN_SCREEN -> BarCodeScanner()
+                    NavConstants.ROUTE_ROUTE_SCREEN -> DispatchQueueScreen(navController = navController, homeViewModel = homeViewModel)
+                    NavConstants.ROUTE_SCHEDULED_TRIPS_SCREEN -> ScheduledTripsScreen(homeViewModel = homeViewModel)
+                    NavConstants.ROUTE_MY_TRIPS_SCREEN -> MyTripsScreen(homeViewModel = homeViewModel)
                 }
             }
         }

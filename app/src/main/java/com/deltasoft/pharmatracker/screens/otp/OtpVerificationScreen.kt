@@ -1,15 +1,42 @@
 package com.deltasoft.pharmatracker.screens.otp
 
 
+import android.content.Context
+import android.content.IntentFilter
+import android.os.Build
+import android.util.Log
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -17,22 +44,26 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.login.OTPTextField
 import com.deltasoft.pharmatracker.screens.login.OtpTextFieldDefaults
+import com.google.android.gms.auth.api.phone.SmsRetriever
 import kotlinx.coroutines.delay
 
 
+private const val TAG = "OtpVerificationScreen"
 @Composable
 fun OtpVerificationScreen(
     navController: NavHostController,
     phoneNumber: String,
     otpVerificationViewModel: OtpVerificationViewModel = viewModel()
 ) {
+
+    val context = LocalContext.current
+
     var otp by remember { mutableStateOf("") }
     val otpVerificationState by otpVerificationViewModel.otpVerificationState.collectAsState()
 
@@ -66,6 +97,32 @@ fun OtpVerificationScreen(
         append("Enter the OTP sent to  ")
         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
             append("+91-"+phoneNumber)
+        }
+    }
+    DisposableEffect(context) {
+
+        SmsRetriever.getClient(context).startSmsRetriever()
+
+        val receiver = MySMSBroadcastReceiver().apply {
+            initListener(
+                object : MySMSBroadcastReceiver.Listener {
+                    override fun onOtpReceived(value: String?) {
+                        Log.d(TAG, "onOtpReceived: "+value)
+                        otp = value?:""
+                    }
+                }
+            )
+        }
+        val filter = IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION)
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.registerReceiver(receiver,filter, Context.RECEIVER_EXPORTED)
+        }
+
+        onDispose {
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.unregisterReceiver(receiver)
+            }
         }
     }
 

@@ -11,6 +11,7 @@ import androidx.navigation.navArgument
 import com.deltasoft.pharmatracker.screens.SplashScreen
 import com.deltasoft.pharmatracker.screens.home.HomeScreen
 import com.deltasoft.pharmatracker.screens.home.profile.ProfileScreen
+import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.ScheduleNewTrip
 import com.deltasoft.pharmatracker.screens.login.LoginScreen
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationScreen
 
@@ -23,18 +24,18 @@ fun AppNavigation(applicationContext: Context) {
         }
         composable(
             route = Screen.Login.route,
-            arguments = listOf(navArgument("phoneNumber") {
+            arguments = listOf(navArgument(NavConstants.ARG_PHONE_NUMBER) {
                 type = NavType.StringType
                 nullable = true // This is the key change!
                 defaultValue = null
             })
         ) {backStackEntry ->
-            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber")
+            val phoneNumber = backStackEntry.arguments?.getString(NavConstants.ARG_PHONE_NUMBER)
             LoginScreen(navController, phoneNumber)
         }
         composable(Screen.OtpVerification.route,
-            arguments = listOf(navArgument("phoneNumber") { type = NavType.StringType })) {backStackEntry ->
-            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: ""
+            arguments = listOf(navArgument(NavConstants.ARG_PHONE_NUMBER) { type = NavType.StringType })) {backStackEntry ->
+            val phoneNumber = backStackEntry.arguments?.getString(NavConstants.ARG_PHONE_NUMBER) ?: ""
             OtpVerificationScreen(navController,phoneNumber)
         }
         composable(Screen.Home.route) {
@@ -42,6 +43,19 @@ fun AppNavigation(applicationContext: Context) {
         }
         composable(Screen.Profile.route) {
             ProfileScreen(navController,applicationContext)
+        }
+        composable(
+            route = Screen.ScheduleNewTrip.route,
+            arguments = listOf(
+                navArgument(NavConstants.ARG_ROUTE) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val route = backStackEntry.arguments?.getString(NavConstants.ARG_ROUTE)
+            val userListJson = backStackEntry.arguments?.getString(NavConstants.ARG_USER_LIST)
+
+            if (route != null && userListJson != null) {
+                ScheduleNewTrip(navController=navController,route = route,userListJson = userListJson)
+            }
         }
     }
 }
