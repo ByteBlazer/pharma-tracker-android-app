@@ -1,5 +1,8 @@
 package com.deltasoft.pharmatracker.screens.home.MyTrips
 
+import android.Manifest
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +29,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,14 +44,67 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
+import com.deltasoft.pharmatracker.utils.AppUtils
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 
+private const val TAG = "MyTripsScreen"
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MyTripsScreen(
     homeViewModel: HomeViewModel, myTripsViewModel: MyTripsViewModel = viewModel()
 ) {
     val context = LocalContext.current
+
+    val locationPermissionState = rememberPermissionState(
+        Manifest.permission.ACCESS_FINE_LOCATION
+    )
+
+    val isRunning by myTripsViewModel.isServiceRunning.collectAsState()
+
+    val allPermissionsGranted = locationPermissionState.status.isGranted
+    val shouldShowRationale = locationPermissionState.status.shouldShowRationale
+
+
+    var isPermissionCheckedOnce by remember { mutableStateOf(false) }
+    var isLocationPermissionClicked by remember { mutableStateOf(false) }
+
     val apiState by myTripsViewModel.scheduledTripsState.collectAsState()
     val refreshClickEvent by homeViewModel.myTripsListRefreshClickEvent.collectAsState()
+
+    LaunchedEffect(apiState) {
+        when (apiState) {
+            is ScheduledTripsState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is ScheduledTripsState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is ScheduledTripsState.Success -> {
+                val message = (apiState as ScheduledTripsState.Success).scheduledTripsResponse.message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "State: Success - Message: $message")
+            }
+            is ScheduledTripsState.Error -> {
+                val message = (apiState as ScheduledTripsState.Error).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "State: Error - Message: $message")
+                myTripsViewModel.clearState()
+            }
+        }
+    }
+
+    // NEW LaunchedEffect to react to permission status changes
+    LaunchedEffect(locationPermissionState.status) {
+        if (locationPermissionState.status.isGranted && isLocationPermissionClicked) {
+            myTripsViewModel.startTrip()
+            isLocationPermissionClicked = false
+        } else {
+            Log.d(TAG, "Location permission DENIED or not yet requested.")
+        }
+    }
 
     LaunchedEffect(refreshClickEvent) {
         myTripsViewModel.getMyTripsList()
@@ -73,7 +132,40 @@ fun MyTripsScreen(
                         val scheduledTripsResponse = (apiState as ScheduledTripsState.Success).scheduledTripsResponse
                         myTripsViewModel.updateScheduledList(scheduledTripsResponse?.trips?: arrayListOf())
                         MyTripListCompose(myTripsViewModel,scheduledTripsResponse?.message, onItemClick = { schduledTrip ->
+                            if (schduledTrip?.status.equals("SCHEDULED")) {
+                                // Start Trip
+                                myTripsViewModel.currentTrip = schduledTrip
+                                when {
+                                    // 2. If the permission is granted
+                                    locationPermissionState.status.isGranted -> {
+                                        myTripsViewModel.startTrip()
+                                        isLocationPermissionClicked = false
+                                    }
 
+                                    // 3. If the user has denied the permission, show a rationale
+                                    //    or guide them to settings.
+                                    locationPermissionState.status.shouldShowRationale -> {
+                                        isLocationPermissionClicked = true
+                                        locationPermissionState.launchPermissionRequest()
+                                        isPermissionCheckedOnce = true
+                                    }
+
+                                    // 4. If it's the first time or they've denied permanently,
+                                    //    show a button to request permission.
+                                    else -> {
+                                        isLocationPermissionClicked = true
+                                        if (!locationPermissionState.status.isGranted && !locationPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
+                                            AppUtils.openAppSettings(context)
+                                        } else {
+                                            locationPermissionState.launchPermissionRequest()
+                                            isPermissionCheckedOnce = true
+                                        }
+                                    }
+                                }
+                            }else{
+                                //Resume Trip
+
+                            }
                         })
                     }
                     is ScheduledTripsState.Error -> {

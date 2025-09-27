@@ -1,12 +1,15 @@
 package com.deltasoft.pharmatracker.utils
 
 import android.content.Context
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.ToneGenerator
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import com.deltasoft.pharmatracker.screens.home.UserType
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
@@ -194,5 +197,12 @@ object AppUtils {
             3 -> "rd"
             else -> "th"
         }
+    }
+
+    fun openAppSettings(context: Context) {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+        }
+        context.startActivity(intent)
     }
 }
