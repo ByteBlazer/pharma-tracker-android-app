@@ -117,10 +117,11 @@ fun DispatchQueueScreen(
                 )
         }
     ) { paddingValues ->
+        val modifier = Modifier.padding(paddingValues)
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = paddingValues.calculateBottomPadding())
+//                .padding(vertical = paddingValues.calculateBottomPadding())
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
