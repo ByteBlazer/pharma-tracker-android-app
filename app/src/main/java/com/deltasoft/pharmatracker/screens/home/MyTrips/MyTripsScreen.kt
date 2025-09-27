@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,8 +65,15 @@ fun MyTripsScreen(
 
     val isRunning by myTripsViewModel.isServiceRunning.collectAsState()
 
-    val allPermissionsGranted = locationPermissionState.status.isGranted
-    val shouldShowRationale = locationPermissionState.status.shouldShowRationale
+    val latitude by myTripsViewModel.latitude.collectAsState()
+    val longitude by myTripsViewModel.longitude.collectAsState()
+
+    DisposableEffect(myTripsViewModel) {
+        myTripsViewModel.registerReceiver(context)
+        onDispose {
+            myTripsViewModel.unregisterReceiver(context)
+        }
+    }
 
 
     var isPermissionCheckedOnce by remember { mutableStateOf(false) }
@@ -86,6 +94,7 @@ fun MyTripsScreen(
                 val message = (apiState as ScheduledTripsState.Success).scheduledTripsResponse.message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.d(TAG, "State: Success - Message: $message")
+                myTripsViewModel.startMyService(context)
             }
             is ScheduledTripsState.Error -> {
                 val message = (apiState as ScheduledTripsState.Error).message
