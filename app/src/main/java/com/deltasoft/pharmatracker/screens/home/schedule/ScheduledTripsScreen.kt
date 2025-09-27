@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -69,11 +71,11 @@ fun ScheduledTripsScreen(
                 // 1. Show the dialog
                 isDialogOpen = true
 
-                delay(2000L)
-                isDialogOpen = false
-
-                cancelApiResponseDialogMessage = ""
-                scheduledTripsViewModel.clearCancelScheduleState()
+//                delay(2000L)
+//                isDialogOpen = false
+//
+//                cancelApiResponseDialogMessage = ""
+//                scheduledTripsViewModel.clearCancelScheduleState()
                 scheduledTripsViewModel.getScheduledTripsList()
             }
             is CancelScheduleState.Error -> {
@@ -81,12 +83,12 @@ fun ScheduledTripsScreen(
                 cancelApiResponseDialogMessage = message
                 isDialogOpen = true
 
-
-                delay(2000L)
-                isDialogOpen = false
-
-                cancelApiResponseDialogMessage = ""
-                scheduledTripsViewModel.clearCancelScheduleState()
+//
+//                delay(2000L)
+//                isDialogOpen = false
+//
+//                cancelApiResponseDialogMessage = ""
+//                scheduledTripsViewModel.clearCancelScheduleState()
             }
         }
     }
@@ -95,11 +97,22 @@ fun ScheduledTripsScreen(
         AlertDialog(
             onDismissRequest = {
                 isDialogOpen = false
+                cancelApiResponseDialogMessage = ""
+                scheduledTripsViewModel.clearCancelScheduleState()
             },
             text = {
                 Text(cancelApiResponseDialogMessage, color = MaterialTheme.colorScheme.onSurface)
             },
-            confirmButton = {}
+            confirmButton = {
+                TextButton(onClick = {
+                    isDialogOpen = false
+                    cancelApiResponseDialogMessage = ""
+                    scheduledTripsViewModel.clearCancelScheduleState()
+                }) {
+                    Text("OK", color = MaterialTheme.colorScheme.onSurface)
+                }
+
+            }
         )
     }
 
@@ -239,11 +252,15 @@ private fun ScheduledTripListCompose(scheduledTripsViewModel: ScheduledTripsView
                 Text(noDataMessage, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant , textAlign = TextAlign.Center)
             }
         }else{
-            LazyColumn {
-                items(scheduledTripList.size) { index ->
-                    if (index in scheduledTripList.indices) {
-                        val scheduledTrip = scheduledTripList[index]
-                        SingleScheduledTripCompose(scheduledTrip,onItemClick)
+            Column(Modifier.fillMaxWidth()) {
+                Text("The following trips have been scheduled from your location", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
+                Spacer(Modifier.height(16.dp))
+                LazyColumn {
+                    items(scheduledTripList.size) { index ->
+                        if (index in scheduledTripList.indices) {
+                            val scheduledTrip = scheduledTripList[index]
+                            SingleScheduledTripCompose(scheduledTrip,onItemClick)
+                        }
                     }
                 }
             }
@@ -327,7 +344,7 @@ private fun SingleScheduledTripCompose(scheduledTrip: ScheduledTrip,onItemClick:
                         },
                         modifier = Modifier
                     ) {
-                        Text("Cancel")
+                        Text("Cancel Trip")
                     }
                 }
             }
