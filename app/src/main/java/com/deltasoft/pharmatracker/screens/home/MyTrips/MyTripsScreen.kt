@@ -42,6 +42,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
@@ -50,14 +52,18 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import com.google.gson.Gson
 
 private const val TAG = "MyTripsScreen"
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MyTripsScreen(
+    navController: NavHostController,
     homeViewModel: HomeViewModel, myTripsViewModel: MyTripsViewModel = viewModel()
 ) {
     val context = LocalContext.current
+
+    var isStartTripClicked by remember { mutableStateOf(false) }
 
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
@@ -75,28 +81,44 @@ fun MyTripsScreen(
         }
     }
 
+    LaunchedEffect(isRunning,latitude,longitude) {
+        if (isStartTripClicked){
+            isStartTripClicked = false
+            myTripsViewModel.clearStartTripState()
+            navController.navigate(
+                Screen.SingleTripDetails.createRoute(
+                    selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
+                )
+            )
+        }else{
+
+        }
+    }
+
 
     var isPermissionCheckedOnce by remember { mutableStateOf(false) }
     var isLocationPermissionClicked by remember { mutableStateOf(false) }
 
     val apiState by myTripsViewModel.scheduledTripsState.collectAsState()
+    val startTripState by myTripsViewModel.startTripState.collectAsState()
     val refreshClickEvent by homeViewModel.myTripsListRefreshClickEvent.collectAsState()
 
-    LaunchedEffect(apiState) {
-        when (apiState) {
-            is ScheduledTripsState.Idle -> {
+    LaunchedEffect(startTripState) {
+        when (startTripState) {
+            is StartTripState.Idle -> {
                 Log.d(TAG, "State: Idle")
             }
-            is ScheduledTripsState.Loading -> {
+            is StartTripState.Loading -> {
                 Log.d(TAG, "State: Loading")
             }
-            is ScheduledTripsState.Success -> {
+            is StartTripState.Success -> {
                 val message = (apiState as ScheduledTripsState.Success).scheduledTripsResponse.message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.d(TAG, "State: Success - Message: $message")
+                myTripsViewModel.storeCurrentTripId()
                 myTripsViewModel.startMyService(context)
             }
-            is ScheduledTripsState.Error -> {
+            is StartTripState.Error -> {
                 val message = (apiState as ScheduledTripsState.Error).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "State: Error - Message: $message")
@@ -130,57 +152,70 @@ fun MyTripsScreen(
         ) {
             Box(modifier = Modifier
                 .fillMaxSize(), contentAlignment = Alignment.Center) {
-                when (apiState) {
-                    is ScheduledTripsState.Idle -> {
-                        CircularProgressIndicator()
-                    }
-                    is ScheduledTripsState.Loading -> {
-                        CircularProgressIndicator()
-                    }
-                    is ScheduledTripsState.Success -> {
-                        val scheduledTripsResponse = (apiState as ScheduledTripsState.Success).scheduledTripsResponse
-                        myTripsViewModel.updateScheduledList(scheduledTripsResponse?.trips?: arrayListOf())
-                        MyTripListCompose(myTripsViewModel,scheduledTripsResponse?.message, onItemClick = { schduledTrip ->
-                            if (schduledTrip?.status.equals("SCHEDULED")) {
-                                // Start Trip
-                                myTripsViewModel.currentTrip = schduledTrip
-                                when {
-                                    // 2. If the permission is granted
-                                    locationPermissionState.status.isGranted -> {
-                                        myTripsViewModel.startTrip()
-                                        isLocationPermissionClicked = false
-                                    }
+                if (startTripState is StartTripState.Idle) {
+                    when (apiState) {
+                        is ScheduledTripsState.Idle -> {
+                            CircularProgressIndicator()
+                        }
 
-                                    // 3. If the user has denied the permission, show a rationale
-                                    //    or guide them to settings.
-                                    locationPermissionState.status.shouldShowRationale -> {
-                                        isLocationPermissionClicked = true
-                                        locationPermissionState.launchPermissionRequest()
-                                        isPermissionCheckedOnce = true
-                                    }
+                        is ScheduledTripsState.Loading -> {
+                            CircularProgressIndicator()
+                        }
 
-                                    // 4. If it's the first time or they've denied permanently,
-                                    //    show a button to request permission.
-                                    else -> {
-                                        isLocationPermissionClicked = true
-                                        if (!locationPermissionState.status.isGranted && !locationPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
-                                            AppUtils.openAppSettings(context)
-                                        } else {
-                                            locationPermissionState.launchPermissionRequest()
-                                            isPermissionCheckedOnce = true
+                        is ScheduledTripsState.Success -> {
+                            val scheduledTripsResponse =
+                                (apiState as ScheduledTripsState.Success).scheduledTripsResponse
+                            myTripsViewModel.updateScheduledList(
+                                scheduledTripsResponse?.trips ?: arrayListOf()
+                            )
+                            MyTripListCompose(
+                                myTripsViewModel,
+                                scheduledTripsResponse?.message,
+                                onItemClick = { schduledTrip ->
+                                    if (schduledTrip?.status.equals("SCHEDULED")) {
+                                        // Start Trip
+                                        myTripsViewModel.currentTrip = schduledTrip
+                                        when {
+                                            // 2. If the permission is granted
+                                            locationPermissionState.status.isGranted -> {
+                                                myTripsViewModel.startTrip()
+                                                isLocationPermissionClicked = false
+                                            }
+
+                                            // 3. If the user has denied the permission, show a rationale
+                                            //    or guide them to settings.
+                                            locationPermissionState.status.shouldShowRationale -> {
+                                                isLocationPermissionClicked = true
+                                                locationPermissionState.launchPermissionRequest()
+                                                isPermissionCheckedOnce = true
+                                            }
+
+                                            // 4. If it's the first time or they've denied permanently,
+                                            //    show a button to request permission.
+                                            else -> {
+                                                isLocationPermissionClicked = true
+                                                if (!locationPermissionState.status.isGranted && !locationPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
+                                                    AppUtils.openAppSettings(context)
+                                                } else {
+                                                    locationPermissionState.launchPermissionRequest()
+                                                    isPermissionCheckedOnce = true
+                                                }
+                                            }
                                         }
-                                    }
-                                }
-                            }else{
-                                //Resume Trip
+                                    } else {
+                                        //Resume Trip
 
-                            }
-                        })
+                                    }
+                                })
+                        }
+
+                        is ScheduledTripsState.Error -> {
+                            val message = (apiState as ScheduledTripsState.Error).message
+                            Text(text = message)
+                        }
                     }
-                    is ScheduledTripsState.Error -> {
-                        val message = (apiState as ScheduledTripsState.Error).message
-                        Text(text = message)
-                    }
+                }else{
+                    CircularProgressIndicator()
                 }
             }
         }
@@ -234,7 +269,7 @@ fun MyTripListCompose(myTripsViewModel: MyTripsViewModel, message: String?, onIt
 }
 
 @Composable
-fun SingleMyTripRowItem(key: String, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal) {
+private fun SingleMyTripRowItem(key: String, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = key,

@@ -154,7 +154,7 @@ fun HomeScreen(
                     NavConstants.ROUTE_SCAN_SCREEN -> BarCodeScanner()
                     NavConstants.ROUTE_ROUTE_SCREEN -> DispatchQueueScreen(navController = navController, homeViewModel = homeViewModel)
                     NavConstants.ROUTE_SCHEDULED_TRIPS_SCREEN -> ScheduledTripsScreen(homeViewModel = homeViewModel)
-                    NavConstants.ROUTE_MY_TRIPS_SCREEN -> MyTripsScreen(homeViewModel = homeViewModel)
+                    NavConstants.ROUTE_MY_TRIPS_SCREEN -> MyTripsScreen(navController = navController,homeViewModel = homeViewModel)
                 }
             }
         }

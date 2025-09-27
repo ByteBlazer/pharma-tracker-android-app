@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 class MyTripsViewModel(application: Application) : AndroidViewModel(application) {
 
     private var sharedPreferences: SharedPreferences
+    private var sharedPreferencesUtil: SharedPreferencesUtil
 
     private val repository = MyTripsRepository(this)
 
@@ -34,10 +35,10 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         val appContext = getApplication<Application>().applicationContext
-        val sharedPrefsUtil = SharedPreferencesUtil(appContext)
-        sharedPreferences = sharedPrefsUtil.getSharedPreference()
+        sharedPreferencesUtil = SharedPreferencesUtil(appContext)
+        sharedPreferences = sharedPreferencesUtil.getSharedPreference()
         token =
-            AppUtils.createBearerToken(sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: "")
+            AppUtils.createBearerToken(sharedPreferencesUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: "")
         checkServiceRunningStatus()
     }
 
@@ -162,6 +163,14 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
     fun stopService(context: Context) {
         val serviceIntent = Intent(context, LocationPingService::class.java)
         context.stopService(serviceIntent)
+    }
+
+    fun storeCurrentTripId() {
+        sharedPreferencesUtil?.saveString(PrefsKey.CURRENT_TRIP_ID,(currentTrip?.tripId?:0).toString())
+    }
+
+    fun getCurrentTripId():String {
+        return sharedPreferencesUtil?.getString(PrefsKey.CURRENT_TRIP_ID,"")?:""
     }
 
 

@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.deltasoft.pharmatracker.screens.SplashScreen
 import com.deltasoft.pharmatracker.screens.home.HomeScreen
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.SingleTripDetailsScreen
 import com.deltasoft.pharmatracker.screens.home.profile.ProfileScreen
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.ScheduleNewTrip
 import com.deltasoft.pharmatracker.screens.login.LoginScreen
@@ -55,6 +56,18 @@ fun AppNavigation(applicationContext: Context) {
 
             if (route != null && userListJson != null) {
                 ScheduleNewTrip(navController=navController,route = route,userListJson = userListJson)
+            }
+        }
+        composable(
+            route = Screen.SingleTripDetails.route,
+            arguments = listOf(
+                navArgument(NavConstants.ARG_SELECTED_SCHEDULED_TRIP_ID) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val selectedScheduledTripId = backStackEntry.arguments?.getString(NavConstants.ARG_SELECTED_SCHEDULED_TRIP_ID)
+
+            if (selectedScheduledTripId != null) {
+                SingleTripDetailsScreen(navController=navController,selectedScheduledTripId = selectedScheduledTripId)
             }
         }
     }
