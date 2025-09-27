@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -108,11 +110,15 @@ fun MyTripListCompose(myTripsViewModel: MyTripsViewModel, message: String?, onIt
                 Text(noDataMessage, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant , textAlign = TextAlign.Center)
             }
         }else{
-            LazyColumn {
-                items(scheduledTripList.size) { index ->
-                    if (index in scheduledTripList.indices) {
-                        val scheduledTrip = scheduledTripList[index]
-                        SingleMyTripCompose(scheduledTrip,onItemClick)
+            Column(Modifier.fillMaxWidth()) {
+                Text("The following trips have been assigned to you", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
+                Spacer(Modifier.height(16.dp))
+                LazyColumn {
+                    items(scheduledTripList.size) { index ->
+                        if (index in scheduledTripList.indices) {
+                            val scheduledTrip = scheduledTripList[index]
+                            SingleMyTripCompose(scheduledTrip,onItemClick)
+                        }
                     }
                 }
             }
