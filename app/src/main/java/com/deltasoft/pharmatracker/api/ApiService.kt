@@ -67,4 +67,11 @@ interface ApiService {
     suspend fun getMyTripsList(
         @Header("Authorization") token: String
     ): Response<ScheduledTripsResponse>
+
+    @POST("trip/start/{tripId}")
+    suspend fun startTrip(
+        @Header("Authorization") token: String,
+        @Path("tripId") tripId: String,
+    ): Response<ApiResponse>
+
 }

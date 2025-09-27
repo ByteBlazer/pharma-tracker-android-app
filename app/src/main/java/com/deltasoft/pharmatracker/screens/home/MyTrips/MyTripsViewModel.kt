@@ -2,7 +2,7 @@ package com.deltasoft.pharmatracker.screens.home.MyTrips
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsRepository
+import com.deltasoft.pharmatracker.screens.home.schedule.CancelScheduleState
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
 import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTripsResponse
@@ -63,6 +63,31 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
 
     fun updateScheduledList(scheduledTripListNew: ArrayList<ScheduledTrip>){
         _scheduledList.value = scheduledTripListNew
+    }
+
+
+    fun startTrip(tripId: String) {
+        _startTripState.value = StartTripState.Loading
+        try {
+            repository?.startTrip(token,tripId)
+        } catch (e: Exception) {
+            _startTripState.value = StartTripState.Error("Cancel failed: ${e.message}")
+        }
+    }
+
+
+    private val _startTripState = MutableStateFlow<StartTripState>(StartTripState.Idle)
+    val startTripState = _startTripState.asStateFlow()
+    fun updateStartTripState(message: String, success: Boolean = false) {
+        if (success){
+            _startTripState.value = StartTripState.Success(message)
+        }else{
+            _startTripState.value = StartTripState.Error(message)
+        }
+    }
+
+    fun clearStartTripState() {
+        _startTripState.value = StartTripState.Idle
     }
 
 }

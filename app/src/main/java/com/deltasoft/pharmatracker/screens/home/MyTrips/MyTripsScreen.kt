@@ -202,7 +202,7 @@ fun SingleMyTripCompose(scheduledTrip: ScheduledTrip, onItemClick: (scheduledTri
                         },
                         modifier = Modifier
                     ) {
-                        Text("Start Trip")
+                        Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
                     }
                 }
             }
