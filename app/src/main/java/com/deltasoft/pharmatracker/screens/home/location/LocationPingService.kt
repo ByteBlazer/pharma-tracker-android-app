@@ -75,6 +75,8 @@ class LocationPingService : Service() {
         locationHeartBeatFrequencyInSeconds = sharedPrefsUtil?.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS)?:0
         token = AppUtils.createBearerToken(sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN)?:"")
 
+        Log.d(TAG, "delay in sec: "+locationHeartBeatFrequencyInSeconds)
+
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("API Pinging Service")
             .setContentText("Pinging API and getting location...")
@@ -90,6 +92,7 @@ class LocationPingService : Service() {
         // Use a Handler to trigger the location request and API ping every minute
         runnable = object : Runnable {
             override fun run() {
+                Log.d(TAG, "run: ")
                 requestSingleLocationUpdate()
                 handler.postDelayed(this, (locationHeartBeatFrequencyInSeconds*1000).toLong())
             }

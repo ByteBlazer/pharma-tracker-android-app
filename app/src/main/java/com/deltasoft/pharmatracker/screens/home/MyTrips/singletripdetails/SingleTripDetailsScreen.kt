@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -138,6 +140,8 @@ fun SingleTripDetailsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
@@ -205,7 +209,7 @@ fun TripBasicDetailsCompose(singleTripDetailsResponse: SingleTripDetailsResponse
         modifier = Modifier
             .padding(vertical = 8.dp)
     ) {
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SingleMyTripRowItem(
                 key = "Route",
                 value = singleTripDetailsResponse.route ?: ""+" : On Trip",
@@ -301,9 +305,9 @@ fun SingleDocGroup(
     singleTripDetailsViewModel: SingleTripDetailsViewModel
 ) {
     var expandIcon =  if (isExpanded) {
-        painterResource(id = R.drawable.ic_expand_circle_right)
-    } else {
         painterResource(id = R.drawable.ic_expand_circle_down)
+    } else {
+        painterResource(id = R.drawable.ic_expand_circle_right)
     }
     ListItem(
         modifier = Modifier.clickable { onClick.invoke() },
@@ -318,14 +322,10 @@ fun SingleDocGroup(
                             heading = docGroup.heading ?: ""
                         )
                     }) {
-                        Text(text = "DDrop Off At Hub")
+                        Text(text = "Drop Off At Hub")
                     }
                 }else if (docGroup.droppable) {
                     TextButton(onClick = {
-                        singleTripDetailsViewModel.dropOffTrip(
-                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
-                            heading = docGroup.heading ?: ""
-                        )
                     }) {
                         Text(text = "Dropped Off At Hub")
                     }
@@ -349,7 +349,7 @@ fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(start = 32.dp)
+            .padding(start = 8.dp)
     ) {
         for (doc in docGroup.docs?: arrayListOf()) {
             Column(Modifier.fillMaxWidth()) {
@@ -369,7 +369,7 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc) 
         modifier = Modifier
             .padding(vertical = 8.dp)
     ) {
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SingleDocRowItem(
                 key = "Firm Name",
                 value = doc.customerFirmName ?: "",
