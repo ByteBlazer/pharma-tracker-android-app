@@ -1,9 +1,13 @@
 package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 
 import android.app.Application
+import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
+import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
+import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
@@ -13,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(application) {
 
+    var selectedScheduledTripId: String = ""
     private var sharedPreferences: SharedPreferences
 
     private val repository = SingleTripDetailsRepository(this)
@@ -30,7 +35,7 @@ class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(ap
     private val _singleTripDetailsState = MutableStateFlow<SingleTripDetailsState>(SingleTripDetailsState.Idle)
     val singleTripDetailsState = _singleTripDetailsState.asStateFlow()
 
-    fun getSingleTripDetails(selectedScheduledTripId: String) {
+    fun getSingleTripDetails() {
         _singleTripDetailsState.value = SingleTripDetailsState.Loading
         try {
             repository.getSingleTripDetails(token,selectedScheduledTripId)
@@ -59,8 +64,56 @@ class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(ap
         _singleTripDetailsState.value = SingleTripDetailsState.Idle
     }
 
+
+    fun dropOffTrip(selectedScheduledTripId: String,heading:String) {
+        _dropOffTripState.value = AppCommonApiState.Loading
+        try {
+            repository.dropOffTrip(token,selectedScheduledTripId,heading)
+        } catch (e: Exception) {
+            _dropOffTripState.value = AppCommonApiState.Error("Drop Off trip failed: ${e.message}")
+        }
+    }
+    private val _dropOffTripState = MutableStateFlow<AppCommonApiState>(AppCommonApiState.Idle)
+    val dropOffTripState = _dropOffTripState.asStateFlow()
+
+    fun updateDropOffTripState(message: String, success: Boolean = false) {
+        if (success){
+            _dropOffTripState.value = AppCommonApiState.Success(message)
+        }else{
+            _dropOffTripState.value = AppCommonApiState.Error(message)
+        }
+    }
+
+    fun clearStartTripState() {
+        _dropOffTripState.value = AppCommonApiState.Idle
+    }
+
     fun endTrip(selectedScheduledTripId: String) {
+        _endTripState.value = AppCommonApiState.Loading
+        try {
+            repository.endTrip(token,selectedScheduledTripId)
+        } catch (e: Exception) {
+            _endTripState.value = AppCommonApiState.Error("End trip failed: ${e.message}")
+        }
 
     }
 
+    private val _endTripState = MutableStateFlow<AppCommonApiState>(AppCommonApiState.Idle)
+    val endTripState = _endTripState.asStateFlow()
+    fun updateEndTripState(message: String, success: Boolean = false) {
+        if (success){
+            _endTripState.value = AppCommonApiState.Success(message)
+        }else{
+            _endTripState.value = AppCommonApiState.Error(message)
+        }
+    }
+
+    fun clearEndTripState() {
+        _endTripState.value = AppCommonApiState.Idle
+    }
+
+    fun stopService(context: Context) {
+        val serviceIntent = Intent(context, LocationPingService::class.java)
+        context.stopService(serviceIntent)
+    }
 }

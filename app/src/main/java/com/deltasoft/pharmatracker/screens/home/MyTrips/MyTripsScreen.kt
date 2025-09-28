@@ -52,7 +52,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
-import com.google.gson.Gson
 
 private const val TAG = "MyTripsScreen"
 @OptIn(ExperimentalPermissionsApi::class)
@@ -105,24 +104,24 @@ fun MyTripsScreen(
 
     LaunchedEffect(startTripState) {
         when (startTripState) {
-            is StartTripState.Idle -> {
+            is AppCommonApiState.Idle -> {
                 Log.d(TAG, "State: Idle")
             }
-            is StartTripState.Loading -> {
+            is AppCommonApiState.Loading -> {
                 Log.d(TAG, "State: Loading")
             }
-            is StartTripState.Success -> {
-                val message = (apiState as ScheduledTripsState.Success).scheduledTripsResponse.message
+            is AppCommonApiState.Success -> {
+                val message = (startTripState as AppCommonApiState.Success).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.d(TAG, "State: Success - Message: $message")
                 myTripsViewModel.storeCurrentTripId()
                 myTripsViewModel.startMyService(context)
             }
-            is StartTripState.Error -> {
-                val message = (apiState as ScheduledTripsState.Error).message
+            is AppCommonApiState.Error -> {
+                val message = (startTripState as AppCommonApiState.Error).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "State: Error - Message: $message")
-                myTripsViewModel.clearState()
+                myTripsViewModel.clearStartTripState()
             }
         }
     }
@@ -152,7 +151,7 @@ fun MyTripsScreen(
         ) {
             Box(modifier = Modifier
                 .fillMaxSize(), contentAlignment = Alignment.Center) {
-                if (startTripState is StartTripState.Idle) {
+                if (startTripState is AppCommonApiState.Idle) {
                     when (apiState) {
                         is ScheduledTripsState.Idle -> {
                             CircularProgressIndicator()
@@ -204,7 +203,44 @@ fun MyTripsScreen(
                                         }
                                     } else {
                                         //Resume Trip
+                                        myTripsViewModel.currentTrip = schduledTrip
+                                        myTripsViewModel.storeCurrentTripId()
+                                        when {
+                                            // 2. If the permission is granted
+                                            locationPermissionState.status.isGranted -> {
+                                                if (isRunning){
+                                                    navController.navigate(
+                                                        Screen.SingleTripDetails.createRoute(
+                                                            selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
+                                                        )
+                                                    )
+                                                }else{
+                                                    isStartTripClicked = false
+                                                    myTripsViewModel.startMyService(context)
+                                                }
+                                                isLocationPermissionClicked = false
+                                            }
 
+                                            // 3. If the user has denied the permission, show a rationale
+                                            //    or guide them to settings.
+                                            locationPermissionState.status.shouldShowRationale -> {
+                                                isLocationPermissionClicked = true
+                                                locationPermissionState.launchPermissionRequest()
+                                                isPermissionCheckedOnce = true
+                                            }
+
+                                            // 4. If it's the first time or they've denied permanently,
+                                            //    show a button to request permission.
+                                            else -> {
+                                                isLocationPermissionClicked = true
+                                                if (!locationPermissionState.status.isGranted && !locationPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
+                                                    AppUtils.openAppSettings(context)
+                                                } else {
+                                                    locationPermissionState.launchPermissionRequest()
+                                                    isPermissionCheckedOnce = true
+                                                }
+                                            }
+                                        }
                                     }
                                 })
                         }

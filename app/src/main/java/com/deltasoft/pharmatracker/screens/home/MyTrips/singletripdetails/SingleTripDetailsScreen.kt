@@ -1,5 +1,7 @@
 package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,17 +17,13 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,24 +39,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
+import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.Doc
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.DocGroup
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
-import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.ScheduleNewTripState
 import com.deltasoft.pharmatracker.utils.AppUtils
-import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
+private const val TAG = "SingleTripDetailsScreen"
 @Composable
 fun SingleTripDetailsScreen(
     navController: NavHostController,
@@ -68,10 +63,59 @@ fun SingleTripDetailsScreen(
     val context = LocalContext.current
 
     LaunchedEffect(selectedScheduledTripId) {
-        singleTripDetailsViewModel?.getSingleTripDetails(selectedScheduledTripId)
+        singleTripDetailsViewModel.selectedScheduledTripId = selectedScheduledTripId
+        singleTripDetailsViewModel?.getSingleTripDetails()
     }
 
     val singleTripDetailsState by singleTripDetailsViewModel.singleTripDetailsState.collectAsState()
+    val dropOffTripState by singleTripDetailsViewModel.dropOffTripState.collectAsState()
+    val endTripState by singleTripDetailsViewModel.endTripState.collectAsState()
+
+    LaunchedEffect(dropOffTripState) {
+        when (dropOffTripState) {
+            is AppCommonApiState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is AppCommonApiState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is AppCommonApiState.Success -> {
+                val message = (dropOffTripState as AppCommonApiState.Success).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "State: Success - Message: $message")
+                singleTripDetailsViewModel?.getSingleTripDetails()
+            }
+            is AppCommonApiState.Error -> {
+                val message = (dropOffTripState as AppCommonApiState.Error).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "State: Error - Message: $message")
+            }
+        }
+    }
+
+    LaunchedEffect(endTripState) {
+        when (endTripState) {
+            is AppCommonApiState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is AppCommonApiState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is AppCommonApiState.Success -> {
+                val message = (endTripState as AppCommonApiState.Success).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                singleTripDetailsViewModel.stopService(context)
+                navController.popBackStack()
+                Log.d(TAG, "State: Success - Message: $message")
+
+            }
+            is AppCommonApiState.Error -> {
+                val message = (endTripState as AppCommonApiState.Error).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "State: Error - Message: $message")
+            }
+        }
+    }
 
     Scaffold(modifier = Modifier.fillMaxSize(),
         topBar = {   App_CommonTopBar(title = "My Trip Details", onBackClick = {  navController.popBackStack() }) },
@@ -102,26 +146,31 @@ fun SingleTripDetailsScreen(
                 modifier = Modifier
                     .fillMaxSize(), contentAlignment = Alignment.Center
             ) {
-                when (singleTripDetailsState) {
-                    is SingleTripDetailsState.Idle -> {
-                        CircularProgressIndicator()
-                    }
-
-                    is SingleTripDetailsState.Loading -> {
-                        CircularProgressIndicator()
-                    }
-
-                    is SingleTripDetailsState.Success -> {
-                        val singleTripDetailsResponse  =
-                            (singleTripDetailsState as SingleTripDetailsState.Success).singleTripDetailsResponse
-                        singleTripDetailsResponse?.let {
-                            SingleTripDetailsCompose(it,singleTripDetailsViewModel)
+                if (dropOffTripState is AppCommonApiState.Loading || endTripState is AppCommonApiState.Loading){
+                    CircularProgressIndicator()
+                }else {
+                    when (singleTripDetailsState) {
+                        is SingleTripDetailsState.Idle -> {
+                            CircularProgressIndicator()
                         }
-                    }
 
-                    is SingleTripDetailsState.Error -> {
-                        val message = (singleTripDetailsState as SingleTripDetailsState.Error).message
-                        Text(text = message)
+                        is SingleTripDetailsState.Loading -> {
+                            CircularProgressIndicator()
+                        }
+
+                        is SingleTripDetailsState.Success -> {
+                            val singleTripDetailsResponse =
+                                (singleTripDetailsState as SingleTripDetailsState.Success).singleTripDetailsResponse
+                            singleTripDetailsResponse?.let {
+                                SingleTripDetailsCompose(it, singleTripDetailsViewModel)
+                            }
+                        }
+
+                        is SingleTripDetailsState.Error -> {
+                            val message =
+                                (singleTripDetailsState as SingleTripDetailsState.Error).message
+                            Text(text = message)
+                        }
                     }
                 }
             }
@@ -231,7 +280,8 @@ fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docG
                 }
             },
             isExpanded,
-            docGroup
+            docGroup,
+            singleTripDetailsViewModel
         )
         AnimatedVisibility(visible = isExpanded) {
             ExpandedDocGroup(
@@ -247,7 +297,8 @@ fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docG
 fun SingleDocGroup(
     onClick: () -> Unit,
     isExpanded: Boolean,
-    docGroup: DocGroup
+    docGroup: DocGroup,
+    singleTripDetailsViewModel: SingleTripDetailsViewModel
 ) {
     var expandIcon =  if (isExpanded) {
         painterResource(id = R.drawable.ic_expand_circle_right)
@@ -261,11 +312,21 @@ fun SingleDocGroup(
         trailingContent = {
             Row {
                 if (docGroup.showDropOffButton) {
-                    TextButton(onClick = {  }) {
+                    TextButton(onClick = {
+                        singleTripDetailsViewModel.dropOffTrip(
+                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
+                            heading = docGroup.heading ?: ""
+                        )
+                    }) {
                         Text(text = "DDrop Off At Hub")
                     }
                 }else if (docGroup.droppable) {
-                    TextButton(onClick = {  }) {
+                    TextButton(onClick = {
+                        singleTripDetailsViewModel.dropOffTrip(
+                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
+                            heading = docGroup.heading ?: ""
+                        )
+                    }) {
                         Text(text = "Dropped Off At Hub")
                     }
                 }else{

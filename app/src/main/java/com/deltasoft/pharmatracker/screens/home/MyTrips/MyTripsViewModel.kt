@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -30,6 +31,9 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
     private val _scheduledTripsState =
         MutableStateFlow<ScheduledTripsState>(ScheduledTripsState.Idle)
     val scheduledTripsState = _scheduledTripsState.asStateFlow()
+
+    private val _isServiceRunning = MutableStateFlow(false)
+    val isServiceRunning = _isServiceRunning.asStateFlow()
 
     var token = ""
 
@@ -81,35 +85,34 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
 
     fun startTrip() {
         if (currentTrip?.tripId != null) {
-            _startTripState.value = StartTripState.Loading
+            _startTripState.value = AppCommonApiState.Loading
             try {
                 val tripId = currentTrip?.tripId?:0
                 repository?.startTrip(token, tripId.toString())
             } catch (e: Exception) {
-                _startTripState.value = StartTripState.Error("Cancel failed: ${e.message}")
+                _startTripState.value = AppCommonApiState.Error("Cancel failed: ${e.message}")
             }
         }
     }
 
 
-    private val _startTripState = MutableStateFlow<StartTripState>(StartTripState.Idle)
+    private val _startTripState = MutableStateFlow<AppCommonApiState>(AppCommonApiState.Idle)
     val startTripState = _startTripState.asStateFlow()
     fun updateStartTripState(message: String, success: Boolean = false) {
         if (success){
-            _startTripState.value = StartTripState.Success(message)
+            _startTripState.value = AppCommonApiState.Success(message)
         }else{
-            _startTripState.value = StartTripState.Error(message)
+            _startTripState.value = AppCommonApiState.Error(message)
         }
     }
 
     fun clearStartTripState() {
-        _startTripState.value = StartTripState.Idle
+        _startTripState.value = AppCommonApiState.Idle
     }
 
     var currentTrip :ScheduledTrip? = null
 
-    private val _isServiceRunning = MutableStateFlow(false)
-    val isServiceRunning = _isServiceRunning.asStateFlow()
+
 
     private val preferenceListener =
         SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->

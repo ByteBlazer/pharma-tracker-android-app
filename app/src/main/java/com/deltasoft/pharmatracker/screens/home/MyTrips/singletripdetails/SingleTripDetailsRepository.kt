@@ -45,4 +45,60 @@ class SingleTripDetailsRepository(var viewModel: SingleTripDetailsViewModel) {
             }
         }
     }
+    fun dropOffTrip(token: String, tripId: String, heading: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.dropOff(token = token, tripId = tripId, heading = heading)
+                if (response.isSuccessful) {
+                    viewModel.updateDropOffTripState(response?.body()?.message?:"",true)
+                } else {
+                    val errorBodyString = response.errorBody()?.string()
+                    if (errorBodyString != null) {
+                        try {
+                            val errorResponse =
+                                Gson().fromJson(errorBodyString, ApiResponse::class.java)
+                            val errorMessage = errorResponse.message
+                            viewModel.updateDropOffTripState(errorMessage ?: "")
+                        } catch (e: Exception) {
+                            // Catch JSON parsing errors if the error body format is unexpected
+                            println("Failed to parse error body: ${e.message}")
+                            viewModel.updateDropOffTripState("${e.message}")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle network errors
+                println("Network error: ${e.message}")
+                viewModel.updateDropOffTripState("${e.message}")
+            }
+        }
+    }
+    fun endTrip(token: String, tripId: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.endTrip(token, tripId)
+                if (response.isSuccessful) {
+                    viewModel.updateEndTripState(response?.body()?.message?:"",true)
+                } else {
+                    val errorBodyString = response.errorBody()?.string()
+                    if (errorBodyString != null) {
+                        try {
+                            val errorResponse =
+                                Gson().fromJson(errorBodyString, ApiResponse::class.java)
+                            val errorMessage = errorResponse.message
+                            viewModel.updateEndTripState(errorMessage ?: "")
+                        } catch (e: Exception) {
+                            // Catch JSON parsing errors if the error body format is unexpected
+                            println("Failed to parse error body: ${e.message}")
+                            viewModel.updateEndTripState("${e.message}")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle network errors
+                println("Network error: ${e.message}")
+                viewModel.updateEndTripState("${e.message}")
+            }
+        }
+    }
 }

@@ -128,38 +128,49 @@ class LocationPingService : Service() {
                 fusedLocationClient.removeLocationUpdates(this)
 
                 locationResult.lastLocation?.let {
-                    // Send location via broadcast
-                    val broadcastIntent = Intent(ACTION_LOCATION_UPDATE).apply {
-                        putExtra(EXTRA_LATITUDE, it.latitude)
-                        putExtra(EXTRA_LONGITUDE, it.longitude)
+                    // Ping your API here, now with a callback
+                    pingAPIWithLocation(it) { success ->
+                        if (success) {
+                            // Send location via broadcast
+                            val broadcastIntent = Intent(ACTION_LOCATION_UPDATE).apply {
+                                putExtra(EXTRA_LATITUDE, it.latitude)
+                                putExtra(EXTRA_LONGITUDE, it.longitude)
+                            }
+                            LocalBroadcastManager.getInstance(this@LocationPingService).sendBroadcast(broadcastIntent)
+                            Log.d(TAG, "API Ping successful (from callback)")
+                        } else {
+                            Log.e(TAG, "API Ping failed (from callback)")
+                        }
+                        // You can add more logic here based on the success status
                     }
-                    LocalBroadcastManager.getInstance(this@LocationPingService).sendBroadcast(broadcastIntent)
-
-                    // Ping your API here
-                    pingAPIWithLocation(it)
                 }
             }
         }
     }
 
-    private fun pingAPIWithLocation(location: Location) {
+    // Modify the signature to include the callback
+    private fun pingAPIWithLocation(location: Location, onResult: (success: Boolean) -> Unit) {
         val lat = location.latitude
         val lon = location.longitude
 
         serviceScope.launch {
             try {
                 val locationData = LocationData(latitude = lat.toString(), longitude = lon.toString())
-                val response = RetrofitClient.apiService.sendLocation(token,locationData)
+                val response = RetrofitClient.apiService.sendLocation(token, locationData)
 
                 if (response.isSuccessful) {
                     Log.d(TAG, "Location sent successfully: Lat: $lat, Lon: $lon")
+                    onResult(true) // Invoke callback with true for success
                 } else {
                     Log.e(TAG, "Failed to send location. Code: ${response.code()}, Body: ${response.errorBody()?.string()}")
+                    onResult(false) // Invoke callback with false for failure
                 }
             } catch (e: IOException) {
                 Log.e(TAG, "Network error: ${e.message}")
+                onResult(false) // Invoke callback with false for network error
             } catch (e: HttpException) {
                 Log.e(TAG, "HTTP error: ${e.message}")
+                onResult(false) // Invoke callback with false for HTTP error
             }
         }
     }
