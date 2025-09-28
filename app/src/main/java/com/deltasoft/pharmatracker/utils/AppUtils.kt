@@ -225,6 +225,8 @@ object AppUtils {
         longitude: String,
         destinationName: String = "Destination"
     ) {
+        Log.d(TAG, "startGoogleMapsNavigation: latitude "+latitude)
+        Log.d(TAG, "startGoogleMapsNavigation: longitude "+longitude)
         // 1. Define the URI for navigation (using 'daddr' for destination address)
         // 'q' is used for the query, combining lat/lng and a label.
         // 'mode=d' requests driving directions.
