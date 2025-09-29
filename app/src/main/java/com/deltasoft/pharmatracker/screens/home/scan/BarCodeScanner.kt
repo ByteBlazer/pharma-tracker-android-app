@@ -465,7 +465,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                             else -> {
                                 isCameraPermissionClicked = true
                                 if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
-                                    openAppSettings(context)
+                                    AppUtils.openAppSettings(context)
                                 } else {
                                     cameraPermissionState.launchPermissionRequest()
                                     isPermissionCheckedOnce = true
@@ -606,13 +606,6 @@ fun getColorFromCode(code: Int): Color {
         }
     }
 
-}
-
-private fun openAppSettings(context: Context) {
-    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-        data = Uri.fromParts("package", context.packageName, null)
-    }
-    context.startActivity(intent)
 }
 
 

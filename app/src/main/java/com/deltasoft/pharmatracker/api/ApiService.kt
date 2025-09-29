@@ -1,5 +1,6 @@
 package com.deltasoft.pharmatracker.api
 
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
 import com.deltasoft.pharmatracker.screens.home.location.LocationData
 import com.deltasoft.pharmatracker.screens.home.route.entity.DispatchQueueResponse
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.DriverListResponse
@@ -63,8 +64,34 @@ interface ApiService {
         @Path("tripId") tripId: String,
     ): Response<ApiResponse>
 
-    @GET("trip/my-scheduled-trips")
+    @GET("trip/my-trips")
     suspend fun getMyTripsList(
         @Header("Authorization") token: String
     ): Response<ScheduledTripsResponse>
+
+    @POST("trip/start/{tripId}")
+    suspend fun startTrip(
+        @Header("Authorization") token: String,
+        @Path("tripId") tripId: String,
+    ): Response<ApiResponse>
+
+    @GET("trip/{tripId}")
+    suspend fun getSingleTripDetails(
+        @Header("Authorization") token: String,
+        @Path("tripId") tripId: String,
+    ): Response<SingleTripDetailsResponse>
+
+    @POST("trip/drop-off-lot/{tripId}/{heading}")
+    suspend fun dropOff(
+        @Header("Authorization") token: String,
+        @Path("tripId") tripId: String,
+        @Path("heading") heading : String,
+    ): Response<ApiResponse>
+
+    @POST("trip/end/{tripId}")
+    suspend fun endTrip(
+        @Header("Authorization") token: String,
+        @Path("tripId") tripId: String
+    ): Response<ApiResponse>
+
 }

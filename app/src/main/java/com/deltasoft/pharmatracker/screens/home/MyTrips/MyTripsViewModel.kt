@@ -1,8 +1,17 @@
 package com.deltasoft.pharmatracker.screens.home.MyTrips
 
 import android.app.Application
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.SharedPreferences
+import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsRepository
+import androidx.lifecycle.viewModelScope
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
 import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTripsResponse
@@ -11,8 +20,12 @@ import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class MyTripsViewModel(application: Application) : AndroidViewModel(application) {
+
+    private var sharedPreferences: SharedPreferences
+    private var sharedPreferencesUtil: SharedPreferencesUtil
 
     private val repository = MyTripsRepository(this)
 
@@ -20,13 +33,18 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
         MutableStateFlow<ScheduledTripsState>(ScheduledTripsState.Idle)
     val scheduledTripsState = _scheduledTripsState.asStateFlow()
 
+//    private val _isServiceRunning = MutableStateFlow(false)
+//    val isServiceRunning = _isServiceRunning.asStateFlow()
+
     var token = ""
 
     init {
         val appContext = getApplication<Application>().applicationContext
-        val sharedPrefsUtil = SharedPreferencesUtil(appContext)
+        sharedPreferencesUtil = SharedPreferencesUtil(appContext)
+        sharedPreferences = sharedPreferencesUtil.getSharedPreference()
         token =
-            AppUtils.createBearerToken(sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: "")
+            AppUtils.createBearerToken(sharedPreferencesUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: "")
+//        checkServiceRunningStatus()
     }
 
     fun getMyTripsList() {
@@ -63,6 +81,116 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
 
     fun updateScheduledList(scheduledTripListNew: ArrayList<ScheduledTrip>){
         _scheduledList.value = scheduledTripListNew
+    }
+
+
+    fun startTrip() {
+        if (currentTrip?.tripId != null) {
+            _startTripState.value = AppCommonApiState.Loading
+            try {
+                val tripId = currentTrip?.tripId?:0
+                repository?.startTrip(token, tripId.toString())
+            } catch (e: Exception) {
+                _startTripState.value = AppCommonApiState.Error("Cancel failed: ${e.message}")
+            }
+        }
+    }
+
+
+    private val _startTripState = MutableStateFlow<AppCommonApiState>(AppCommonApiState.Idle)
+    val startTripState = _startTripState.asStateFlow()
+    fun updateStartTripState(message: String, success: Boolean = false) {
+        if (success){
+            _startTripState.value = AppCommonApiState.Success(message)
+        }else{
+            _startTripState.value = AppCommonApiState.Error(message)
+        }
+    }
+
+    fun clearStartTripState() {
+        _startTripState.value = AppCommonApiState.Idle
+    }
+
+    var currentTrip :ScheduledTrip? = null
+
+
+
+//    private val preferenceListener =
+//        SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
+//            if (key == PrefsKey.IS_LOCATION_SERVICE_RUNNING.name) {
+//                _isServiceRunning.value =
+//                    sharedPreferences.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING.name, false)
+//            }
+//        }
+//    fun checkServiceRunningStatus() {
+//        // Register the listener
+//        sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceListener)
+//        // Set the initial value
+//        _isServiceRunning.value = sharedPreferences.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING.name, false)
+//    }
+
+    private val _latitude = MutableStateFlow<Double?>(null)
+    val latitude = _latitude.asStateFlow()
+
+    private val _longitude = MutableStateFlow<Double?>(null)
+    val longitude = _longitude.asStateFlow()
+
+    private val locationUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == LocationPingService.ACTION_LOCATION_UPDATE) {
+                val latitude = intent.getDoubleExtra(LocationPingService.EXTRA_LATITUDE, 0.0)
+                val longitude = intent.getDoubleExtra(LocationPingService.EXTRA_LONGITUDE, 0.0)
+                viewModelScope.launch {
+                    _latitude.value = latitude
+                    _longitude.value = longitude
+                }
+            }
+        }
+    }
+
+    fun clearLocationValues() {
+        _latitude.value = null
+        _longitude.value = null
+    }
+
+    fun registerReceiver(context: Context) {
+        LocalBroadcastManager.getInstance(context).registerReceiver(
+            locationUpdateReceiver,
+            IntentFilter(LocationPingService.ACTION_LOCATION_UPDATE)
+        )
+    }
+
+    fun unregisterReceiver(context: Context) {
+        LocalBroadcastManager.getInstance(context).unregisterReceiver(locationUpdateReceiver)
+    }
+
+    fun startMyService(context: Context) {
+        val serviceIntent = Intent(context, LocationPingService::class.java)
+        context.startForegroundService(serviceIntent)
+    }
+
+    fun stopService(context: Context) {
+        val serviceIntent = Intent(context, LocationPingService::class.java)
+        context.stopService(serviceIntent)
+    }
+
+    fun storeCurrentTripId() {
+        sharedPreferencesUtil?.saveString(PrefsKey.CURRENT_TRIP_ID,(currentTrip?.tripId?:0).toString())
+    }
+
+    fun getCurrentTripId():String {
+        return sharedPreferencesUtil?.getString(PrefsKey.CURRENT_TRIP_ID,"")?:""
+    }
+
+    fun restartForegroundService(context: Context) {
+        val serviceIntent = Intent(context, LocationPingService::class.java)
+
+        // A. Stop the service first (This will call onDestroy() in your Service)
+        context.stopService(serviceIntent)
+
+        // B. Start the service again immediately (This will call onCreate() and then onStartCommand())
+        // Use startForegroundService for a foreground service, especially on newer Android versions (API 26+)
+        ContextCompat.startForegroundService(context, serviceIntent)
     }
 
 }
