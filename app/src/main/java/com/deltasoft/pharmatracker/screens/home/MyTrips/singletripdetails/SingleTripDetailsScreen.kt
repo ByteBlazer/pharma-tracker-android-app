@@ -3,6 +3,7 @@ package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +26,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -205,7 +208,7 @@ fun SingleTripDetailsCompose(
 
 @Composable
 fun TripBasicDetailsCompose(singleTripDetailsResponse: SingleTripDetailsResponse) {
-    Card(
+    OutlinedCard(
         modifier = Modifier
             .padding(vertical = 8.dp)
     ) {
@@ -275,25 +278,29 @@ private fun SingleMyTripRowItem(key: String, value: String, style: TextStyle, co
 @Composable
 fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup) {
     var isExpanded by rememberSaveable { mutableStateOf(docGroup.expandGroupByDefault && !docGroup.dropOffCompleted) }
-
-    Column(Modifier.fillMaxWidth()) {
-        SingleDocGroup(
-            onClick = {
-                if(!docGroup.dropOffCompleted){
-                    isExpanded = !isExpanded
-                }
-            },
-            isExpanded,
-            docGroup,
-            singleTripDetailsViewModel
-        )
-        AnimatedVisibility(visible = isExpanded) {
-            ExpandedDocGroup(
-                singleTripDetailsViewModel,
-                docGroup
+    Card(
+        modifier = Modifier
+            .padding(vertical = 8.dp)
+    ) {
+        Column(Modifier.fillMaxWidth()) {
+            SingleDocGroup(
+                onClick = {
+                    if (!docGroup.dropOffCompleted) {
+                        isExpanded = !isExpanded
+                    }
+                },
+                isExpanded,
+                docGroup,
+                singleTripDetailsViewModel
             )
-        }
+            AnimatedVisibility(visible = isExpanded) {
+                ExpandedDocGroup(
+                    singleTripDetailsViewModel,
+                    docGroup
+                )
+            }
 
+        }
     }
 }
 
@@ -316,7 +323,7 @@ fun SingleDocGroup(
         trailingContent = {
             Row {
                 if (docGroup.showDropOffButton) {
-                    TextButton(onClick = {
+                    Button(onClick = {
                         singleTripDetailsViewModel.dropOffTrip(
                             selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
                             heading = docGroup.heading ?: ""
@@ -326,6 +333,7 @@ fun SingleDocGroup(
                     }
                 }else if (docGroup.droppable) {
                     TextButton(onClick = {
+                        onClick.invoke()
                     }) {
                         Text(text = "Dropped Off At Hub")
                     }
@@ -340,7 +348,8 @@ fun SingleDocGroup(
                     )
                 }
             }
-        }
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
     )
 }
 @Composable

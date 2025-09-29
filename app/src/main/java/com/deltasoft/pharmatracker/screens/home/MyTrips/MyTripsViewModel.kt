@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -32,8 +33,8 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
         MutableStateFlow<ScheduledTripsState>(ScheduledTripsState.Idle)
     val scheduledTripsState = _scheduledTripsState.asStateFlow()
 
-    private val _isServiceRunning = MutableStateFlow(false)
-    val isServiceRunning = _isServiceRunning.asStateFlow()
+//    private val _isServiceRunning = MutableStateFlow(false)
+//    val isServiceRunning = _isServiceRunning.asStateFlow()
 
     var token = ""
 
@@ -43,7 +44,7 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
         sharedPreferences = sharedPreferencesUtil.getSharedPreference()
         token =
             AppUtils.createBearerToken(sharedPreferencesUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: "")
-        checkServiceRunningStatus()
+//        checkServiceRunningStatus()
     }
 
     fun getMyTripsList() {
@@ -114,19 +115,19 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
 
 
 
-    private val preferenceListener =
-        SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
-            if (key == PrefsKey.IS_LOCATION_SERVICE_RUNNING.name) {
-                _isServiceRunning.value =
-                    sharedPreferences.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING.name, false)
-            }
-        }
-    fun checkServiceRunningStatus() {
-        // Register the listener
-        sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceListener)
-        // Set the initial value
-        _isServiceRunning.value = sharedPreferences.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING.name, false)
-    }
+//    private val preferenceListener =
+//        SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
+//            if (key == PrefsKey.IS_LOCATION_SERVICE_RUNNING.name) {
+//                _isServiceRunning.value =
+//                    sharedPreferences.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING.name, false)
+//            }
+//        }
+//    fun checkServiceRunningStatus() {
+//        // Register the listener
+//        sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceListener)
+//        // Set the initial value
+//        _isServiceRunning.value = sharedPreferences.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING.name, false)
+//    }
 
     private val _latitude = MutableStateFlow<Double?>(null)
     val latitude = _latitude.asStateFlow()
@@ -145,6 +146,11 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
                 }
             }
         }
+    }
+
+    fun clearLocationValues() {
+        _latitude.value = null
+        _longitude.value = null
     }
 
     fun registerReceiver(context: Context) {
@@ -176,5 +182,15 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
         return sharedPreferencesUtil?.getString(PrefsKey.CURRENT_TRIP_ID,"")?:""
     }
 
+    fun restartForegroundService(context: Context) {
+        val serviceIntent = Intent(context, LocationPingService::class.java)
+
+        // A. Stop the service first (This will call onDestroy() in your Service)
+        context.stopService(serviceIntent)
+
+        // B. Start the service again immediately (This will call onCreate() and then onStartCommand())
+        // Use startForegroundService for a foreground service, especially on newer Android versions (API 26+)
+        ContextCompat.startForegroundService(context, serviceIntent)
+    }
 
 }

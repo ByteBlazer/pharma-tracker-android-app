@@ -63,15 +63,19 @@ fun MyTripsScreen(
     val context = LocalContext.current
 
     var isStartTripClicked by remember { mutableStateOf(false) }
+    var resumingCurrentTrip by remember { mutableStateOf(false) }
 
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
 
-    val isRunning by myTripsViewModel.isServiceRunning.collectAsState()
+//    val isRunning by myTripsViewModel.isServiceRunning.collectAsState()
 
     val latitude by myTripsViewModel.latitude.collectAsState()
     val longitude by myTripsViewModel.longitude.collectAsState()
+
+    Log.d(TAG, "MyTripsScreen: latitude "+latitude)
+    Log.d(TAG, "MyTripsScreen: longitude "+longitude)
 
     DisposableEffect(myTripsViewModel) {
         myTripsViewModel.registerReceiver(context)
@@ -80,9 +84,10 @@ fun MyTripsScreen(
         }
     }
 
-    LaunchedEffect(isRunning,latitude,longitude) {
-        if (isStartTripClicked){
+    LaunchedEffect(latitude,longitude) {
+        if (isStartTripClicked && latitude != null && longitude != null){
             isStartTripClicked = false
+            resumingCurrentTrip = false
             myTripsViewModel.clearStartTripState()
             navController.navigate(
                 Screen.SingleTripDetails.createRoute(
@@ -151,7 +156,7 @@ fun MyTripsScreen(
         ) {
             Box(modifier = Modifier
                 .fillMaxSize(), contentAlignment = Alignment.Center) {
-                if (startTripState is AppCommonApiState.Idle) {
+                if (startTripState is AppCommonApiState.Idle && resumingCurrentTrip == false) {
                     when (apiState) {
                         is ScheduledTripsState.Idle -> {
                             CircularProgressIndicator()
@@ -177,6 +182,9 @@ fun MyTripsScreen(
                                         when {
                                             // 2. If the permission is granted
                                             locationPermissionState.status.isGranted -> {
+                                                isStartTripClicked = true
+                                                myTripsViewModel.stopService(context)
+                                                myTripsViewModel.clearLocationValues()
                                                 myTripsViewModel.startTrip()
                                                 isLocationPermissionClicked = false
                                             }
@@ -203,21 +211,23 @@ fun MyTripsScreen(
                                         }
                                     } else {
                                         //Resume Trip
+                                        resumingCurrentTrip = true
                                         myTripsViewModel.currentTrip = schduledTrip
                                         myTripsViewModel.storeCurrentTripId()
                                         when {
                                             // 2. If the permission is granted
                                             locationPermissionState.status.isGranted -> {
-                                                if (isRunning){
-                                                    navController.navigate(
-                                                        Screen.SingleTripDetails.createRoute(
-                                                            selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
-                                                        )
-                                                    )
-                                                }else{
-                                                    isStartTripClicked = false
-                                                    myTripsViewModel.startMyService(context)
-                                                }
+//                                                if (isRunning){
+//                                                    navController.navigate(
+//                                                        Screen.SingleTripDetails.createRoute(
+//                                                            selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
+//                                                        )
+//                                                    )
+//                                                }else{
+                                                    isStartTripClicked = true
+                                                    myTripsViewModel.clearStartTripState()
+                                                    myTripsViewModel.restartForegroundService(context)
+//                                                }
                                                 isLocationPermissionClicked = false
                                             }
 
