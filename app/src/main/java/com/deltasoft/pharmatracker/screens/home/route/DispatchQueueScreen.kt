@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -116,10 +117,11 @@ fun DispatchQueueScreen(
                 )
         }
     ) { paddingValues ->
+        val modifier = Modifier.padding(paddingValues)
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues.calculateBottomPadding())
+//                .padding(vertical = paddingValues.calculateBottomPadding())
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
@@ -174,12 +176,14 @@ fun DispatchQueueListCompose(dispatchQueueViewModel: DispatchQueueViewModel, mes
                 Text(noDataMessage, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant , textAlign = TextAlign.Center)
             }
         }else{
-            LazyColumn {
-                items(routeSummaryLists.size) { index ->
-                    if (index in routeSummaryLists.indices) {
-                        val route = routeSummaryLists[index]
-                        RouteHeaderComposable(route,dispatchQueueViewModel)
-                        Spacer(Modifier.height(28.dp))
+            Column(Modifier.fillMaxWidth()) {
+                LazyColumn {
+                    items(routeSummaryLists.size) { index ->
+                        if (index in routeSummaryLists.indices) {
+                            val route = routeSummaryLists[index]
+                            RouteHeaderComposable(route,dispatchQueueViewModel)
+                            Spacer(Modifier.height(28.dp))
+                        }
                     }
                 }
             }

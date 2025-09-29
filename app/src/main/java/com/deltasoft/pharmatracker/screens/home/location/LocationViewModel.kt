@@ -53,20 +53,20 @@ class LocationViewModel : ViewModel() {
 
     private lateinit var sharedPreferences: SharedPreferences
 
-    private val preferenceListener =
-        SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
-            if (key == PrefsKey.IS_LOCATION_SERVICE_RUNNING.name) {
-                _isServiceRunning.value =
-                    sharedPreferences.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING.name, false)
-            }
-        }
+//    private val preferenceListener =
+//        SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
+//            if (key == PrefsKey.IS_LOCATION_SERVICE_RUNNING.name) {
+//                _isServiceRunning.value =
+//                    sharedPreferences.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING.name, false)
+//            }
+//        }
 
     fun initialize(context: Context) {
         sharedPreferences = SharedPreferencesUtil(context).getSharedPreference()
         // Register the listener
-        sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceListener)
-        // Set the initial value
-        _isServiceRunning.value = sharedPreferences.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING.name, false)
+//        sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceListener)
+//        // Set the initial value
+//        _isServiceRunning.value = sharedPreferences.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING.name, false)
     }
 
     fun clearLocationValues() {

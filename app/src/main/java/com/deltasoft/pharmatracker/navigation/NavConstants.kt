@@ -8,6 +8,7 @@ object NavConstants {
     const val ROUTE_HOME_SCREEN = "home_screen"
     const val ROUTE_PROFILE_SCREEN = "profile_screen"
     const val ROUTE_SCHEDULE_NEW_TRIP_SCREEN = "schedule_new_trip_screen"
+    const val ROUTE_SINGLE_TRIP_DETAILS_SCREEN = "single_trip_details_screen"
 
     /*Home screen bottom navigation routes*/
     const val ROUTE_SCAN_SCREEN = "scan"
@@ -19,5 +20,6 @@ object NavConstants {
     const val ARG_PHONE_NUMBER = "phoneNumber"
     const val ARG_ROUTE = "routeWithUsers"
     const val ARG_USER_LIST = "userList"
+    const val ARG_SELECTED_SCHEDULED_TRIP_ID = "selectedScheduleTripId"
 
 }

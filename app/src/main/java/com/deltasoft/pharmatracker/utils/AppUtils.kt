@@ -1,13 +1,17 @@
 package com.deltasoft.pharmatracker.utils
 
 import android.content.Context
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.ToneGenerator
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import com.deltasoft.pharmatracker.screens.home.UserType
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
@@ -193,6 +197,59 @@ object AppUtils {
             2 -> "nd"
             3 -> "rd"
             else -> "th"
+        }
+    }
+
+    fun openAppSettings(context: Context) {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+        }
+        context.startActivity(intent)
+    }
+
+    /**
+     * Utility function to open Google Maps and start navigation to a specified
+     * latitude and longitude.
+     *
+     * This function checks if the Google Maps app is available. If it is, it
+     * launches a navigation Intent. If not, it falls back to showing an error.
+     *
+     * @param context The application or activity context.
+     * @param latitude The destination latitude (e.g., 9.9816).
+     * @param longitude The destination longitude (e.g., 76.2999).
+     * @param destinationName An optional name for the destination (e.g., "Vytilla Office").
+     */
+    fun startGoogleMapsNavigation(
+        context: Context,
+        latitude: String,
+        longitude: String,
+        destinationName: String = "Destination"
+    ) {
+        Log.d(TAG, "startGoogleMapsNavigation: latitude "+latitude)
+        Log.d(TAG, "startGoogleMapsNavigation: longitude "+longitude)
+        // 1. Define the URI for navigation (using 'daddr' for destination address)
+        // 'q' is used for the query, combining lat/lng and a label.
+        // 'mode=d' requests driving directions.
+        val gmmIntentUri = Uri.parse("google.navigation:q=$latitude,$longitude&mode=d")
+
+//        val gmmIntentUri = Uri.parse("geo:0,0?q=$latitude,$longitude($destinationName)")
+
+        // 2. Create an Intent, specifying the ACTION_VIEW and setting the data URI
+        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+
+        // 3. Explicitly set the package to ensure only the Google Maps app handles the Intent
+        mapIntent.setPackage("com.google.android.apps.maps")
+
+        // 4. Check if there is an app available to handle this Intent
+        if (mapIntent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(mapIntent)
+        } else {
+            // Fallback: Google Maps app is not installed
+            Toast.makeText(
+                context,
+                "Google Maps app not found. Please install it to use navigation.",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 }

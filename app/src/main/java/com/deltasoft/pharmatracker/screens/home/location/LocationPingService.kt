@@ -51,6 +51,8 @@ class LocationPingService : Service() {
 
     private var sharedPrefsUtil : SharedPreferencesUtil? = null
 
+    private var serviceStarted = false
+
     companion object {
         const val CHANNEL_ID = "APIPingServiceChannel"
         const val TAG = "APIPingService"
@@ -69,32 +71,43 @@ class LocationPingService : Service() {
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        sharedPrefsUtil = SharedPreferencesUtil(this)
-        sharedPrefsUtil?.saveBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING,true)
+        if (serviceStarted == false) {
+            serviceStarted = true
+            sharedPrefsUtil = SharedPreferencesUtil(this)
+//        sharedPrefsUtil?.saveBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING,true)
 
-        locationHeartBeatFrequencyInSeconds = sharedPrefsUtil?.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS)?:0
-        token = AppUtils.createBearerToken(sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN)?:"")
+            locationHeartBeatFrequencyInSeconds =
+                sharedPrefsUtil?.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS) ?: 0
+            token = AppUtils.createBearerToken(
+                sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: ""
+            )
 
-        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("API Pinging Service")
-            .setContentText("Pinging API and getting location...")
-            .setSmallIcon(com.deltasoft.pharmatracker.R.drawable.ic_share_location)
-            .build()
+            Log.d(TAG, "delay in sec: " + locationHeartBeatFrequencyInSeconds)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(1, notification, FOREGROUND_SERVICE_TYPE_LOCATION)
-        } else {
-            startForeground(1, notification)
-        }
+            val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("API Pinging Service")
+                .setContentText("Pinging API and getting location...")
+                .setSmallIcon(com.deltasoft.pharmatracker.R.drawable.ic_share_location)
+                .build()
 
-        // Use a Handler to trigger the location request and API ping every minute
-        runnable = object : Runnable {
-            override fun run() {
-                requestSingleLocationUpdate()
-                handler.postDelayed(this, (locationHeartBeatFrequencyInSeconds*1000).toLong())
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(1, notification, FOREGROUND_SERVICE_TYPE_LOCATION)
+            } else {
+                startForeground(1, notification)
             }
+
+            // Use a Handler to trigger the location request and API ping every minute
+            runnable = object : Runnable {
+                override fun run() {
+                    Log.d(TAG, "run: ")
+                    requestSingleLocationUpdate()
+                    handler.postDelayed(this, (locationHeartBeatFrequencyInSeconds * 1000).toLong())
+                }
+            }
+            handler.post(runnable)
+        }else{
+            Log.d(TAG, "onStartCommand: Service already started")
         }
-        handler.post(runnable)
 
         return START_STICKY
     }
@@ -128,49 +141,61 @@ class LocationPingService : Service() {
                 fusedLocationClient.removeLocationUpdates(this)
 
                 locationResult.lastLocation?.let {
-                    // Send location via broadcast
-                    val broadcastIntent = Intent(ACTION_LOCATION_UPDATE).apply {
-                        putExtra(EXTRA_LATITUDE, it.latitude)
-                        putExtra(EXTRA_LONGITUDE, it.longitude)
+                    // Ping your API here, now with a callback
+                    pingAPIWithLocation(it) { success ->
+                        if (success) {
+                            // Send location via broadcast
+                            val broadcastIntent = Intent(ACTION_LOCATION_UPDATE).apply {
+                                putExtra(EXTRA_LATITUDE, it.latitude)
+                                putExtra(EXTRA_LONGITUDE, it.longitude)
+                            }
+                            LocalBroadcastManager.getInstance(this@LocationPingService).sendBroadcast(broadcastIntent)
+                            Log.d(TAG, "API Ping successful (from callback)")
+                        } else {
+                            Log.e(TAG, "API Ping failed (from callback)")
+                        }
+                        // You can add more logic here based on the success status
                     }
-                    LocalBroadcastManager.getInstance(this@LocationPingService).sendBroadcast(broadcastIntent)
-
-                    // Ping your API here
-                    pingAPIWithLocation(it)
                 }
             }
         }
     }
 
-    private fun pingAPIWithLocation(location: Location) {
+    // Modify the signature to include the callback
+    private fun pingAPIWithLocation(location: Location, onResult: (success: Boolean) -> Unit) {
         val lat = location.latitude
         val lon = location.longitude
 
         serviceScope.launch {
             try {
                 val locationData = LocationData(latitude = lat.toString(), longitude = lon.toString())
-                val response = RetrofitClient.apiService.sendLocation(token,locationData)
+                val response = RetrofitClient.apiService.sendLocation(token, locationData)
 
                 if (response.isSuccessful) {
                     Log.d(TAG, "Location sent successfully: Lat: $lat, Lon: $lon")
+                    onResult(true) // Invoke callback with true for success
                 } else {
                     Log.e(TAG, "Failed to send location. Code: ${response.code()}, Body: ${response.errorBody()?.string()}")
+                    onResult(false) // Invoke callback with false for failure
                 }
             } catch (e: IOException) {
                 Log.e(TAG, "Network error: ${e.message}")
+                onResult(false) // Invoke callback with false for network error
             } catch (e: HttpException) {
                 Log.e(TAG, "HTTP error: ${e.message}")
+                onResult(false) // Invoke callback with false for HTTP error
             }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.d(TAG, "onDestroy: ")
         handler.removeCallbacks(runnable)
         fusedLocationClient.removeLocationUpdates(locationCallback)
         serviceScope.cancel() // Cancel all coroutines when the service is destroyed
 
-        sharedPrefsUtil?.saveBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING,false)
+//        sharedPrefsUtil?.saveBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING,false)
     }
 
     override fun onBind(intent: Intent?): IBinder? {

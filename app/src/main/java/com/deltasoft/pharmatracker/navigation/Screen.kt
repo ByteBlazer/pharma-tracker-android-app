@@ -13,4 +13,7 @@ sealed class Screen(val route: String) {
     object ScheduleNewTrip : Screen("${NavConstants.ROUTE_SCHEDULE_NEW_TRIP_SCREEN}/{${NavConstants.ARG_ROUTE}}/{${NavConstants.ARG_USER_LIST}}"){
         fun createRoute(route: String, userList: String) = "${NavConstants.ROUTE_SCHEDULE_NEW_TRIP_SCREEN}/$route/$userList"
     }
+    object SingleTripDetails : Screen("${NavConstants.ROUTE_SINGLE_TRIP_DETAILS_SCREEN}/{${NavConstants.ARG_SELECTED_SCHEDULED_TRIP_ID}}"){
+        fun createRoute(selectedScheduledTripId: String) = "${NavConstants.ROUTE_SINGLE_TRIP_DETAILS_SCREEN}/$selectedScheduledTripId"
+    }
 }
