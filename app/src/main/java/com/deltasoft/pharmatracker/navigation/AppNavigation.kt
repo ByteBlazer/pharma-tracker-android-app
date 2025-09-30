@@ -8,7 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.deltasoft.pharmatracker.screens.SplashScreen
+import com.deltasoft.pharmatracker.screens.splash.SplashScreen
 import com.deltasoft.pharmatracker.screens.home.HomeScreen
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.SingleTripDetailsScreen
 import com.deltasoft.pharmatracker.screens.home.profile.ProfileScreen

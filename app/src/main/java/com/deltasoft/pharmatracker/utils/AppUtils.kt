@@ -12,7 +12,9 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.deltasoft.pharmatracker.screens.home.UserType
+import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
@@ -251,5 +253,16 @@ object AppUtils {
                 Toast.LENGTH_LONG
             ).show()
         }
+    }
+
+    fun restartForegroundService(context: Context) {
+        val serviceIntent = Intent(context, LocationPingService::class.java)
+
+        // A. Stop the service first (This will call onDestroy() in your Service)
+        context.stopService(serviceIntent)
+
+        // B. Start the service again immediately (This will call onCreate() and then onStartCommand())
+        // Use startForegroundService for a foreground service, especially on newer Android versions (API 26+)
+        ContextCompat.startForegroundService(context, serviceIntent)
     }
 }
