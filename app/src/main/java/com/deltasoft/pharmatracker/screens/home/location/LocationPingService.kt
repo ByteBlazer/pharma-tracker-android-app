@@ -5,6 +5,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
@@ -82,7 +83,7 @@ class LocationPingService : Service() {
                 sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: ""
             )
 
-            Log.d(TAG, "delay in sec: " + locationHeartBeatFrequencyInSeconds)
+            Log.d(TAG, "delay in sec: " + getLocationHeartBeatInSeconds(applicationContext))
 
             val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("API Pinging Service")
@@ -100,8 +101,16 @@ class LocationPingService : Service() {
             runnable = object : Runnable {
                 override fun run() {
                     Log.d(TAG, "run: ")
-                    requestSingleLocationUpdate()
-                    handler.postDelayed(this, (locationHeartBeatFrequencyInSeconds * 1000).toLong())
+                    token = AppUtils.createBearerToken(
+                        sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: ""
+                    )
+                    if (AppUtils.isValidToken(token)) {
+                        Log.d(TAG, "run: valid token")
+                        requestSingleLocationUpdate()
+                    }else{
+                        Log.d(TAG, "run: invalid token")
+                    }
+                    handler.postDelayed(this, (getLocationHeartBeatInSeconds(applicationContext) * 1000).toLong())
                 }
             }
             handler.post(runnable)
@@ -110,6 +119,10 @@ class LocationPingService : Service() {
         }
 
         return START_STICKY
+    }
+
+    private fun getLocationHeartBeatInSeconds(applicationContext: Context?): Int {
+        return  sharedPrefsUtil?.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS) ?: 0
     }
 
     private fun requestSingleLocationUpdate() {
