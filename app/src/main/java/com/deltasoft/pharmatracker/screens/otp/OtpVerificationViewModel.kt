@@ -5,6 +5,8 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
+import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTripsResponse
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
@@ -22,6 +24,8 @@ class OtpVerificationViewModel(application: Application) :  AndroidViewModel(app
     private val _otpVerificationState = MutableStateFlow<OtpVerificationState>(OtpVerificationState.Idle)
     val otpVerificationState = _otpVerificationState.asStateFlow()
 
+    var token = ""
+
     fun verifyOtp(phoneNumber: String, otp: String) {
         viewModelScope.launch {
             _otpVerificationState.value = OtpVerificationState.Loading
@@ -38,6 +42,7 @@ class OtpVerificationViewModel(application: Application) :  AndroidViewModel(app
         when(code){
             200->{
                 sharedPrefsUtil.saveString(PrefsKey.USER_ACCESS_TOKEN,otpVerificationResponse?.access_token?:"")
+                token = otpVerificationResponse?.access_token?:""
                 AppUtils.storePayLoadDetailsToSharedPreferences(sharedPrefsUtil,otpVerificationResponse?.access_token?:"")
                 Log.d("TAG", "updateOtpVerificationState: "+sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN))
                 _otpVerificationState.value = OtpVerificationState.Success
@@ -57,5 +62,52 @@ class OtpVerificationViewModel(application: Application) :  AndroidViewModel(app
 
     fun onResendClick(phoneNumber: String) {
         repository.resendOTP(phoneNumber)
+    }
+
+
+    var apiRetryAttempt = 0
+
+    private val _scheduledTripsState =
+        MutableStateFlow<ScheduledTripsState>(ScheduledTripsState.Idle)
+    val scheduledTripsState = _scheduledTripsState.asStateFlow()
+
+    fun getMyTripsList(delay: Long = 0) {
+        _otpVerificationState.value = OtpVerificationState.Loading
+        _scheduledTripsState.value = ScheduledTripsState.Loading
+        try {
+            repository.getMyTripsList(token,delay)
+        } catch (e: Exception) {
+            _scheduledTripsState.value =
+                ScheduledTripsState.Error("Fetch My scheduled trips failed: ${e.message}")
+        }
+    }
+
+    fun updateMyScheduledListState(
+        code: Int,
+        message: String,
+        scheduleNewTripResponse: ScheduledTripsResponse? = null
+    ) {
+        when (code) {
+            200 -> {
+                _scheduledTripsState.value =
+                    ScheduledTripsState.Success(scheduleNewTripResponse ?: ScheduledTripsResponse())
+            }
+
+            400 -> {
+                _scheduledTripsState.value = ScheduledTripsState.Error(message)
+            }
+
+            500 -> {
+                _scheduledTripsState.value = ScheduledTripsState.Error(message)
+            }
+
+            else -> {
+                _scheduledTripsState.value = ScheduledTripsState.Error(message)
+            }
+        }
+    }
+
+    fun clearState() {
+        _scheduledTripsState.value = ScheduledTripsState.Idle
     }
 }
