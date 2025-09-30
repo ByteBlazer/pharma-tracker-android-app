@@ -255,6 +255,17 @@ object AppUtils {
         }
     }
 
+    fun startMyService(context: Context) {
+        val serviceIntent = Intent(context, LocationPingService::class.java)
+        ContextCompat.startForegroundService(context, serviceIntent)
+    }
+
+    fun stopService(context: Context) {
+        val serviceIntent = Intent(context, LocationPingService::class.java)
+        context.stopService(serviceIntent)
+    }
+
+
     fun restartForegroundService(context: Context) {
         val serviceIntent = Intent(context, LocationPingService::class.java)
 

@@ -38,6 +38,7 @@ import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationState
+import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
@@ -56,6 +57,7 @@ fun ProfileScreen(
     LogoutConfirmationDialog(
         showDialog = showDialog,
         onConfirm = {
+            AppUtils.stopService(context)
             sharedPrefsUtil.saveString(PrefsKey.USER_ACCESS_TOKEN,"")
             navController.navigate(Screen.Login.createRoute(phone)) {
                 popUpTo(navController.graph.id) {
