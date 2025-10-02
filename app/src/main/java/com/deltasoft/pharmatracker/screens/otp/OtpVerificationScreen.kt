@@ -1,10 +1,12 @@
 package com.deltasoft.pharmatracker.screens.otp
 
 
+import android.Manifest
 import android.content.Context
 import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -48,13 +50,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
+import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.login.OTPTextField
 import com.deltasoft.pharmatracker.screens.login.OtpTextFieldDefaults
+import com.deltasoft.pharmatracker.utils.AppUtils
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.auth.api.phone.SmsRetriever
 import kotlinx.coroutines.delay
 
 
 private const val TAG = "OtpVerificationScreen"
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun OtpVerificationScreen(
     navController: NavHostController,
@@ -63,6 +71,55 @@ fun OtpVerificationScreen(
 ) {
 
     val context = LocalContext.current
+
+    val apiState by otpVerificationViewModel.scheduledTripsState.collectAsState()
+
+    val locationPermissionState = rememberPermissionState(
+        Manifest.permission.ACCESS_FINE_LOCATION
+    )
+
+    LaunchedEffect(apiState) {
+        when (apiState) {
+            is ScheduledTripsState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is ScheduledTripsState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is ScheduledTripsState.Success -> {
+                val scheduledTripsResponse =
+                    (apiState as ScheduledTripsState.Success).scheduledTripsResponse
+                val anyTripIsCurrentlyActive =
+                    scheduledTripsResponse?.trips?.any { it?.status.equals("STARTED") }?:false
+                Log.d(TAG, "SplashScreen: anyTripIsCurrentlyActive $anyTripIsCurrentlyActive")
+                if (anyTripIsCurrentlyActive){
+                    AppUtils.restartForegroundService(context)
+                }
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Login.route) {
+                        inclusive = true
+                    }
+                }
+            }
+            is ScheduledTripsState.Error -> {
+                val message = (apiState as ScheduledTripsState.Error).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                otpVerificationViewModel.clearState()
+
+                Log.d(TAG, "SplashScreen: splashViewModel.apiRetryAttempt "+otpVerificationViewModel.apiRetryAttempt)
+                if (otpVerificationViewModel.apiRetryAttempt <= 5) {
+                    otpVerificationViewModel.apiRetryAttempt += 1
+                    otpVerificationViewModel.getMyTripsList(delay = 1000)
+                }else{
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     var otp by remember { mutableStateOf("") }
     val otpVerificationState by otpVerificationViewModel.otpVerificationState.collectAsState()
@@ -86,9 +143,15 @@ fun OtpVerificationScreen(
 
     LaunchedEffect(otpVerificationState) {
         if (otpVerificationState is OtpVerificationState.Success) {
-            navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Login.route) {
-                    inclusive = true
+            if (locationPermissionState.status.isGranted) {
+                // If permission granted call api to check any trip is currently active
+                otpVerificationViewModel.getMyTripsList()
+            } else {
+                // permission not granted so directly move to home
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Login.route) {
+                        inclusive = true
+                    }
                 }
             }
         }

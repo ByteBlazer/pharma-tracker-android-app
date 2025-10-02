@@ -113,7 +113,11 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
 
     var currentTrip :ScheduledTrip? = null
 
-
+    private val _loading = MutableStateFlow<Boolean>(false)
+    val loading = _loading.asStateFlow()
+    fun setLoading(value: Boolean) {
+        _loading.value = value
+    }
 
 //    private val preferenceListener =
 //        SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
@@ -191,6 +195,16 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
         // B. Start the service again immediately (This will call onCreate() and then onStartCommand())
         // Use startForegroundService for a foreground service, especially on newer Android versions (API 26+)
         ContextCompat.startForegroundService(context, serviceIntent)
+    }
+
+    fun clearAllValues() {
+        currentTrip = null
+        _scheduledTripsState.value = ScheduledTripsState.Idle
+        _scheduledList.value = arrayListOf()
+        _startTripState.value = AppCommonApiState.Idle
+        _latitude.value = null
+        _longitude.value = null
+        _loading.value = false
     }
 
 }

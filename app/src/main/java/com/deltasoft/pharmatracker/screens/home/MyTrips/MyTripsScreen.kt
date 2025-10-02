@@ -62,20 +62,14 @@ fun MyTripsScreen(
 ) {
     val context = LocalContext.current
 
-    var isStartTripClicked by remember { mutableStateOf(false) }
-    var resumingCurrentTrip by remember { mutableStateOf(false) }
-
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
 
-//    val isRunning by myTripsViewModel.isServiceRunning.collectAsState()
-
     val latitude by myTripsViewModel.latitude.collectAsState()
     val longitude by myTripsViewModel.longitude.collectAsState()
 
-    Log.d(TAG, "MyTripsScreen: latitude "+latitude)
-    Log.d(TAG, "MyTripsScreen: longitude "+longitude)
+    val loading by myTripsViewModel.loading.collectAsState()
 
     DisposableEffect(myTripsViewModel) {
         myTripsViewModel.registerReceiver(context)
@@ -85,17 +79,13 @@ fun MyTripsScreen(
     }
 
     LaunchedEffect(latitude,longitude) {
-        if (isStartTripClicked && latitude != null && longitude != null){
-            isStartTripClicked = false
-            resumingCurrentTrip = false
-            myTripsViewModel.clearStartTripState()
+        if (myTripsViewModel?.currentTrip != null && latitude != null && longitude != null){
+            myTripsViewModel?.clearAllValues()
             navController.navigate(
                 Screen.SingleTripDetails.createRoute(
                     selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
                 )
             )
-        }else{
-
         }
     }
 
@@ -120,13 +110,15 @@ fun MyTripsScreen(
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.d(TAG, "State: Success - Message: $message")
                 myTripsViewModel.storeCurrentTripId()
-                myTripsViewModel.startMyService(context)
+                myTripsViewModel.clearLocationValues()
+                myTripsViewModel.restartForegroundService(context)
             }
             is AppCommonApiState.Error -> {
                 val message = (startTripState as AppCommonApiState.Error).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "State: Error - Message: $message")
                 myTripsViewModel.clearStartTripState()
+                myTripsViewModel?.setLoading(false)
             }
         }
     }
@@ -134,10 +126,22 @@ fun MyTripsScreen(
     // NEW LaunchedEffect to react to permission status changes
     LaunchedEffect(locationPermissionState.status) {
         if (locationPermissionState.status.isGranted && isLocationPermissionClicked) {
-            myTripsViewModel.startTrip()
+            if (myTripsViewModel?.currentTrip?.status?.equals("SCHEDULED") == true){
+                // start new trip
+                myTripsViewModel.setLoading(true)
+                myTripsViewModel.startTrip()
+            }else if (myTripsViewModel?.currentTrip?.status?.equals("STARTED") == true) {
+                // Resume trip
+                myTripsViewModel.setLoading(true)
+                myTripsViewModel.clearLocationValues()
+                myTripsViewModel.restartForegroundService(context)
+            }else{
+                myTripsViewModel?.setLoading(false)
+            }
             isLocationPermissionClicked = false
         } else {
             Log.d(TAG, "Location permission DENIED or not yet requested.")
+            myTripsViewModel?.setLoading(false)
         }
     }
 
@@ -156,13 +160,15 @@ fun MyTripsScreen(
         ) {
             Box(modifier = Modifier
                 .fillMaxSize(), contentAlignment = Alignment.Center) {
-                if (startTripState is AppCommonApiState.Idle && resumingCurrentTrip == false) {
+                if (loading == false) {
                     when (apiState) {
                         is ScheduledTripsState.Idle -> {
+                            Log.d(TAG, "MyTripsScreen: CircularProgressIndicator 1")
                             CircularProgressIndicator()
                         }
 
                         is ScheduledTripsState.Loading -> {
+                            Log.d(TAG, "MyTripsScreen: CircularProgressIndicator 2")
                             CircularProgressIndicator()
                         }
 
@@ -176,20 +182,19 @@ fun MyTripsScreen(
                                 myTripsViewModel,
                                 scheduledTripsResponse?.message,
                                 onItemClick = { schduledTrip ->
+                                    myTripsViewModel.currentTrip = schduledTrip
+                                    myTripsViewModel.stopService(context)
+                                    myTripsViewModel.clearLocationValues()
                                     if (schduledTrip?.status.equals("SCHEDULED")) {
                                         // Start Trip
-                                        myTripsViewModel.currentTrip = schduledTrip
                                         when {
-                                            // 2. If the permission is granted
                                             locationPermissionState.status.isGranted -> {
-                                                isStartTripClicked = true
-                                                myTripsViewModel.stopService(context)
-                                                myTripsViewModel.clearLocationValues()
+                                                myTripsViewModel.setLoading(true)
                                                 myTripsViewModel.startTrip()
                                                 isLocationPermissionClicked = false
                                             }
 
-                                            // 3. If the user has denied the permission, show a rationale
+                                            // If the user has denied the permission, show a rationale
                                             //    or guide them to settings.
                                             locationPermissionState.status.shouldShowRationale -> {
                                                 isLocationPermissionClicked = true
@@ -197,7 +202,7 @@ fun MyTripsScreen(
                                                 isPermissionCheckedOnce = true
                                             }
 
-                                            // 4. If it's the first time or they've denied permanently,
+                                            // If it's the first time or they've denied permanently,
                                             //    show a button to request permission.
                                             else -> {
                                                 isLocationPermissionClicked = true
@@ -211,27 +216,15 @@ fun MyTripsScreen(
                                         }
                                     } else {
                                         //Resume Trip
-                                        resumingCurrentTrip = true
-                                        myTripsViewModel.currentTrip = schduledTrip
                                         myTripsViewModel.storeCurrentTripId()
                                         when {
-                                            // 2. If the permission is granted
                                             locationPermissionState.status.isGranted -> {
-//                                                if (isRunning){
-//                                                    navController.navigate(
-//                                                        Screen.SingleTripDetails.createRoute(
-//                                                            selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
-//                                                        )
-//                                                    )
-//                                                }else{
-                                                    isStartTripClicked = true
-                                                    myTripsViewModel.clearStartTripState()
-                                                    myTripsViewModel.restartForegroundService(context)
-//                                                }
+                                                myTripsViewModel.setLoading(true)
+                                                myTripsViewModel.restartForegroundService(context)
                                                 isLocationPermissionClicked = false
                                             }
 
-                                            // 3. If the user has denied the permission, show a rationale
+                                            // If the user has denied the permission, show a rationale
                                             //    or guide them to settings.
                                             locationPermissionState.status.shouldShowRationale -> {
                                                 isLocationPermissionClicked = true
@@ -239,7 +232,7 @@ fun MyTripsScreen(
                                                 isPermissionCheckedOnce = true
                                             }
 
-                                            // 4. If it's the first time or they've denied permanently,
+                                            // If it's the first time or they've denied permanently,
                                             //    show a button to request permission.
                                             else -> {
                                                 isLocationPermissionClicked = true
@@ -258,9 +251,11 @@ fun MyTripsScreen(
                         is ScheduledTripsState.Error -> {
                             val message = (apiState as ScheduledTripsState.Error).message
                             Text(text = message)
+                            myTripsViewModel.setLoading(false)
                         }
                     }
                 }else{
+                    Log.d(TAG, "MyTripsScreen: CircularProgressIndicator 3")
                     CircularProgressIndicator()
                 }
             }

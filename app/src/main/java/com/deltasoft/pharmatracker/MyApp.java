@@ -11,6 +11,7 @@ import com.datadog.android.privacy.TrackingConsent;
 import com.datadog.android.rum.Rum;
 import com.datadog.android.rum.RumConfiguration;
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy;
+import com.deltasoft.pharmatracker.api.RetrofitClient;
 
 public class MyApp extends Application {
 
@@ -24,6 +25,8 @@ public class MyApp extends Application {
             setupDataDogLogging();
             setupDataDogSessionRecording();
         }
+
+        RetrofitClient.INSTANCE.initialize(getApplicationContext());
     }
 
     private void setupDataDogLogging() {
