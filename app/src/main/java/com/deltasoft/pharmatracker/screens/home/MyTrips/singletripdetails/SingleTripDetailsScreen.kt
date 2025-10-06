@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,12 +53,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.Doc
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.DocGroup
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
 import com.deltasoft.pharmatracker.utils.AppUtils
+import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
 private const val TAG = "SingleTripDetailsScreen"
 @Composable
@@ -75,6 +79,10 @@ fun SingleTripDetailsScreen(
     val singleTripDetailsState by singleTripDetailsViewModel.singleTripDetailsState.collectAsState()
     val dropOffTripState by singleTripDetailsViewModel.dropOffTripState.collectAsState()
     val endTripState by singleTripDetailsViewModel.endTripState.collectAsState()
+
+
+    var dropOffTripId by remember { mutableStateOf("") }
+    var dropOffHeading by remember { mutableStateOf("") }
 
     LaunchedEffect(dropOffTripState) {
         when (dropOffTripState) {
@@ -169,7 +177,10 @@ fun SingleTripDetailsScreen(
                             val singleTripDetailsResponse =
                                 (singleTripDetailsState as SingleTripDetailsState.Success).singleTripDetailsResponse
                             singleTripDetailsResponse?.let {
-                                SingleTripDetailsCompose(it, singleTripDetailsViewModel)
+                                SingleTripDetailsCompose(it, singleTripDetailsViewModel, dropOffOnClick = { tripId, heading ->
+                                    dropOffTripId = tripId
+                                    dropOffHeading = heading
+                                })
                             }
                         }
 
@@ -183,12 +194,30 @@ fun SingleTripDetailsScreen(
             }
         }
     }
+    AppConfirmationDialog(
+        showDialog = dropOffTripId.isNotNullOrEmpty() && dropOffHeading.isNotNullOrEmpty(),
+        onConfirm = {
+            singleTripDetailsViewModel.dropOffTrip(
+                selectedScheduledTripId = dropOffTripId,
+                heading = dropOffHeading
+            )
+            dropOffTripId = ""
+            dropOffHeading = ""
+        },
+        onDismiss = {
+            dropOffTripId = ""
+            dropOffHeading = ""
+        },
+        title = "Drop Off Trip",
+        message = "Are you sure you want to drop off the trip?"
+    )
 }
 
 @Composable
 fun SingleTripDetailsCompose(
     singleTripDetailsResponse: SingleTripDetailsResponse,
-    singleTripDetailsViewModel: SingleTripDetailsViewModel
+    singleTripDetailsViewModel: SingleTripDetailsViewModel,
+    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> }
 ) {
     Column(
         Modifier
@@ -200,7 +229,8 @@ fun SingleTripDetailsCompose(
         for (docGroup in singleTripDetailsResponse.docGroups?:arrayListOf()) {
             DocGroupCompose(
                 singleTripDetailsViewModel,
-                docGroup
+                docGroup,
+                dropOffOnClick = dropOffOnClick
             )
         }
     }
@@ -276,7 +306,8 @@ private fun SingleMyTripRowItem(key: String, value: String, style: TextStyle, co
 }
 
 @Composable
-fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup) {
+fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup,
+                    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> }) {
     var isExpanded by rememberSaveable { mutableStateOf(docGroup.expandGroupByDefault && !docGroup.dropOffCompleted) }
     Card(
         modifier = Modifier
@@ -291,7 +322,8 @@ fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docG
                 },
                 isExpanded,
                 docGroup,
-                singleTripDetailsViewModel
+                singleTripDetailsViewModel,
+                dropOffOnClick = dropOffOnClick
             )
             AnimatedVisibility(visible = isExpanded) {
                 ExpandedDocGroup(
@@ -309,7 +341,8 @@ fun SingleDocGroup(
     onClick: () -> Unit,
     isExpanded: Boolean,
     docGroup: DocGroup,
-    singleTripDetailsViewModel: SingleTripDetailsViewModel
+    singleTripDetailsViewModel: SingleTripDetailsViewModel,
+    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> }
 ) {
     var expandIcon =  if (isExpanded) {
         painterResource(id = R.drawable.ic_expand_circle_down)
@@ -324,10 +357,11 @@ fun SingleDocGroup(
             Row {
                 if (docGroup.showDropOffButton) {
                     Button(onClick = {
-                        singleTripDetailsViewModel.dropOffTrip(
-                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
-                            heading = docGroup.heading ?: ""
-                        )
+//                        singleTripDetailsViewModel.dropOffTrip(
+//                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
+//                            heading = docGroup.heading ?: ""
+//                        )
+                        dropOffOnClick.invoke(singleTripDetailsViewModel.selectedScheduledTripId?:"", docGroup.heading ?: "")
                     }) {
                         Text(text = "Drop Off At Hub")
                     }
