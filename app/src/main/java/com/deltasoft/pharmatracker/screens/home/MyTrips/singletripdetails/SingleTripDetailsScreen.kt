@@ -46,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -131,7 +132,7 @@ fun SingleTripDetailsScreen(
     }
 
     Scaffold(modifier = Modifier.fillMaxSize(),
-        topBar = {   App_CommonTopBar(title = "My Trip Details", onBackClick = {  navController.popBackStack() }) },
+        topBar = {   App_CommonTopBar(title = stringResource(R.string.single_trip_details_heading), onBackClick = {  navController.popBackStack() }) },
         bottomBar = {
             Column(Modifier
                 .fillMaxWidth()
@@ -143,7 +144,7 @@ fun SingleTripDetailsScreen(
                             singleTripDetailsViewModel.endTrip(selectedScheduledTripId)
                     }
                 ) {
-                    Text("End Trip")
+                    Text(stringResource(R.string.end_trip_btn_txt))
                 }
             }
         }) { paddingValues ->
@@ -208,8 +209,8 @@ fun SingleTripDetailsScreen(
             dropOffTripId = ""
             dropOffHeading = ""
         },
-        title = "Drop Off Trip",
-        message = "Are you sure you want to drop off the trip?"
+        title = stringResource(R.string.drop_off_confirm_title),
+        message = stringResource(R.string.drop_off_confirm_message)
     )
 }
 
@@ -244,33 +245,33 @@ fun TripBasicDetailsCompose(singleTripDetailsResponse: SingleTripDetailsResponse
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SingleMyTripRowItem(
-                key = "Route",
+                key = stringResource(R.string.row_item_title_route),
                 value = singleTripDetailsResponse.route ?: ""+" : On Trip",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             SingleMyTripRowItem(
-                key = "Trip ID",
+                key = stringResource(R.string.row_item_title_trip_id),
                 value = singleTripDetailsResponse.tripId.toString(),
                 style = MaterialTheme.typography.titleSmall
             )
            SingleMyTripRowItem(
-                key = "Created By",
+                key = stringResource(R.string.row_item_title_created_by),
                 value = singleTripDetailsResponse.createdBy ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleMyTripRowItem(
-                key = "Created At",
+                key = stringResource(R.string.row_item_title_created_at),
                 value = singleTripDetailsResponse.createdAtFormatted ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleMyTripRowItem(
-                key = "Driver Name",
+                key = stringResource(R.string.row_item_title_driver_name),
                 value = singleTripDetailsResponse.driverName ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
             SingleMyTripRowItem(
-                key = "Vehicle Number",
+                key = stringResource(R.string.row_item_title_vehicle_number),
                 value = singleTripDetailsResponse.vehicleNumber ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
@@ -363,13 +364,13 @@ fun SingleDocGroup(
 //                        )
                         dropOffOnClick.invoke(singleTripDetailsViewModel.selectedScheduledTripId?:"", docGroup.heading ?: "")
                     }) {
-                        Text(text = "Drop Off At Hub")
+                        Text(text = stringResource(R.string.drop_off_at_hub_btn_txt))
                     }
                 }else if (docGroup.droppable) {
                     TextButton(onClick = {
                         onClick.invoke()
                     }) {
-                        Text(text = "Dropped Off At Hub")
+                        Text(text = stringResource(R.string.dropped_off_at_hub_txt))
                     }
                 }else{
                     null
@@ -414,33 +415,33 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc) 
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SingleDocRowItem(
-                key = "Firm Name",
+                key = stringResource(R.string.row_item_title_firm_name),
                 value = doc.customerFirmName ?: "",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             SingleDocRowItem(
-                key = "Amount",
+                key = stringResource(R.string.row_item_title_amount),
                 value = doc.docAmount.toString(),
                 style = MaterialTheme.typography.titleSmall
             )
             SingleDocRowItem(
-                key = "Address",
+                key = stringResource(R.string.row_item_title_address),
                 value = doc.customerAddress ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleDocRowItem(
-                key = "City",
+                key = stringResource(R.string.row_item_title_city),
                 value = doc.customerCity ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleDocRowItem(
-                key = "Pin Code",
+                key = stringResource(R.string.row_item_title_pin_code),
                 value = doc.customerPincode ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
             SingleDocRowItem(
-                key = "Phone",
+                key = stringResource(R.string.row_item_title_phone),
                 value = doc.customerPhone ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
