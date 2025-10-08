@@ -137,9 +137,8 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                         Spacer(Modifier.height(16.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Button(onClick = onDismiss) {
-                                androidx.compose.material.Text(
-                                    dismissButtonText,
-                                    color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                                Text(
+                                    dismissButtonText
                                 )
                             }
                             Button(onClick = {
@@ -149,9 +148,8 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                             },
                                 enabled = commentText.isNotNullOrEmpty()
                             ) {
-                                androidx.compose.material.Text(
-                                    confirmButtonText,
-                                    color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                                Text(
+                                    confirmButtonText
                                 )
                             }
                         }
