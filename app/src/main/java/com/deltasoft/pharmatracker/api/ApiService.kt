@@ -1,5 +1,7 @@
 package com.deltasoft.pharmatracker.api
 
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsDeliveredRequest
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsUnDeliveredRequest
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
 import com.deltasoft.pharmatracker.screens.home.location.LocationData
 import com.deltasoft.pharmatracker.screens.home.route.entity.DispatchQueueResponse
@@ -16,6 +18,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface ApiService {
@@ -92,6 +95,20 @@ interface ApiService {
     suspend fun endTrip(
         @Header("Authorization") token: String,
         @Path("tripId") tripId: String
+    ): Response<ApiResponse>
+
+    @PUT("doc/mark-delivery/{docId}")
+    suspend fun markAsDelivered(
+        @Header("Authorization") token: String,
+        @Path("docId") docId: String,
+        @Body body : MarkAsDeliveredRequest
+    ): Response<ApiResponse>
+
+    @PUT("doc/mark-delivery-failed/{docId}")
+    suspend fun markAsUnDelivered(
+        @Header("Authorization") token: String,
+        @Path("docId") docId: String,
+        @Body body : MarkAsUnDeliveredRequest
     ): Response<ApiResponse>
 
 }

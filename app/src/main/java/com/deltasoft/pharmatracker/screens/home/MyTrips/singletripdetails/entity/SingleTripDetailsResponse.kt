@@ -15,6 +15,9 @@ data class SingleTripDetailsResponse(
     val lastUpdatedAt: String? = null,
     val creatorLocation: String? = null,
     val driverLocation: String? = null,
+    val driverLastKnownLatitude: String? = null,
+    val driverLastKnownLongitude: String? = null,
+    val driverLastLocationUpdateTime: String? = null,
     val docGroups: List<DocGroup>? = null
 ){
     val createdAtFormatted: String? get() = createdAt?.let { AppUtils.convertIso8601ToIst(it) }

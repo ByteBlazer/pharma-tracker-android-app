@@ -3,7 +3,6 @@ package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -51,12 +52,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.Doc
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.DocGroup
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
 import com.deltasoft.pharmatracker.utils.AppUtils
+import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
 private const val TAG = "SingleTripDetailsScreen"
 @Composable
@@ -75,6 +78,16 @@ fun SingleTripDetailsScreen(
     val singleTripDetailsState by singleTripDetailsViewModel.singleTripDetailsState.collectAsState()
     val dropOffTripState by singleTripDetailsViewModel.dropOffTripState.collectAsState()
     val endTripState by singleTripDetailsViewModel.endTripState.collectAsState()
+    val markAsUnDeliveredState by singleTripDetailsViewModel.markAsUnDeliveredState.collectAsState()
+    val markAsDeliveredState by singleTripDetailsViewModel.markAsDeliveredState.collectAsState()
+
+
+    var dropOffTripId by remember { mutableStateOf("") }
+    var dropOffHeading by remember { mutableStateOf("") }
+
+
+    var showDeliverySuccesDocId by remember { mutableStateOf("") }
+    var showDeliveryFailedDocId by remember { mutableStateOf("") }
 
     LaunchedEffect(dropOffTripState) {
         when (dropOffTripState) {
@@ -122,8 +135,55 @@ fun SingleTripDetailsScreen(
         }
     }
 
+    LaunchedEffect(markAsDeliveredState) {
+        when (markAsDeliveredState) {
+            is AppCommonApiState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is AppCommonApiState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is AppCommonApiState.Success -> {
+                val message = (markAsDeliveredState as AppCommonApiState.Success).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                singleTripDetailsViewModel?.getSingleTripDetails()
+                Log.d(TAG, "State: Success - Message: $message")
+
+            }
+            is AppCommonApiState.Error -> {
+                val message = (markAsDeliveredState as AppCommonApiState.Error).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "State: Error - Message: $message")
+            }
+        }
+    }
+
+
+    LaunchedEffect(markAsUnDeliveredState) {
+        when (markAsUnDeliveredState) {
+            is AppCommonApiState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is AppCommonApiState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is AppCommonApiState.Success -> {
+                val message = (markAsUnDeliveredState as AppCommonApiState.Success).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                singleTripDetailsViewModel?.getSingleTripDetails()
+                Log.d(TAG, "State: Success - Message: $message")
+
+            }
+            is AppCommonApiState.Error -> {
+                val message = (markAsUnDeliveredState as AppCommonApiState.Error).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "State: Error - Message: $message")
+            }
+        }
+    }
+
     Scaffold(modifier = Modifier.fillMaxSize(),
-        topBar = {   App_CommonTopBar(title = "My Trip Details", onBackClick = {  navController.popBackStack() }) },
+        topBar = {   App_CommonTopBar(title = stringResource(R.string.single_trip_details_heading), onBackClick = {  navController.popBackStack() }) },
         bottomBar = {
             Column(Modifier
                 .fillMaxWidth()
@@ -135,7 +195,7 @@ fun SingleTripDetailsScreen(
                             singleTripDetailsViewModel.endTrip(selectedScheduledTripId)
                     }
                 ) {
-                    Text("End Trip")
+                    Text(stringResource(R.string.end_trip_btn_txt))
                 }
             }
         }) { paddingValues ->
@@ -153,7 +213,7 @@ fun SingleTripDetailsScreen(
                 modifier = Modifier
                     .fillMaxSize(), contentAlignment = Alignment.Center
             ) {
-                if (dropOffTripState is AppCommonApiState.Loading || endTripState is AppCommonApiState.Loading){
+                if (dropOffTripState is AppCommonApiState.Loading || endTripState is AppCommonApiState.Loading || markAsDeliveredState is AppCommonApiState.Loading || markAsUnDeliveredState is AppCommonApiState.Loading){
                     CircularProgressIndicator()
                 }else {
                     when (singleTripDetailsState) {
@@ -169,7 +229,14 @@ fun SingleTripDetailsScreen(
                             val singleTripDetailsResponse =
                                 (singleTripDetailsState as SingleTripDetailsState.Success).singleTripDetailsResponse
                             singleTripDetailsResponse?.let {
-                                SingleTripDetailsCompose(it, singleTripDetailsViewModel)
+                                SingleTripDetailsCompose(it, singleTripDetailsViewModel, dropOffOnClick = { tripId, heading ->
+                                    dropOffTripId = tripId
+                                    dropOffHeading = heading
+                                }, deliverySuccessOnClick = {docId ->
+                                    showDeliverySuccesDocId = docId
+                                }, deliveryFailedOnClick = { docId ->
+                                    showDeliveryFailedDocId = docId
+                                })
                             }
                         }
 
@@ -183,12 +250,69 @@ fun SingleTripDetailsScreen(
             }
         }
     }
+    AppConfirmationDialog(
+        showDialog = dropOffTripId.isNotNullOrEmpty() && dropOffHeading.isNotNullOrEmpty(),
+        onConfirm = {
+            singleTripDetailsViewModel.dropOffTrip(
+                selectedScheduledTripId = dropOffTripId,
+                heading = dropOffHeading
+            )
+            dropOffTripId = ""
+            dropOffHeading = ""
+        },
+        onDismiss = {
+            dropOffTripId = ""
+            dropOffHeading = ""
+        },
+        title = stringResource(R.string.drop_off_confirm_title),
+        message = stringResource(R.string.drop_off_confirm_message)
+    )
+
+    DeliverySuccessConfirmationDialogCustom(
+        showDialog = showDeliverySuccesDocId.isNotNullOrEmpty(),
+        onConfirm = { comment,signature,isChecked ->
+            singleTripDetailsViewModel.markAsDelivered(
+                docId = showDeliverySuccesDocId,
+                signatureEncodedString = signature,
+                deliveryComment = comment,
+                isChecked = isChecked
+            )
+            showDeliverySuccesDocId = ""
+        },
+        onDismiss = {
+            showDeliverySuccesDocId = ""
+        },
+        title = stringResource(R.string.delivery_success_confirm_title),
+        message = stringResource(R.string.delivery_success_confirm_message)
+    )
+    DeliveryFailedConfirmationDialogCustom(
+        showDialog = showDeliveryFailedDocId.isNotNullOrEmpty(),
+        onConfirm = { comment ->
+            singleTripDetailsViewModel.markAsUnDelivered(
+                docId = showDeliveryFailedDocId,
+                comment = comment
+            )
+            showDeliveryFailedDocId = ""
+        },
+        onDismiss = {
+            showDeliveryFailedDocId = ""
+        },
+        title = stringResource(R.string.delivery_failed_confirm_title),
+        message = stringResource(R.string.delivery_failed_confirm_message)
+    )
 }
+
+
+
+
 
 @Composable
 fun SingleTripDetailsCompose(
     singleTripDetailsResponse: SingleTripDetailsResponse,
-    singleTripDetailsViewModel: SingleTripDetailsViewModel
+    singleTripDetailsViewModel: SingleTripDetailsViewModel,
+    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> },
+    deliverySuccessOnClick: (docId: String) -> Unit = { a -> },
+    deliveryFailedOnClick: (docId: String) -> Unit = { a -> }
 ) {
     Column(
         Modifier
@@ -200,7 +324,10 @@ fun SingleTripDetailsCompose(
         for (docGroup in singleTripDetailsResponse.docGroups?:arrayListOf()) {
             DocGroupCompose(
                 singleTripDetailsViewModel,
-                docGroup
+                docGroup,
+                dropOffOnClick = dropOffOnClick,
+                deliverySuccessOnClick = deliverySuccessOnClick,
+                deliveryFailedOnClick = deliveryFailedOnClick
             )
         }
     }
@@ -212,35 +339,37 @@ fun TripBasicDetailsCompose(singleTripDetailsResponse: SingleTripDetailsResponse
         modifier = Modifier
             .padding(vertical = 8.dp)
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier
+            .fillMaxWidth()
+            .padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SingleMyTripRowItem(
-                key = "Route",
+                key = stringResource(R.string.row_item_title_route),
                 value = singleTripDetailsResponse.route ?: ""+" : On Trip",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             SingleMyTripRowItem(
-                key = "Trip ID",
+                key = stringResource(R.string.row_item_title_trip_id),
                 value = singleTripDetailsResponse.tripId.toString(),
                 style = MaterialTheme.typography.titleSmall
             )
            SingleMyTripRowItem(
-                key = "Created By",
+                key = stringResource(R.string.row_item_title_created_by),
                 value = singleTripDetailsResponse.createdBy ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleMyTripRowItem(
-                key = "Created At",
+                key = stringResource(R.string.row_item_title_created_at),
                 value = singleTripDetailsResponse.createdAtFormatted ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleMyTripRowItem(
-                key = "Driver Name",
+                key = stringResource(R.string.row_item_title_driver_name),
                 value = singleTripDetailsResponse.driverName ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
             SingleMyTripRowItem(
-                key = "Vehicle Number",
+                key = stringResource(R.string.row_item_title_vehicle_number),
                 value = singleTripDetailsResponse.vehicleNumber ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
@@ -276,7 +405,10 @@ private fun SingleMyTripRowItem(key: String, value: String, style: TextStyle, co
 }
 
 @Composable
-fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup) {
+fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup,
+                    deliverySuccessOnClick: (docId: String) -> Unit = { a -> },
+                    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> },
+    deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
     var isExpanded by rememberSaveable { mutableStateOf(docGroup.expandGroupByDefault && !docGroup.dropOffCompleted) }
     Card(
         modifier = Modifier
@@ -291,12 +423,15 @@ fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docG
                 },
                 isExpanded,
                 docGroup,
-                singleTripDetailsViewModel
+                singleTripDetailsViewModel,
+                dropOffOnClick = dropOffOnClick
             )
             AnimatedVisibility(visible = isExpanded) {
                 ExpandedDocGroup(
                     singleTripDetailsViewModel,
-                    docGroup
+                    docGroup,
+                    deliverySuccessOnClick = deliverySuccessOnClick,
+                    deliveryFailedOnClick = deliveryFailedOnClick
                 )
             }
 
@@ -309,36 +444,45 @@ fun SingleDocGroup(
     onClick: () -> Unit,
     isExpanded: Boolean,
     docGroup: DocGroup,
-    singleTripDetailsViewModel: SingleTripDetailsViewModel
+    singleTripDetailsViewModel: SingleTripDetailsViewModel,
+    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> }
 ) {
     var expandIcon =  if (isExpanded) {
         painterResource(id = R.drawable.ic_expand_circle_down)
     } else {
         painterResource(id = R.drawable.ic_expand_circle_right)
     }
+    val isAnyItemNeedToDeliver = docGroup.docs?.any { it.status == DeliveryStatusConstants.ON_TRIP } == true
+
     ListItem(
         modifier = Modifier.clickable { onClick.invoke() },
         headlineContent = { Text(text = docGroup.heading?:"") },
         leadingContent = null,
         trailingContent = {
             Row {
-                if (docGroup.showDropOffButton) {
-                    Button(onClick = {
-                        singleTripDetailsViewModel.dropOffTrip(
-                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
-                            heading = docGroup.heading ?: ""
-                        )
-                    }) {
-                        Text(text = "Drop Off At Hub")
+                if (isAnyItemNeedToDeliver) {
+                    if (docGroup.showDropOffButton) {
+                        Button(onClick = {
+//                        singleTripDetailsViewModel.dropOffTrip(
+//                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
+//                            heading = docGroup.heading ?: ""
+//                        )
+                            dropOffOnClick.invoke(
+                                singleTripDetailsViewModel.selectedScheduledTripId ?: "",
+                                docGroup.heading ?: ""
+                            )
+                        }) {
+                            Text(text = stringResource(R.string.drop_off_at_hub_btn_txt))
+                        }
+                    } else if (docGroup.droppable) {
+                        TextButton(onClick = {
+                            onClick.invoke()
+                        }) {
+                            Text(text = stringResource(R.string.dropped_off_at_hub_txt))
+                        }
+                    } else {
+                        null
                     }
-                }else if (docGroup.droppable) {
-                    TextButton(onClick = {
-                        onClick.invoke()
-                    }) {
-                        Text(text = "Dropped Off At Hub")
-                    }
-                }else{
-                    null
                 }
                 IconButton(onClick = {onClick.invoke() }) {
                     Icon(
@@ -353,7 +497,7 @@ fun SingleDocGroup(
     )
 }
 @Composable
-fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup) {
+fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup,deliverySuccessOnClick: (docId: String) -> Unit = { a -> },deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
 
     Column(
         Modifier
@@ -364,7 +508,9 @@ fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc
             Column(Modifier.fillMaxWidth()) {
                 SingleDoc(
                     singleTripDetailsViewModel,
-                    doc
+                    doc,
+                    deliverySuccessOnClick = deliverySuccessOnClick,
+                    deliveryFailedOnClick = deliveryFailedOnClick
                 )
             }
         }
@@ -372,45 +518,65 @@ fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc
 }
 
 @Composable
-fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc) {
+fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,deliverySuccessOnClick: (docId: String) -> Unit = { a -> },deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
     val context = LocalContext.current
     Card(
         modifier = Modifier
             .padding(vertical = 8.dp)
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier
+            .fillMaxWidth()
+            .padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SingleDocRowItem(
-                key = "Firm Name",
+                key = stringResource(R.string.row_item_title_firm_name),
                 value = doc.customerFirmName ?: "",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             SingleDocRowItem(
-                key = "Amount",
+                key = stringResource(R.string.row_item_title_amount),
                 value = doc.docAmount.toString(),
                 style = MaterialTheme.typography.titleSmall
             )
             SingleDocRowItem(
-                key = "Address",
+                key = stringResource(R.string.row_item_title_address),
                 value = doc.customerAddress ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleDocRowItem(
-                key = "City",
+                key = stringResource(R.string.row_item_title_city),
                 value = doc.customerCity ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleDocRowItem(
-                key = "Pin Code",
+                key = stringResource(R.string.row_item_title_pin_code),
                 value = doc.customerPincode ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
             SingleDocRowItem(
-                key = "Phone",
+                key = stringResource(R.string.row_item_title_phone),
                 value = doc.customerPhone ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            SingleDocRowItem(
+                key = stringResource(R.string.row_item_title_status),
+                value = if (doc.status?.equals(DeliveryStatusConstants.DELIVERED,ignoreCase = true) == true) "Delivered"
+                else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Column (Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(0.dp), horizontalAlignment = Alignment.End) {
+                if (doc.status == DeliveryStatusConstants.ON_TRIP) {
+                    Button(onClick = {
+                        deliverySuccessOnClick.invoke(doc.id ?: "")
+                    }) {
+                        Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
+                    }
+                    Button(onClick = {
+                        deliveryFailedOnClick.invoke(doc.id ?: "")
+                    }) {
+                        Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+                    }
+                }
                 IconButton(
                     onClick = {
                         AppUtils.startGoogleMapsNavigation(

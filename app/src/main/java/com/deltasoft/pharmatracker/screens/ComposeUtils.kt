@@ -1,9 +1,11 @@
 package com.deltasoft.pharmatracker.screens
 
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -16,6 +18,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
@@ -95,4 +98,51 @@ fun Color.blendWith(other: Color, ratio: Float): Color {
 
 enum class BorderSide {
     LEFT, RIGHT
+}
+
+
+@Composable
+fun AppConfirmationDialog(
+    showDialog: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    title: String,
+    message: String,
+    confirmButtonText: String = "Confirm" ,
+    dismissButtonText: String = "Cancel",
+) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                androidx.compose.material.Text(
+                    text = title, style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                androidx.compose.material.Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = onConfirm) {
+                    androidx.compose.material.Text(
+                        confirmButtonText,
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    androidx.compose.material.Text(
+                        dismissButtonText,
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        )
+    }
 }

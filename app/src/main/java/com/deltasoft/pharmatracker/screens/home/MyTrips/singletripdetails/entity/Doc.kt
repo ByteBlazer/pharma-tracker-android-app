@@ -10,6 +10,7 @@ data class Doc(
     val docAmount: String? = null,
     val route: String? = null,
     val lot: String? = null,
+    val comment: String? = null,
     val customerId: String? = null,
     val createdAt: String? = null,
     val lastUpdatedAt: String? = null,
