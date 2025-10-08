@@ -1,5 +1,6 @@
 package com.deltasoft.pharmatracker.utils
 
+import DrawingPath
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
@@ -21,6 +22,24 @@ import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+
+import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.location.Location
+import android.util.Base64
+import androidx.compose.ui.graphics.toArgb
+import com.google.android.gms.location.CurrentLocationRequest
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import toAndroidPath
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 import java.util.Date
 import java.util.Locale
@@ -275,5 +294,189 @@ object AppUtils {
         // B. Start the service again immediately (This will call onCreate() and then onStartCommand())
         // Use startForegroundService for a foreground service, especially on newer Android versions (API 26+)
         ContextCompat.startForegroundService(context, serviceIntent)
+    }
+
+    @SuppressLint("MissingPermission")
+    fun fetchCurrentLocation(
+        context: Context,
+        onSuccess: (Location) -> Unit, // Callback for successful result
+        onFailure: (Exception) -> Unit  // Callback for failure
+    ) {
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        val cancellationTokenSource = CancellationTokenSource()
+
+        // Request settings for high accuracy
+        val request = CurrentLocationRequest.Builder()
+            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+            .build()
+
+        fusedLocationClient.getCurrentLocation(request, cancellationTokenSource.token)
+            .addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    onSuccess(location)
+                } else {
+                    onFailure(Exception("Location data is null (GPS may be disabled)."))
+                }
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
+    fun getFusedLocationClient(context: Context): FusedLocationProviderClient {
+        return LocationServices.getFusedLocationProviderClient(context)
+    }
+
+
+    /**
+     * Converts the list of Compose Paths into an Android Bitmap and saves it as a PNG file.
+     *
+     * @param context The Android context for file operations.
+     * @param finalPaths The list of all completed signature strokes.
+     * @param targetWidth The desired pixel width of the output image.
+     * @param targetHeight The desired pixel height of the output image.
+     * @param sourceWidthPx The actual pixel width of the composable where the path was drawn (Source).
+     * @param sourceHeightPx The actual pixel height of the composable where the path was drawn (Source).
+     */
+    fun saveSignatureImage(
+        context: Context,
+        finalPaths: List<DrawingPath>,
+        targetWidth: Int,
+        targetHeight: Int,
+        sourceWidthPx: Int,
+        sourceHeightPx: Int
+    ): String? {
+        if (finalPaths.isEmpty() || sourceWidthPx <= 0 || sourceHeightPx <= 0) return null
+
+        // 1. Create an empty Bitmap
+        val bitmap = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        // 2. Draw a solid white background onto the Bitmap
+        canvas.drawColor(android.graphics.Color.WHITE)
+
+        // 3. Define the Paint object for drawing the strokes
+        val paint = Paint().apply {
+            isAntiAlias = true
+            style = Paint.Style.STROKE
+            strokeJoin = Paint.Join.ROUND
+            strokeCap = Paint.Cap.ROUND
+        }
+
+        // Calculate scaling factors
+        val scaleX = targetWidth.toFloat() / sourceWidthPx.toFloat()
+        val scaleY = targetHeight.toFloat() / sourceHeightPx.toFloat()
+
+        // 4. Draw each Compose Path onto the Android Canvas
+        finalPaths.forEach { drawingPath ->
+
+            paint.color = drawingPath.color.toArgb() // Convert Compose Color to Android Color
+
+            // Scale stroke width relative to the scaling factor (using X for both)
+            paint.strokeWidth = drawingPath.strokeWidth.value * scaleX
+
+            // Convert the Compose Path to the native Android Path
+            val androidPath = drawingPath.path.toAndroidPath()
+
+            // Apply scaling matrix to the Path coordinates
+            val matrix = Matrix()
+            matrix.setScale(scaleX, scaleY)
+            androidPath.transform(matrix) // Apply the transformation
+
+            canvas.drawPath(androidPath, paint)
+        }
+
+
+        // 5. Compression and Iterative Loop for File Size Control
+        val filename = "signature_${System.currentTimeMillis()}.jpeg"
+        val file = File(context.filesDir, filename)
+
+        // Target file size limits
+        val maxAcceptableBytes = 10 * 1024L // 10 KB
+        val minForcedBytes = 7 * 1024L     // 7 KB
+
+        var currentQuality = 100 // Start at 100 as requested
+        var fileSizeInBytes: Long
+        var attempts = 0
+        val maxAttempts = 100 // Safety break
+
+        // Initial Compression at Quality 100
+        try {
+            FileOutputStream(file).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, currentQuality, out)
+            }
+            fileSizeInBytes = file.length()
+        } catch (e: IOException) {
+            Log.e("SignaturePad", "Error during initial saving: ${e.message}")
+            return null
+        }
+
+        // Iterative Reduction Loop (only if the initial file size is too large)
+        if (fileSizeInBytes > maxAcceptableBytes) {
+
+            Log.d("SignaturePad", "Initial size (${fileSizeInBytes / 1024.0} KB) > 10KB. Starting reduction...")
+
+            // Reset quality just below 100 and start iterating down, now targeting 7KB-10KB
+            currentQuality = 99
+
+            while ((fileSizeInBytes > maxAcceptableBytes || fileSizeInBytes < minForcedBytes) &&
+                currentQuality in 1..99 &&
+                attempts < maxAttempts) {
+
+                attempts++
+
+                // Re-compress the bitmap
+                try {
+                    FileOutputStream(file).use { out ->
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, currentQuality, out)
+                    }
+                    fileSizeInBytes = file.length()
+                } catch (e: IOException) {
+                    Log.e("SignaturePad", "Error during iterative compression: ${e.message}")
+                    break // Exit loop on IO error
+                }
+
+
+                Log.d("SignaturePad", " attempt  "+attempts)
+                Log.d("SignaturePad", " currentQuality  "+currentQuality)
+                if (fileSizeInBytes > maxAcceptableBytes) {
+                    // File is too large (> 10KB), reduce quality.
+                    currentQuality -= if (currentQuality > 80) 5 else 1 // Larger steps for faster convergence
+                    if (currentQuality < 1) currentQuality = 1
+                } else if (fileSizeInBytes < minForcedBytes) {
+                    // File is too small (< 7KB), increase quality slightly to increase size
+                    currentQuality += 1
+                    if (currentQuality > 100) currentQuality = 100
+                } else {
+                    // Success: within 7KB-10KB range
+                    break
+                }
+            }
+        }
+
+
+        // Final log message
+        val finalFileSizeInKB = fileSizeInBytes / 1024.0
+        val status = if (fileSizeInBytes <= maxAcceptableBytes) "SUCCESS" else "FAILURE (forced < 7KB)"
+
+        Log.d("SignaturePad", "Save Status: Iteration Complete")
+        Log.d("SignaturePad", "Final File Path: ${file.absolutePath}")
+        Log.d("SignaturePad", "Final File Size: ${String.format("%.2f", finalFileSizeInKB)} KB (Quality: $currentQuality, status: $status)")
+
+        // 6. ENCODE THE FILE TO BASE64 AND PRINT
+        try {
+            val bytes = file.readBytes()
+            // Use Base64.DEFAULT for standard encoding
+            val base64EncodedString = Base64.encodeToString(bytes, Base64.DEFAULT)
+
+            Log.d("SignaturePad", "--- Base64 Encoded Image Data ---")
+            Log.d("SignaturePad", base64EncodedString)
+            Log.d("SignaturePad", "-----------------------------------")
+            return base64EncodedString
+
+        } catch (e: IOException) {
+            Log.e("SignaturePad", "Error reading file for Base64 encoding: ${e.message}")
+            return null
+        }
     }
 }

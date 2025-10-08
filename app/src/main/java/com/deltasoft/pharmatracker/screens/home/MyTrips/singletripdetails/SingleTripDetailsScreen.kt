@@ -1,5 +1,7 @@
 package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 
+import DrawingPath
+import SignaturePad
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -19,10 +21,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,6 +34,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,12 +49,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -80,10 +88,16 @@ fun SingleTripDetailsScreen(
     val singleTripDetailsState by singleTripDetailsViewModel.singleTripDetailsState.collectAsState()
     val dropOffTripState by singleTripDetailsViewModel.dropOffTripState.collectAsState()
     val endTripState by singleTripDetailsViewModel.endTripState.collectAsState()
+    val markAsUnDeliveredState by singleTripDetailsViewModel.markAsUnDeliveredState.collectAsState()
+    val markAsDeliveredState by singleTripDetailsViewModel.markAsDeliveredState.collectAsState()
 
 
     var dropOffTripId by remember { mutableStateOf("") }
     var dropOffHeading by remember { mutableStateOf("") }
+
+
+    var showDeliverySuccesDocId by remember { mutableStateOf("") }
+    var showDeliveryFailedDocId by remember { mutableStateOf("") }
 
     LaunchedEffect(dropOffTripState) {
         when (dropOffTripState) {
@@ -125,6 +139,53 @@ fun SingleTripDetailsScreen(
             }
             is AppCommonApiState.Error -> {
                 val message = (endTripState as AppCommonApiState.Error).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "State: Error - Message: $message")
+            }
+        }
+    }
+
+    LaunchedEffect(markAsDeliveredState) {
+        when (markAsDeliveredState) {
+            is AppCommonApiState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is AppCommonApiState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is AppCommonApiState.Success -> {
+                val message = (markAsDeliveredState as AppCommonApiState.Success).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                singleTripDetailsViewModel?.getSingleTripDetails()
+                Log.d(TAG, "State: Success - Message: $message")
+
+            }
+            is AppCommonApiState.Error -> {
+                val message = (markAsDeliveredState as AppCommonApiState.Error).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "State: Error - Message: $message")
+            }
+        }
+    }
+
+
+    LaunchedEffect(markAsUnDeliveredState) {
+        when (markAsUnDeliveredState) {
+            is AppCommonApiState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is AppCommonApiState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is AppCommonApiState.Success -> {
+                val message = (markAsUnDeliveredState as AppCommonApiState.Success).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                singleTripDetailsViewModel?.getSingleTripDetails()
+                Log.d(TAG, "State: Success - Message: $message")
+
+            }
+            is AppCommonApiState.Error -> {
+                val message = (markAsUnDeliveredState as AppCommonApiState.Error).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "State: Error - Message: $message")
             }
@@ -181,6 +242,10 @@ fun SingleTripDetailsScreen(
                                 SingleTripDetailsCompose(it, singleTripDetailsViewModel, dropOffOnClick = { tripId, heading ->
                                     dropOffTripId = tripId
                                     dropOffHeading = heading
+                                }, deliverySuccessOnClick = {docId ->
+                                    showDeliverySuccesDocId = docId
+                                }, deliveryFailedOnClick = { docId ->
+                                    showDeliveryFailedDocId = docId
                                 })
                             }
                         }
@@ -212,13 +277,302 @@ fun SingleTripDetailsScreen(
         title = stringResource(R.string.drop_off_confirm_title),
         message = stringResource(R.string.drop_off_confirm_message)
     )
+
+    DeliverySuccessConfirmationDialog(
+        showDialog = showDeliverySuccesDocId.isNotNullOrEmpty(),
+        onConfirm = { comment,signature ->
+            singleTripDetailsViewModel.markAsDelivered(
+                docId = showDeliverySuccesDocId,
+                signatureEncodedString = signature,
+                deliveryComment = comment
+            )
+            showDeliverySuccesDocId = ""
+        },
+        onDismiss = {
+            showDeliverySuccesDocId = ""
+        },
+        title = stringResource(R.string.delivery_success_confirm_title),
+        message = stringResource(R.string.delivery_success_confirm_message)
+    )
+    DeliveryFailedConfirmationDialog(
+        showDialog = showDeliveryFailedDocId.isNotNullOrEmpty(),
+        onConfirm = { comment ->
+            singleTripDetailsViewModel.markAsUnDelivered(
+                docId = showDeliveryFailedDocId,
+                comment = comment
+            )
+            showDeliveryFailedDocId = ""
+        },
+        onDismiss = {
+            showDeliveryFailedDocId = ""
+        },
+        title = stringResource(R.string.delivery_failed_confirm_title),
+        message = stringResource(R.string.delivery_failed_confirm_message)
+    )
+}
+
+@Composable
+fun DeliveryFailedConfirmationDialog(showDialog: Boolean,
+                                     onConfirm: (comment: String) -> Unit = { a-> },
+                                     onDismiss: () -> Unit,
+                                     title: String,
+                                     message: String,
+                                     confirmButtonText: String = "Confirm" ,
+                                     dismissButtonText: String = "Cancel",) {
+    if (showDialog) {
+        // 1. State to hold the user's input
+        var commentText by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                androidx.compose.material.Text(
+                    text = title, style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+//                androidx.compose.material.Text(
+//                    text = message,
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    color = MaterialTheme.colorScheme.onSurface
+//                )
+
+
+                // 2. OutlinedTextField with minLines and maxLines set to 4
+                OutlinedTextField(
+                    value = commentText,
+                    onValueChange = { commentText = it },
+                    label = { Text("Enter your comment") },
+                    // KEY PROPERTY: Forces the field to be 4 lines tall visually
+                    minLines = 4,
+                    // KEY PROPERTY: Prevents the field from growing beyond 4 lines
+                    maxLines = 4,
+                    modifier = Modifier
+                        .fillMaxWidth() // Makes the field take up the full width
+                        .padding(16.dp)
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (commentText.isNotNullOrEmpty()) {
+                        onConfirm.invoke(commentText)
+                    }
+                },
+                    enabled = commentText.isNotNullOrEmpty()
+                ) {
+                    androidx.compose.material.Text(
+                        confirmButtonText,
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    androidx.compose.material.Text(
+                        dismissButtonText,
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun DeliverySuccessConfirmationDialog(showDialog: Boolean,
+                                      onConfirm: (comment: String,signature:String) -> Unit = { a,b-> },
+                                      onDismiss: () -> Unit,
+                                      title: String,
+                                      message: String,
+                                      confirmButtonText: String = "Confirm" ,
+                                      dismissButtonText: String = "Cancel",) {
+    if (showDialog) {
+        // 1. State to hold the user's input
+        var commentText by remember { mutableStateOf("") }
+        var signatureEncodedString by remember { mutableStateOf<String?>("") }
+
+        // Get context to access file system and resources
+        val context = LocalContext.current
+
+        // State to hold all the drawing paths (strokes)
+        var paths by remember { mutableStateOf(emptyList<DrawingPath>()) }
+
+        // The currently active path being drawn
+        var currentPath by remember { mutableStateOf(Path()) }
+
+        // State to store the actual pixel size of the SignaturePad Composable (Source Size)
+        var signaturePadSizePx by remember { mutableStateOf(IntSize(0, 0)) }
+
+        // Style settings for the signature
+        val signatureColor = Color.Black
+        val signatureStrokeWidth = 4.dp
+
+        // Define the fixed dimensions (in DP) of the drawing area for later bitmap scaling
+        val signaturePadHeightDp = 300.dp
+
+        // Target width in pixels for the saved image (fixed high quality width)
+        val targetBitmapWidth = 800
+
+        val finalPaths = paths + if (!currentPath.isEmpty) {
+            listOf(DrawingPath(currentPath, signatureColor, signatureStrokeWidth))
+        } else {
+            emptyList()
+        }
+
+        // Target height will be calculated dynamically to match the canvas aspect ratio
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                androidx.compose.material.Text(
+                    text = title, style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+
+                // Target height will be calculated dynamically to match the canvas aspect ratio
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFFF0F4F8)) // Light background
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Sign Below",
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    // The Signature Drawing Area
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(signaturePadHeightDp), // Use the defined height DP
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    ) {
+                        SignaturePad(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.White) // Signature area background
+                                // Capture the size of the Composable in pixels
+                                .onGloballyPositioned { layoutCoordinates ->
+                                    signaturePadSizePx = layoutCoordinates.size
+                                },
+                            paths = paths,
+                            currentPath = currentPath,
+                            onSignatureDrawn = { path, dragEnd ->
+                                if (dragEnd) {
+                                    // Drag ended, save the current path to the list of finished paths
+                                    paths = paths + DrawingPath(path, signatureColor, signatureStrokeWidth)
+                                    currentPath = Path() // Start a new current path
+                                } else {
+                                    // FIX: Create a new Path object by copying the content of the mutated 'path'
+                                    // This forces Compose to see a state change (new object reference) and recompose the Canvas.
+                                    currentPath = Path().apply { addPath(path) }
+                                }
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.size(32.dp))
+
+                    // Control Buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        Button(
+                            onClick = {
+                                paths = emptyList()
+                                currentPath = Path()
+                            },
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Clear Signature")
+                        }
+
+
+                    }
+
+                    OutlinedTextField(
+                        value = commentText,
+                        onValueChange = { commentText = it },
+                        label = { Text("Enter your comment") },
+                        // KEY PROPERTY: Forces the field to be 4 lines tall visually
+                        minLines = 4,
+                        // KEY PROPERTY: Prevents the field from growing beyond 4 lines
+                        maxLines = 4,
+                        modifier = Modifier
+                            .fillMaxWidth() // Makes the field take up the full width
+                            .padding(16.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Combine all paths for final capture
+                        if (finalPaths.isNotEmpty() && signaturePadSizePx.width > 0) {
+                            // FIX: Dynamically calculate target height based on measured aspect ratio
+                            val ratio =
+                                signaturePadSizePx.height.toFloat() / signaturePadSizePx.width.toFloat()
+                            val calculatedTargetHeight =
+                                (targetBitmapWidth.toFloat() * ratio).toInt()
+
+                            signatureEncodedString = AppUtils.saveSignatureImage(
+                                context,
+                                finalPaths,
+                                targetBitmapWidth,
+                                calculatedTargetHeight, // Use calculated height for correct proportion
+                                signaturePadSizePx.width,
+                                signaturePadSizePx.height
+                            )
+                            if (commentText.isNotNullOrEmpty() && signatureEncodedString.isNotNullOrEmpty()) {
+                                onConfirm.invoke(commentText, signatureEncodedString?:"")
+                            }else{
+
+                                Log.w(
+                                    "SignaturePad",
+                                    "comment or signatureEncodedString is empty"
+                                )
+                            }
+                        } else {
+                            Log.w(
+                                "SignaturePad",
+                                "Cannot save: No signature drawn or size not yet measured."
+                            )
+                        }
+                    },
+                    enabled = true
+                ) {
+                    androidx.compose.material.Text(
+                        confirmButtonText,
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    androidx.compose.material.Text(
+                        dismissButtonText,
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        )
+    }
 }
 
 @Composable
 fun SingleTripDetailsCompose(
     singleTripDetailsResponse: SingleTripDetailsResponse,
     singleTripDetailsViewModel: SingleTripDetailsViewModel,
-    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> }
+    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> },
+    deliverySuccessOnClick: (docId: String) -> Unit = { a -> },
+    deliveryFailedOnClick: (docId: String) -> Unit = { a -> }
 ) {
     Column(
         Modifier
@@ -231,7 +585,9 @@ fun SingleTripDetailsCompose(
             DocGroupCompose(
                 singleTripDetailsViewModel,
                 docGroup,
-                dropOffOnClick = dropOffOnClick
+                dropOffOnClick = dropOffOnClick,
+                deliverySuccessOnClick = deliverySuccessOnClick,
+                deliveryFailedOnClick = deliveryFailedOnClick
             )
         }
     }
@@ -243,7 +599,9 @@ fun TripBasicDetailsCompose(singleTripDetailsResponse: SingleTripDetailsResponse
         modifier = Modifier
             .padding(vertical = 8.dp)
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier
+            .fillMaxWidth()
+            .padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SingleMyTripRowItem(
                 key = stringResource(R.string.row_item_title_route),
                 value = singleTripDetailsResponse.route ?: ""+" : On Trip",
@@ -308,7 +666,9 @@ private fun SingleMyTripRowItem(key: String, value: String, style: TextStyle, co
 
 @Composable
 fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup,
-                    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> }) {
+                    deliverySuccessOnClick: (docId: String) -> Unit = { a -> },
+                    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> },
+    deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
     var isExpanded by rememberSaveable { mutableStateOf(docGroup.expandGroupByDefault && !docGroup.dropOffCompleted) }
     Card(
         modifier = Modifier
@@ -329,7 +689,9 @@ fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docG
             AnimatedVisibility(visible = isExpanded) {
                 ExpandedDocGroup(
                     singleTripDetailsViewModel,
-                    docGroup
+                    docGroup,
+                    deliverySuccessOnClick = deliverySuccessOnClick,
+                    deliveryFailedOnClick = deliveryFailedOnClick
                 )
             }
 
@@ -350,30 +712,37 @@ fun SingleDocGroup(
     } else {
         painterResource(id = R.drawable.ic_expand_circle_right)
     }
+    val isAnyItemNeedToDeliver = docGroup.docs?.any { it.status == DeliveryStatusConstants.ON_TRIP } == true
+
     ListItem(
         modifier = Modifier.clickable { onClick.invoke() },
         headlineContent = { Text(text = docGroup.heading?:"") },
         leadingContent = null,
         trailingContent = {
             Row {
-                if (docGroup.showDropOffButton) {
-                    Button(onClick = {
+                if (isAnyItemNeedToDeliver) {
+                    if (docGroup.showDropOffButton) {
+                        Button(onClick = {
 //                        singleTripDetailsViewModel.dropOffTrip(
 //                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
 //                            heading = docGroup.heading ?: ""
 //                        )
-                        dropOffOnClick.invoke(singleTripDetailsViewModel.selectedScheduledTripId?:"", docGroup.heading ?: "")
-                    }) {
-                        Text(text = stringResource(R.string.drop_off_at_hub_btn_txt))
+                            dropOffOnClick.invoke(
+                                singleTripDetailsViewModel.selectedScheduledTripId ?: "",
+                                docGroup.heading ?: ""
+                            )
+                        }) {
+                            Text(text = stringResource(R.string.drop_off_at_hub_btn_txt))
+                        }
+                    } else if (docGroup.droppable) {
+                        TextButton(onClick = {
+                            onClick.invoke()
+                        }) {
+                            Text(text = stringResource(R.string.dropped_off_at_hub_txt))
+                        }
+                    } else {
+                        null
                     }
-                }else if (docGroup.droppable) {
-                    TextButton(onClick = {
-                        onClick.invoke()
-                    }) {
-                        Text(text = stringResource(R.string.dropped_off_at_hub_txt))
-                    }
-                }else{
-                    null
                 }
                 IconButton(onClick = {onClick.invoke() }) {
                     Icon(
@@ -388,7 +757,7 @@ fun SingleDocGroup(
     )
 }
 @Composable
-fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup) {
+fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup,deliverySuccessOnClick: (docId: String) -> Unit = { a -> },deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
 
     Column(
         Modifier
@@ -399,7 +768,9 @@ fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc
             Column(Modifier.fillMaxWidth()) {
                 SingleDoc(
                     singleTripDetailsViewModel,
-                    doc
+                    doc,
+                    deliverySuccessOnClick = deliverySuccessOnClick,
+                    deliveryFailedOnClick = deliveryFailedOnClick
                 )
             }
         }
@@ -407,13 +778,15 @@ fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc
 }
 
 @Composable
-fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc) {
+fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,deliverySuccessOnClick: (docId: String) -> Unit = { a -> },deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
     val context = LocalContext.current
     Card(
         modifier = Modifier
             .padding(vertical = 8.dp)
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier
+            .fillMaxWidth()
+            .padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SingleDocRowItem(
                 key = stringResource(R.string.row_item_title_firm_name),
                 value = doc.customerFirmName ?: "",
@@ -445,7 +818,25 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc) 
                 value = doc.customerPhone ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            SingleDocRowItem(
+                key = stringResource(R.string.row_item_title_status),
+                value = if (doc.status?.equals(DeliveryStatusConstants.DELIVERED,ignoreCase = true) == true) "Delivered"
+                else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Column (Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(0.dp), horizontalAlignment = Alignment.End) {
+                if (doc.status == DeliveryStatusConstants.ON_TRIP) {
+                    Button(onClick = {
+                        deliverySuccessOnClick.invoke(doc.id ?: "")
+                    }) {
+                        Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
+                    }
+                    Button(onClick = {
+                        deliveryFailedOnClick.invoke(doc.id ?: "")
+                    }) {
+                        Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+                    }
+                }
                 IconButton(
                     onClick = {
                         AppUtils.startGoogleMapsNavigation(
