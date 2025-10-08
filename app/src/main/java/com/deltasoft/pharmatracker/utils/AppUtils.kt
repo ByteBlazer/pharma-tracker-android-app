@@ -479,4 +479,12 @@ object AppUtils {
             return null
         }
     }
+
+    fun String?.showToastMessage(context: Context) {
+        this?.let {
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 }
