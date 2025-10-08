@@ -4,6 +4,7 @@ import DrawingPath
 import SignaturePad
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,11 +15,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -233,7 +236,7 @@ fun DeliverySuccessConfirmationDialog(showDialog: Boolean,
 
 @Composable
 fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
-                                      onConfirm: (comment: String,signature:String) -> Unit = { a,b-> },
+                                      onConfirm: (comment: String,signature:String,isChecked:Boolean) -> Unit = { a,b,c-> },
                                       onDismiss: () -> Unit,
                                       title: String,
                                       message: String,
@@ -270,6 +273,7 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
     } else {
         emptyList()
     }
+    var isChecked by remember { mutableStateOf(true) }
 
     if (showDialog) {
         Dialog(onDismissRequest = onDismiss,
@@ -361,6 +365,21 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
 
 
                         Spacer(Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { isChecked = !isChecked } // Toggle state on row click
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = isChecked,
+                                onCheckedChange = { isChecked = it }
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Update customer location", style = MaterialTheme.typography.bodyMedium)
+                        }
+                        Spacer(Modifier.height(16.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Button(onClick = onDismiss) {
                                 Text(
@@ -385,7 +404,7 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                                         signaturePadSizePx.height
                                     )
                                     if (signatureEncodedString.isNotNullOrEmpty()) {
-                                        onConfirm.invoke(commentText, signatureEncodedString?:"")
+                                        onConfirm.invoke(commentText, signatureEncodedString?:"",isChecked)
                                     }else{
                                         "Signature is mandatory".showToastMessage(context)
                                         Log.w(

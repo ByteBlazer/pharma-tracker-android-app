@@ -1,11 +1,8 @@
 package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 
-import DrawingPath
-import SignaturePad
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,12 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,7 +28,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,15 +42,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -223,7 +213,7 @@ fun SingleTripDetailsScreen(
                 modifier = Modifier
                     .fillMaxSize(), contentAlignment = Alignment.Center
             ) {
-                if (dropOffTripState is AppCommonApiState.Loading || endTripState is AppCommonApiState.Loading){
+                if (dropOffTripState is AppCommonApiState.Loading || endTripState is AppCommonApiState.Loading || markAsDeliveredState is AppCommonApiState.Loading || markAsUnDeliveredState is AppCommonApiState.Loading){
                     CircularProgressIndicator()
                 }else {
                     when (singleTripDetailsState) {
@@ -280,11 +270,12 @@ fun SingleTripDetailsScreen(
 
     DeliverySuccessConfirmationDialogCustom(
         showDialog = showDeliverySuccesDocId.isNotNullOrEmpty(),
-        onConfirm = { comment,signature ->
+        onConfirm = { comment,signature,isChecked ->
             singleTripDetailsViewModel.markAsDelivered(
                 docId = showDeliverySuccesDocId,
                 signatureEncodedString = signature,
-                deliveryComment = comment
+                deliveryComment = comment,
+                isChecked = isChecked
             )
             showDeliverySuccesDocId = ""
         },

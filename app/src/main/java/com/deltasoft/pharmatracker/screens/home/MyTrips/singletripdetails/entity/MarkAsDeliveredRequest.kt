@@ -3,6 +3,6 @@ package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entit
 data class MarkAsDeliveredRequest(
     var signature : String? = null,
     var deliveryComment : String? = null,
-    var deliveryLatitude : Long = 0L,
-    var deliveryLongitude : Long = 0L
+    var deliveryLatitude : Double ? = null,
+    var deliveryLongitude : Double ? = null
 )

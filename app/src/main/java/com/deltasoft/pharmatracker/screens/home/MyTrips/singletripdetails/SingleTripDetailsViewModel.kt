@@ -16,11 +16,8 @@ import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-import android.location.Location
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 
-import androidx.compose.runtime.State
 import androidx.lifecycle.application
 
 
@@ -126,10 +123,20 @@ class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(ap
     private val _markAsDeliveredState = MutableStateFlow<AppCommonApiState>(AppCommonApiState.Idle)
     val markAsDeliveredState = _markAsDeliveredState.asStateFlow()
 
-    fun markAsDelivered(docId: String,signatureEncodedString: String,deliveryComment:String? = null) {
+    fun markAsDelivered(
+        docId: String,
+        signatureEncodedString: String,
+        deliveryComment: String? = null,
+        isChecked: Boolean
+    ) {
         _markAsDeliveredState.value = AppCommonApiState.Loading
         try {
-            requestLocation(docId,signatureEncodedString,deliveryComment)
+            if (isChecked){
+                requestLocation(docId,signatureEncodedString,deliveryComment)
+            }else{
+                val markAsDeliveredRequest = MarkAsDeliveredRequest(signature = signatureEncodedString,deliveryComment = deliveryComment,deliveryLatitude = null,deliveryLongitude = null)
+                repository.markAsDelivered(token = token, docId = docId,markAsDeliveredRequest = markAsDeliveredRequest )
+            }
 
         } catch (e: Exception) {
             _markAsDeliveredState.value = AppCommonApiState.Error("Mark as delivered failed: ${e.message}")
@@ -144,7 +151,7 @@ class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(ap
             context = context,
             onSuccess = { location ->
                 Log.d("LocationVM", "Location error: latitude ${location.latitude} longitude ${location.longitude}")
-                val markAsDeliveredRequest = MarkAsDeliveredRequest(signature = signatureEncodedString,deliveryComment = deliveryComment,deliveryLatitude = (location?.latitude?:0).toLong(),deliveryLongitude = (location?.longitude?:0).toLong())
+                val markAsDeliveredRequest = MarkAsDeliveredRequest(signature = signatureEncodedString,deliveryComment = deliveryComment,deliveryLatitude = (location?.latitude?:0).toDouble(),deliveryLongitude = (location?.longitude?:0).toDouble())
                 repository.markAsDelivered(token = token, docId = docId,markAsDeliveredRequest = markAsDeliveredRequest )
             },
             onFailure = { exception ->
