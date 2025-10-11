@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -276,15 +278,27 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
     var isChecked by remember { mutableStateOf(true) }
 
     if (showDialog) {
-        Dialog(onDismissRequest = onDismiss,
+        Dialog(
+            onDismissRequest = {
+                isChecked = true
+                commentText = ""
+                paths = emptyList()
+                currentPath = Path()
+                onDismiss.invoke()
+            },
             properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false) ) {
             // The Box will fill the entire space allocated to the Dialog's content
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                    Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Card(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)) {
+                    Column(Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = title, style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
@@ -381,7 +395,13 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                         }
                         Spacer(Modifier.height(16.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Button(onClick = onDismiss) {
+                            Button(onClick = {
+                                isChecked = true
+                                commentText = ""
+                                paths = emptyList()
+                                currentPath = Path()
+                                onDismiss.invoke()
+                            }) {
                                 Text(
                                     dismissButtonText
                                 )
@@ -405,6 +425,10 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                                     )
                                     if (signatureEncodedString.isNotNullOrEmpty()) {
                                         onConfirm.invoke(commentText, signatureEncodedString?:"",isChecked)
+                                        commentText = ""
+                                        paths = emptyList()
+                                        currentPath = Path()
+                                        isChecked = true
                                     }else{
                                         "Signature is mandatory".showToastMessage(context)
                                         Log.w(

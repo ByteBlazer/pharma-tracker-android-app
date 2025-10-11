@@ -564,7 +564,7 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
                 else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
                 style = MaterialTheme.typography.titleMedium
             )
-            Column (Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(0.dp), horizontalAlignment = Alignment.End) {
+            Column (Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = Alignment.End) {
                 if (doc.status == DeliveryStatusConstants.ON_TRIP) {
                     Button(onClick = {
                         deliverySuccessOnClick.invoke(doc.id ?: "")

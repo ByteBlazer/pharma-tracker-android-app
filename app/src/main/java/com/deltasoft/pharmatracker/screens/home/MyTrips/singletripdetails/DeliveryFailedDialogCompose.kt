@@ -108,15 +108,23 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                                      dismissButtonText: String = "Cancel",) {
     var commentText by remember { mutableStateOf("") }
     if (showDialog) {
-        Dialog(onDismissRequest = onDismiss,
+        Dialog(
+            onDismissRequest = {
+                commentText = ""
+                onDismiss.invoke()
+            },
             properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false) ) {
             // The Box will fill the entire space allocated to the Dialog's content
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                    Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Card(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)) {
+                    Column(Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = title, style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
@@ -136,7 +144,10 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                         )
                         Spacer(Modifier.height(16.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Button(onClick = onDismiss) {
+                            Button(onClick = {
+                                commentText = ""
+                                onDismiss.invoke()
+                            }) {
                                 Text(
                                     dismissButtonText
                                 )
@@ -144,6 +155,7 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                             Button(onClick = {
                                 if (commentText.isNotNullOrEmpty()) {
                                     onConfirm.invoke(commentText)
+                                    commentText = ""
                                 }
                             },
                                 enabled = commentText.isNotNullOrEmpty()
