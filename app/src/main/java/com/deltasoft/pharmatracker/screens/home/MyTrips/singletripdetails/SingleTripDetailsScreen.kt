@@ -345,7 +345,7 @@ fun TripBasicDetailsCompose(singleTripDetailsResponse: SingleTripDetailsResponse
             SingleMyTripRowItem(
                 key = stringResource(R.string.row_item_title_route),
                 value = singleTripDetailsResponse.route ?: ""+" : On Trip",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold
             )
             SingleMyTripRowItem(
@@ -530,7 +530,7 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
             SingleDocRowItem(
                 key = stringResource(R.string.row_item_title_firm_name),
                 value = doc.customerFirmName ?: "",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold
             )
             SingleDocRowItem(
