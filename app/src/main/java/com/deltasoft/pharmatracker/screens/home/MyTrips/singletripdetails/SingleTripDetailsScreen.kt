@@ -345,7 +345,7 @@ fun TripBasicDetailsCompose(singleTripDetailsResponse: SingleTripDetailsResponse
             SingleMyTripRowItem(
                 key = stringResource(R.string.row_item_title_route),
                 value = singleTripDetailsResponse.route ?: ""+" : On Trip",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold
             )
             SingleMyTripRowItem(
@@ -530,7 +530,7 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
             SingleDocRowItem(
                 key = stringResource(R.string.row_item_title_firm_name),
                 value = doc.customerFirmName ?: "",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold
             )
             SingleDocRowItem(
@@ -564,7 +564,7 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
                 else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
                 style = MaterialTheme.typography.titleMedium
             )
-            Column (Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(0.dp), horizontalAlignment = Alignment.End) {
+            Column (Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = Alignment.End) {
                 if (doc.status == DeliveryStatusConstants.ON_TRIP) {
                     Button(onClick = {
                         deliverySuccessOnClick.invoke(doc.id ?: "")
@@ -579,7 +579,7 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
                 }
                 IconButton(
                     onClick = {
-                        AppUtils.startGoogleMapsNavigation(
+                        AppUtils.startGoogleMapsDirections(
                             context = context,
                             latitude = doc.customerGeoLatitude?:"",
                             longitude = doc.customerGeoLongitude?:"",

@@ -3,6 +3,7 @@ package com.deltasoft.pharmatracker.screens.otp
 import com.deltasoft.pharmatracker.api.ApiResponse
 import com.deltasoft.pharmatracker.api.RetrofitClient
 import com.deltasoft.pharmatracker.screens.login.LoginRequest
+import com.deltasoft.pharmatracker.utils.AppConstants
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +38,7 @@ class OtpVerificationRepository(var viewModel: OtpVerificationViewModel) {
                         } catch (e: Exception) {
                             // Catch JSON parsing errors if the error body format is unexpected
                             println("Failed to parse error body: ${e.message}")
-                            viewModel.updateOtpVerificationState(0, "${e.message}")
+                            viewModel.updateOtpVerificationState(0, AppConstants.NETWORK_LOSS_MESSAGE)
                         }
                     }
                 }
@@ -97,7 +98,7 @@ class OtpVerificationRepository(var viewModel: OtpVerificationViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateMyScheduledListState(0, "${e.message}")
+                viewModel.updateMyScheduledListState(0, AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }

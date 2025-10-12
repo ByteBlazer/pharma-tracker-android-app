@@ -274,6 +274,43 @@ object AppUtils {
         }
     }
 
+    fun startGoogleMapsDirections(
+        context: Context,
+        latitude: String,
+        longitude: String,
+        destinationName: String = "Destination"
+    ) {
+        Log.d("MapsNavigation", "startGoogleMapsDirections: latitude $latitude")
+        Log.d("MapsNavigation", "startGoogleMapsDirections: longitude $longitude")
+
+        // 1. Define the URI to request directions.
+        // We use the 'geo' scheme with the 'daddr' parameter (destination address).
+        // The format is daddr=latitude,longitude(Label).
+        val gmmIntentUri = Uri.parse("geo:0,0?q=$latitude,$longitude($destinationName)")
+
+        // **Alternative URI for Directions** (sometimes preferred):
+        // val gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&destination_place_id=&travelmode=driving")
+
+
+        // 2. Create an Intent, specifying the ACTION_VIEW and setting the data URI
+        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+
+        // 3. Explicitly set the package to ensure only the Google Maps app handles the Intent
+        mapIntent.setPackage("com.google.android.apps.maps")
+
+        // 4. Check if there is an app available to handle this Intent
+        if (mapIntent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(mapIntent)
+        } else {
+            // Fallback: Google Maps app is not installed
+            Toast.makeText(
+                context,
+                "Google Maps app not found. Please install it to use directions.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     fun startMyService(context: Context) {
         val serviceIntent = Intent(context, LocationPingService::class.java)
         ContextCompat.startForegroundService(context, serviceIntent)

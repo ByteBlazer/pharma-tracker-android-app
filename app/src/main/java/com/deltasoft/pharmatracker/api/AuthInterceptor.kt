@@ -31,7 +31,7 @@ class AuthInterceptor(private val appContext: Context) : okhttp3.Interceptor {
         val request = chain.request()
         val response = chain.proceed(request)
 
-        if (response.code == 401) {
+        if (response.code == 401 || response.code == 403 ) {
             val isTokenExpired = verifyLocalTokenExpiry()
 
             // Only notify for logout if the token is indeed locally invalid/expired

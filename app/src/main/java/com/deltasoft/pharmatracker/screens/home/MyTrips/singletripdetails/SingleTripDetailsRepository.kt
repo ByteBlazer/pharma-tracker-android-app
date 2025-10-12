@@ -4,6 +4,7 @@ import com.deltasoft.pharmatracker.api.ApiResponse
 import com.deltasoft.pharmatracker.api.RetrofitClient
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsDeliveredRequest
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsUnDeliveredRequest
+import com.deltasoft.pharmatracker.utils.AppConstants
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,7 +44,7 @@ class SingleTripDetailsRepository(var viewModel: SingleTripDetailsViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateScheduledListState(0, "${e.message}")
+                viewModel.updateScheduledListState(0, AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }
@@ -71,7 +72,7 @@ class SingleTripDetailsRepository(var viewModel: SingleTripDetailsViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateDropOffTripState("${e.message}")
+                viewModel.updateDropOffTripState(AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }
@@ -99,7 +100,7 @@ class SingleTripDetailsRepository(var viewModel: SingleTripDetailsViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateEndTripState("${e.message}")
+                viewModel.updateEndTripState(AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }
@@ -133,7 +134,7 @@ class SingleTripDetailsRepository(var viewModel: SingleTripDetailsViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateMarkAsDeliveredStateState("${e.message}")
+                viewModel.updateMarkAsDeliveredStateState(AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }
@@ -163,7 +164,7 @@ class SingleTripDetailsRepository(var viewModel: SingleTripDetailsViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateMarkAsUnDeliveredStateState("${e.message}")
+                viewModel.updateMarkAsUnDeliveredStateState(AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }

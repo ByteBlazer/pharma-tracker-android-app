@@ -3,6 +3,7 @@ package com.deltasoft.pharmatracker.screens.home.route.scheduletrip
 import com.deltasoft.pharmatracker.api.ApiResponse
 import com.deltasoft.pharmatracker.api.RetrofitClient
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.ScheduleNewTripRequest
+import com.deltasoft.pharmatracker.utils.AppConstants
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +36,7 @@ class ScheduleNewTripRepository(var viewModel: ScheduleNewTripViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateDriverListState(0, "${e.message}")
+                viewModel.updateDriverListState(0, AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }
@@ -64,7 +65,7 @@ class ScheduleNewTripRepository(var viewModel: ScheduleNewTripViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateScheduleNewTripState(0, "${e.message}")
+                viewModel.updateScheduleNewTripState(0, AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }
