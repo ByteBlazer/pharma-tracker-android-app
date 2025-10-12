@@ -265,7 +265,7 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
     val signatureStrokeWidth = 4.dp
 
     // Define the fixed dimensions (in DP) of the drawing area for later bitmap scaling
-    val signaturePadHeightDp = 300.dp
+    val signaturePadHeightDp = 150.dp
 
     // Target width in pixels for the saved image (fixed high quality width)
     val targetBitmapWidth = 800
