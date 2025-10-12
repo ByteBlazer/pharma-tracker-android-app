@@ -141,6 +141,12 @@ fun OtpVerificationScreen(
         }
     }
 
+    LaunchedEffect(key1 = otp) {
+        if (otp.length == 6) {
+            otpVerificationViewModel.verifyOtp(phoneNumber, otp)
+        }
+    }
+
     LaunchedEffect(otpVerificationState) {
         if (otpVerificationState is OtpVerificationState.Success) {
             if (locationPermissionState.status.isGranted) {

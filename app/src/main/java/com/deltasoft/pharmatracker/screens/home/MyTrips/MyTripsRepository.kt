@@ -2,6 +2,7 @@ package com.deltasoft.pharmatracker.screens.home.MyTrips
 
 import com.deltasoft.pharmatracker.api.ApiResponse
 import com.deltasoft.pharmatracker.api.RetrofitClient
+import com.deltasoft.pharmatracker.utils.AppConstants
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +35,7 @@ class MyTripsRepository(var viewModel: MyTripsViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateMyScheduledListState(0, "${e.message}")
+                viewModel.updateMyScheduledListState(0, AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }
@@ -65,7 +66,7 @@ class MyTripsRepository(var viewModel: MyTripsViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateStartTripState("${e.message}")
+                viewModel.updateStartTripState(AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }

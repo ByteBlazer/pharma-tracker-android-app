@@ -3,6 +3,7 @@ package com.deltasoft.pharmatracker.screens.home.schedule
 import android.content.Context
 import com.deltasoft.pharmatracker.api.ApiResponse
 import com.deltasoft.pharmatracker.api.RetrofitClient
+import com.deltasoft.pharmatracker.utils.AppConstants
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +37,7 @@ class ScheduledTripsRepository(var viewModel: ScheduledTripsViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateScheduledListState(0, "${e.message}")
+                viewModel.updateScheduledListState(0, AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }
@@ -65,7 +66,7 @@ class ScheduledTripsRepository(var viewModel: ScheduledTripsViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateCancelScheduleState("${e.message}")
+                viewModel.updateCancelScheduleState(AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }
