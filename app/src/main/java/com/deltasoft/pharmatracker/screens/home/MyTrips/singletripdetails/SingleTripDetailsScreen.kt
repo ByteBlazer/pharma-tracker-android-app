@@ -579,7 +579,7 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
                 }
                 IconButton(
                     onClick = {
-                        AppUtils.startGoogleMapsNavigation(
+                        AppUtils.startGoogleMapsDirections(
                             context = context,
                             latitude = doc.customerGeoLatitude?:"",
                             longitude = doc.customerGeoLongitude?:"",
