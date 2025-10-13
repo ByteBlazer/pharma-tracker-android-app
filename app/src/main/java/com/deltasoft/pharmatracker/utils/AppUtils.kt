@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.location.Location
@@ -523,5 +524,21 @@ object AppUtils {
                 Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    fun isColorDark(colorValue: androidx.compose.ui.graphics.Color): Boolean {
+        var color = colorValue.toArgb()
+        var darkness : Double = 0.0
+        darkness = try {
+            1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
+        } catch (e: Exception) {
+            e.printStackTrace()
+            0.0
+        }
+        return darkness >= 0.5
+    }
+
+    fun getTextColorBasedOnColortype(colorValue: androidx.compose.ui.graphics.Color): androidx.compose.ui.graphics.Color {
+        return if (isColorDark(colorValue)) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
     }
 }

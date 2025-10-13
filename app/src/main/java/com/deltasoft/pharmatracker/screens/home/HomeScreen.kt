@@ -29,6 +29,9 @@ import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
 import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueScreen
 import com.deltasoft.pharmatracker.screens.home.scan.BarCodeScanner
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsScreen
+import com.deltasoft.pharmatracker.ui.theme.getCenterAlignedTopAppBarColors
+import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getNavigationBarItemColors
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.launch
@@ -83,7 +86,8 @@ fun HomeScreen(
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(index)
                                 }
-                            }
+                            },
+                            colors = getNavigationBarItemColors()
                         )
                     }
                 }
@@ -102,7 +106,9 @@ fun HomeScreen(
                         if (false) {
                             IconButton(onClick = {
                                 navController.navigate(Screen.Profile.route)
-                            }) {
+                            },
+                                colors = getIconButtonColors()
+                            ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_outline_person),
                                     contentDescription = "profile"
@@ -126,7 +132,9 @@ fun HomeScreen(
                                             homeViewModel?.onMyTripsReloadButtonClick()
                                         }
                                     }
-                                }) {
+                                },
+                                    colors = getIconButtonColors()
+                                ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_refresh),
                                         contentDescription = "dispatch queue reload"
@@ -135,14 +143,17 @@ fun HomeScreen(
                             }
                             IconButton(onClick = {
                                 navController.navigate(Screen.Profile.route)
-                            }) {
+                            },
+                                colors = getIconButtonColors()
+                            ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_outline_person),
                                     contentDescription = "profile"
                                 )
                             }
                         }
-                    }
+                    },
+                    colors = getCenterAlignedTopAppBarColors()
                 )
             }
         ) { paddingValues ->

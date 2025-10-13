@@ -58,6 +58,9 @@ import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.Doc
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.DocGroup
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
@@ -193,7 +196,8 @@ fun SingleTripDetailsScreen(
                         .fillMaxWidth()
                         .height(56.dp), onClick = {
                             singleTripDetailsViewModel.endTrip(selectedScheduledTripId)
-                    }
+                    },
+                    colors = getButtonColors()
                 ) {
                     Text(stringResource(R.string.end_trip_btn_txt))
                 }
@@ -471,20 +475,24 @@ fun SingleDocGroup(
                                 singleTripDetailsViewModel.selectedScheduledTripId ?: "",
                                 docGroup.heading ?: ""
                             )
-                        }) {
+                        },
+                            colors = getButtonColors()
+                        ) {
                             Text(text = stringResource(R.string.drop_off_at_hub_btn_txt))
                         }
                     } else if (docGroup.droppable) {
                         TextButton(onClick = {
                             onClick.invoke()
-                        }) {
+                        },
+                            colors = getTextButtonColors()
+                        ) {
                             Text(text = stringResource(R.string.dropped_off_at_hub_txt))
                         }
                     } else {
                         null
                     }
                 }
-                IconButton(onClick = {onClick.invoke() }) {
+                IconButton(onClick = {onClick.invoke() }, colors = getIconButtonColors()) {
                     Icon(
                         painter = expandIcon,
                         contentDescription = "expandable button",
@@ -568,12 +576,14 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
                 if (doc.status == DeliveryStatusConstants.ON_TRIP) {
                     Button(onClick = {
                         deliverySuccessOnClick.invoke(doc.id ?: "")
-                    }) {
+                    },
+                        colors = getButtonColors()
+                    ) {
                         Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
                     }
                     Button(onClick = {
                         deliveryFailedOnClick.invoke(doc.id ?: "")
-                    }) {
+                    }, colors = getButtonColors()) {
                         Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
                     }
                 }
@@ -586,7 +596,8 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
                             destinationName = doc.customerFirmName?:""
                         )
                     },
-                    modifier = Modifier
+                    modifier = Modifier,
+                    colors = getIconButtonColors()
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_location),

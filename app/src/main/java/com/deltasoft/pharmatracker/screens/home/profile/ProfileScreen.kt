@@ -38,6 +38,8 @@ import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationState
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
@@ -104,7 +106,8 @@ fun ProfileScreen(
                         onClick = {
                             showDialog = true
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = getButtonColors()
                     ) {
                         androidx.compose.material3.Text(text = "LOGOUT")
                     }
@@ -160,13 +163,17 @@ private fun LogoutConfirmationDialog(
                     color = MaterialTheme.colorScheme.onSurface)
             },
             confirmButton = {
-                TextButton(onClick = onConfirm) {
+                TextButton(onClick = onConfirm,
+                    colors = getTextButtonColors()
+                ) {
                     Text("Confirm",
                         color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = onDismiss,
+                    colors = getTextButtonColors()
+                ) {
                     Text("Cancel",
                         color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 }

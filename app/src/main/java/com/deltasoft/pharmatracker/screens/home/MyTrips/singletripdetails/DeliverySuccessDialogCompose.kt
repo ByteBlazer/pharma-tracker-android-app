@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.AppUtils.showToastMessage
@@ -159,7 +161,8 @@ fun DeliverySuccessConfirmationDialog(showDialog: Boolean,
                                 paths = emptyList()
                                 currentPath = Path()
                             },
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(8.dp),
+                            colors = getButtonColors()
                         ) {
                             Text("Clear Signature")
                         }
@@ -216,7 +219,8 @@ fun DeliverySuccessConfirmationDialog(showDialog: Boolean,
                             )
                         }
                     },
-                    enabled = true
+                    enabled = true,
+                    colors = getTextButtonColors()
                 ) {
                     androidx.compose.material.Text(
                         confirmButtonText,
@@ -225,7 +229,9 @@ fun DeliverySuccessConfirmationDialog(showDialog: Boolean,
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = onDismiss,
+                    colors = getTextButtonColors()
+                ) {
                     androidx.compose.material.Text(
                         dismissButtonText,
                         color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
@@ -355,7 +361,8 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                                     paths = emptyList()
                                     currentPath = Path()
                                 },
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(8.dp),
+                                colors = getButtonColors()
                             ) {
                                 Text("Clear Signature")
                             }
@@ -401,7 +408,9 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                                 paths = emptyList()
                                 currentPath = Path()
                                 onDismiss.invoke()
-                            }) {
+                            },
+                                colors = getButtonColors()
+                            ) {
                                 Text(
                                     dismissButtonText
                                 )
@@ -443,7 +452,8 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                                         "Cannot save: No signature drawn or size not yet measured."
                                     )
                                 }
-                            }
+                            },
+                                colors = getButtonColors()
                             ) {
                                 Text(
                                     confirmButtonText

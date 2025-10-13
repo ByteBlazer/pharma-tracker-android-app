@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -108,7 +110,9 @@ fun ScheduledTripsScreen(
                     isDialogOpen = false
                     cancelApiResponseDialogMessage = ""
                     scheduledTripsViewModel.clearCancelScheduleState()
-                }) {
+                },
+                    colors = getTextButtonColors()
+                ) {
                     Text("OK", color = MaterialTheme.colorScheme.onSurface)
                 }
 
@@ -212,7 +216,7 @@ private fun ScheduleCancelConfirmationDialog(
                 )
             },
             confirmButton = {
-                TextButton(onClick = onConfirm) {
+                TextButton(onClick = onConfirm, colors = getTextButtonColors()) {
                     androidx.compose.material.Text(
                         "Confirm",
                         color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
@@ -220,7 +224,7 @@ private fun ScheduleCancelConfirmationDialog(
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = onDismiss, colors = getTextButtonColors()) {
                     androidx.compose.material.Text(
                         "Cancel",
                         color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
@@ -342,7 +346,8 @@ private fun SingleScheduledTripCompose(scheduledTrip: ScheduledTrip,onItemClick:
                         onClick = {
                             onItemClick.invoke(scheduledTrip)
                         },
-                        modifier = Modifier
+                        modifier = Modifier,
+                        colors = getButtonColors()
                     ) {
                         Text("Cancel Trip")
                     }

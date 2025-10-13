@@ -21,7 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
+import androidx.compose.material3.*
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -64,6 +64,8 @@ import com.deltasoft.pharmatracker.screens.home.route.entity.UserDetailsList
 import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.Driver
 import com.deltasoft.pharmatracker.screens.home.scan.ScanDocState
 import com.deltasoft.pharmatracker.screens.home.scan.getColorFromCode
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getRadioButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.AppVibratorManager
@@ -181,7 +183,9 @@ fun ScheduleNewTrip(
                     , onClick = {
                         scheduleNewTripViewModel.scheduleNewTrip(route,userIds?: arrayOf(),vehicleNumber,driverId,context)
 
-                }, enabled = scheduleNewTripState !is ScheduleNewTripState.Loading) {
+                }, enabled = scheduleNewTripState !is ScheduleNewTripState.Loading,
+                    colors = getButtonColors()
+                ) {
                     Text("Schedule Trip")
                 }
             }
@@ -313,6 +317,7 @@ fun DriverListItem(
                             clear = selected
                         )
                     },
+                    colors = getRadioButtonColors()
                 )
 //                Checkbox(
 //                    checked = selected,

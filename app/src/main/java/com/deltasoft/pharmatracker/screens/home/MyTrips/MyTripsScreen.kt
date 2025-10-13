@@ -47,6 +47,7 @@ import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -377,7 +378,8 @@ fun SingleMyTripCompose(scheduledTrip: ScheduledTrip, onItemClick: (scheduledTri
                         onClick = {
                             onItemClick.invoke(scheduledTrip)
                         },
-                        modifier = Modifier
+                        modifier = Modifier,
+                        colors = getButtonColors()
                     ) {
                         Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
                     }
