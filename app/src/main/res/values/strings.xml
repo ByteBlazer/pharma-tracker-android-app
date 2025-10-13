@@ -1,3 +1,47 @@
 <resources>
     <string name="app_name">Pharma Tracker</string>
+
+    <!--Login screen-->
+    <string name="login_heading">Login</string>
+    <string name="login_description_message_part1">We will send you a </string>
+    <string name="login_description_message_part2_bold">OTP</string>
+    <string name="login_description_message_part3"> on this mobile number</string>
+    <string name="login_text_field_placeholder">Mobile number</string>
+    <string name="login_button_text">GET OTP</string>
+
+
+    <!--Schedule New trip-->
+    <string name="schedule_new_trip_text_field_placeholder">Vehicle Number</string>
+    <string name="schedule_new_trip_text_field_placeholder2">Enter Vehicle Number</string>
+
+    <!--Single Trip Details-->
+    <string name="single_trip_details_heading">My Trip Details</string>
+    <string name="end_trip_btn_txt">End Trip</string>
+    <string name="drop_off_at_hub_btn_txt">Drop Off At Hub</string>
+    <string name="dropped_off_at_hub_txt">Dropped Off At Hub</string>
+    <string name="mark_as_delivered_btn_txt">Mark as delivered</string>
+    <string name="mark_as_un_delivered_btn_txt">Mark as un-delivered</string>
+
+    <string name="drop_off_confirm_title">Drop Off At Hub</string>
+    <string name="drop_off_confirm_message">Are you sure you want to drop off this lot at hub?</string>
+
+    <string name="delivery_success_confirm_title">Confirm Delivery</string>
+    <string name="delivery_success_confirm_message">Delivery Successful</string>
+    <string name="delivery_failed_confirm_title">Confirm UnDelivery</string>
+    <string name="delivery_failed_confirm_message">Delivery Successful</string>
+
+    <string name="row_item_title_driver_name">Driver Name</string>
+    <string name="row_item_title_vehicle_number">Vehicle Number</string>
+    <string name="row_item_title_created_at">Created At</string>
+    <string name="row_item_title_created_by">Created By</string>
+    <string name="row_item_title_trip_id">Trip ID</string>
+    <string name="row_item_title_route">Route</string>
+
+    <string name="row_item_title_firm_name">Firm Name</string>
+    <string name="row_item_title_amount">Amount</string>
+    <string name="row_item_title_address">Address</string>
+    <string name="row_item_title_city">City</string>
+    <string name="row_item_title_pin_code">Pin Code</string>
+    <string name="row_item_title_phone">Phone</string>
+    <string name="row_item_title_status">Status</string>
 </resources>
