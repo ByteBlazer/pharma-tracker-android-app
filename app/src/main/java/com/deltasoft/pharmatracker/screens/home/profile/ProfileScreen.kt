@@ -41,6 +41,7 @@ import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationState
 import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getListItemColors
 import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
@@ -172,7 +173,8 @@ fun SingleRowItem(icon: Int, value: String?) {
                     contentDescription = "Icon",
                     modifier = Modifier.size(24.dp)
                 )
-            }
+            },
+            colors = getListItemColors()
         )
     }
 }
