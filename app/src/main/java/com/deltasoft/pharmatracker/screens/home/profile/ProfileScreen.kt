@@ -14,8 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ListItem
-import androidx.compose.material.Text
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
@@ -31,13 +30,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationState
+import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
@@ -88,20 +90,24 @@ fun ProfileScreen(
         ) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(
-                    Modifier.fillMaxWidth(fraction = 0.75f),
+                    Modifier.fillMaxWidth(fraction = 0.9f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
-                        imageVector = Icons.Default.Person,
+                        painter = painterResource(R.drawable.ic_delivery_truck),
                         contentDescription = "",
                         modifier = Modifier.size(96.dp),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+                        colorFilter = ColorFilter.tint(AppPrimary)
                     )
                     Spacer(Modifier.height(16.dp))
-                    SingleRowItem("User ID", userId)
-                    SingleRowItem("User name", userName)
-                    SingleRowItem("Phone", phone)
+//                    SingleRowItem("User ID", userId)
+//                    SingleRowItem("User name", userName)
+//                    SingleRowItem("Phone", phone)
 
+                    SingleRowItem(R.drawable.ic_hash,userId)
+                    SingleRowItem(R.drawable.ic_outline_person,userName)
+                    SingleRowItem(R.drawable.ic_mobile,phone)
+                    Spacer(Modifier.height(32.dp))
                     Button(
                         onClick = {
                             showDialog = true
@@ -109,7 +115,7 @@ fun ProfileScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = getButtonColors()
                     ) {
-                        androidx.compose.material3.Text(text = "LOGOUT")
+                        Text(text = "LOGOUT")
                     }
                 }
             }
@@ -123,7 +129,7 @@ fun SingleRowItem(key: String, value: String?) {
     if (value.isNotNullOrEmpty()) {
         ListItem(
             modifier = Modifier.fillMaxWidth(),
-            text = {
+            headlineContent = {
                 Row(Modifier.fillMaxWidth()) {
                     Text(
                         text = key ?: "",
@@ -140,6 +146,32 @@ fun SingleRowItem(key: String, value: String?) {
                         modifier = Modifier.weight(1f),
                     )
                 }
+            }
+        )
+    }
+}
+
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun SingleRowItem(icon: Int, value: String?) {
+    if (value.isNotNullOrEmpty()) {
+        ListItem(
+            modifier = Modifier.fillMaxWidth(),
+            headlineContent = {
+                Text(
+                    text = value ?: "",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            leadingContent = {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = "Icon",
+                    modifier = Modifier.size(24.dp)
+                )
             }
         )
     }

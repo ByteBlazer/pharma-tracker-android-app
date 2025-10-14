@@ -3,6 +3,7 @@ package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -193,8 +194,7 @@ fun SingleTripDetailsScreen(
                 .windowInsetsPadding(WindowInsets.navigationBars)) {
                 Button(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp), onClick = {
+                        .fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp), onClick = {
                             singleTripDetailsViewModel.endTrip(selectedScheduledTripId)
                     },
                     colors = getButtonColors()
@@ -572,7 +572,7 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
                 else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
                 style = MaterialTheme.typography.titleMedium
             )
-            Column (Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = Alignment.End) {
+            Column (Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(0.dp), horizontalAlignment = Alignment.End) {
                 if (doc.status == DeliveryStatusConstants.ON_TRIP) {
                     Button(onClick = {
                         deliverySuccessOnClick.invoke(doc.id ?: "")

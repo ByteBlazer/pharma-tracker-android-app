@@ -143,7 +143,7 @@ fun ScheduleNewTrip(
         bottomBar = {
 //            if (selectedDriverId.isNotNullOrEmpty()) {
 //                BottomAppBar {
-            Column(Modifier.fillMaxWidth() .windowInsetsPadding(WindowInsets.navigationBars)) {
+            Column(Modifier.fillMaxWidth() .windowInsetsPadding(WindowInsets.navigationBars), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (selectedDriver != null) {
                     Card(
                         modifier = Modifier,
@@ -177,8 +177,7 @@ fun ScheduleNewTrip(
                         }
                     }
                 }
-                Button(modifier = Modifier
-                    .fillMaxWidth().height(56.dp)
+                Button(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp)
 //                    .navigationBarsPadding()
                     , onClick = {
                         scheduleNewTripViewModel.scheduleNewTrip(route,userIds?: arrayOf(),vehicleNumber,driverId,context)
