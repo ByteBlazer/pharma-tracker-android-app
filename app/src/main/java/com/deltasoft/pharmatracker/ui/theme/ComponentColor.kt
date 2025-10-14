@@ -45,9 +45,9 @@ fun getTextButtonColors(): ButtonColors {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun getIconButtonColors(): IconButtonColors {
+fun getIconButtonColors(contentColor: Color? = null): IconButtonColors {
     return IconButtonDefaults.iconButtonColors(
-        contentColor = AppPrimary
+        contentColor = contentColor ?: AppPrimary
     )
 }
 

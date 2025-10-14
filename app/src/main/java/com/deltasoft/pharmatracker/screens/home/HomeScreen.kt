@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -133,7 +134,7 @@ fun HomeScreen(
                                         }
                                     }
                                 },
-                                    colors = getIconButtonColors()
+                                    colors = getIconButtonColors(contentColor = Color.White)
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_refresh),
@@ -144,7 +145,7 @@ fun HomeScreen(
                             IconButton(onClick = {
                                 navController.navigate(Screen.Profile.route)
                             },
-                                colors = getIconButtonColors()
+                                colors = getIconButtonColors(contentColor = Color.White)
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_outline_person),
