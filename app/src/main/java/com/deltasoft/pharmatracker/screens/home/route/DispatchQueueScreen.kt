@@ -47,6 +47,8 @@ import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.route.entity.RouteSummaryList
 import com.deltasoft.pharmatracker.screens.home.route.entity.UserSummaryList
+import com.deltasoft.pharmatracker.ui.theme.AppPrimary
+import com.deltasoft.pharmatracker.utils.AppUtils
 import java.util.ArrayList
 
 @Composable
@@ -113,7 +115,9 @@ fun DispatchQueueScreen(
                     },
                     text = {
                         Text(text = "Schedule Trip")
-                    }
+                    },
+                    containerColor = AppPrimary,
+                    contentColor = AppUtils.getTextColorBasedOnColortype(AppPrimary)
                 )
         }
     ) { paddingValues ->

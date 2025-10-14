@@ -53,6 +53,7 @@ import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.login.OTPTextField
 import com.deltasoft.pharmatracker.screens.login.OtpTextFieldDefaults
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -209,7 +210,7 @@ fun OtpVerificationScreen(
             verticalArrangement = Arrangement.Top
         ) {
 
-            App_CommonTopBar(backButtonVisibility = false)
+            App_CommonTopBar(backButtonVisibility = false, useDefaultColor = true)
             Text(
                 text = "OTP verification",
                 style = MaterialTheme.typography.headlineLarge,
@@ -265,7 +266,8 @@ fun OtpVerificationScreen(
                             isTimerRunning = true
 //                        onResendClick()
                         },
-                        enabled = false
+                        enabled = false,
+                        colors = getTextButtonColors()
                     ) {
                         Text(
                             "Resend OTP in $timeLeft s",
@@ -291,6 +293,7 @@ fun OtpVerificationScreen(
                                 isTimerRunning = true
                                 otpVerificationViewModel.onResendClick(phoneNumber)
                             },
+                            colors = getTextButtonColors()
                         ) {
                             Text(
                                 "Resend OTP",

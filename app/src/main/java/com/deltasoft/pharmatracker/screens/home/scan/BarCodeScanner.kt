@@ -58,6 +58,9 @@ import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.BorderSide
 import com.deltasoft.pharmatracker.screens.drawOneSideBorder
+import com.deltasoft.pharmatracker.ui.theme.AppPrimary
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.AppVibratorManager
@@ -292,15 +295,105 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.Bottom
         ) {
+
+            Column(Modifier.padding(bottom = 48.dp)) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    // Only show the camera preview if scanning is active.
+                    if (isScanning && scannedValue.isNullOrEmpty()) {
+                        CameraPreview(
+                            onBarcodeScanned = { value ->
+                                scannedValue = value
+                            }
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (!isScanning) {
+                                Text(
+                                    text = "Press start to scan",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            } else {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+
+                // Buttons to control scanning.
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    Button(
+                        onClick = {
+                            when {
+                                // 2. If the permission is granted, show the camera preview or button
+                                cameraPermissionState.status.isGranted -> {
+                                    isScanning = !isScanning
+                                    showDialog.value = false
+                                    isCameraPermissionClicked = false
+                                }
+
+                                // 3. If the user has denied the permission, show a rationale
+                                //    or guide them to settings.
+                                cameraPermissionState.status.shouldShowRationale -> {
+                                    isCameraPermissionClicked = true
+                                    cameraPermissionState.launchPermissionRequest()
+                                    isPermissionCheckedOnce = true
+                                }
+
+                                // 4. If it's the first time or they've denied permanently,
+                                //    show a button to request permission.
+                                else -> {
+                                    isCameraPermissionClicked = true
+                                    if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
+                                        AppUtils.openAppSettings(context)
+                                    } else {
+                                        cameraPermissionState.launchPermissionRequest()
+                                        isPermissionCheckedOnce = true
+                                    }
+                                }
+                            }
+                        },
+                        colors = getButtonColors()
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_barcode_scanner),
+                            contentDescription = "Start Icon",
+                            tint = AppUtils.getTextColorBasedOnColortype(AppPrimary)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(if (isScanning) "STOP" else "START", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        Box(modifier = Modifier.padding(top = 16.dp).padding(horizontal = 16.dp).align(Alignment.TopStart)) {
             Column {
                 if (showDialog.value) {
                     Card(
                         modifier = Modifier.padding(0.dp),
                         border = BorderStroke(1.dp, dialogMessageColor.value),
                         shape = CardDefaults.outlinedShape,
-                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 50.dp)
                     ) {
                         Card(
                             modifier = Modifier
@@ -322,7 +415,9 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                                 Text(dialogMessage.value, modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelMedium)
                                 IconButton(onClick = {
                                     showDialog.value = false
-                                }, modifier = Modifier) {
+                                }, modifier = Modifier,
+                                    colors = getIconButtonColors()
+                                ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_close),
                                         contentDescription = "close"
@@ -333,257 +428,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                     }
                 }
             }
-            Column(Modifier.padding(bottom = 48.dp)) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                // Only show the camera preview if scanning is active.
-                if (isScanning && scannedValue.isNullOrEmpty()) {
-                    CameraPreview(
-                        onBarcodeScanned = { value ->
-                            scannedValue = value
-                        }
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (!isScanning) {
-                            Text(
-                                text = "Press start to scan",
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }else{
-                            CircularProgressIndicator()
-                        }
-//                        if (showDialog.value){
-////                            Text(
-////                                text = dialogMessage.value,
-////                                style = MaterialTheme.typography.headlineMedium,
-////                                color = dialogMessageColor.value,
-////                                modifier = Modifier.fillMaxWidth(),
-////                                textAlign = TextAlign.Center
-////                            )
-//
-//                            CircularProgressIndicator()
-//                        }else {
-//                            if (!isScanning) {
-//                                Text(
-//                                    text = "Press start to scan",
-//                                    style = MaterialTheme.typography.headlineMedium,
-//                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-//                                )
-//                            }else{
-//                                CircularProgressIndicator()
-//                            }
-//                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-//            // Card to display the scanned barcode value.
-//            Card(
-//                modifier = Modifier.fillMaxWidth(),
-//                shape = RoundedCornerShape(12.dp),
-//                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-//            ) {
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(16.dp),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    Text(
-//                        text = if (scannedValue.isNotNullOrEmpty()) scannedValue else "No values available",
-//                        style = MaterialTheme.typography.headlineSmall,
-//                        color = MaterialTheme.colorScheme.primary
-//                    )
-//                }
-//            }
-//
-//            Spacer(modifier = Modifier.height(16.dp))
-
-            // Card to display the scanned barcode value.
-//            Card(
-//                modifier = Modifier.fillMaxWidth(),
-//                shape = RoundedCornerShape(12.dp),
-//                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-//            ) {
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(16.dp),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    Text(
-//                        text = message,
-//                        style = MaterialTheme.typography.headlineSmall,
-//                        color = MaterialTheme.colorScheme.primary
-//                    )
-//                }
-//            }
-//
-//
-//            Spacer(modifier = Modifier.height(16.dp))
-
-
-            // Buttons to control scanning.
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                Button(
-                    onClick = {
-                        when {
-                            // 2. If the permission is granted, show the camera preview or button
-                            cameraPermissionState.status.isGranted -> {
-                                isScanning = !isScanning
-                                showDialog.value = false
-                                isCameraPermissionClicked = false
-                            }
-
-                            // 3. If the user has denied the permission, show a rationale
-                            //    or guide them to settings.
-                            cameraPermissionState.status.shouldShowRationale -> {
-                                isCameraPermissionClicked = true
-                                cameraPermissionState.launchPermissionRequest()
-                                isPermissionCheckedOnce = true
-                            }
-
-                            // 4. If it's the first time or they've denied permanently,
-                            //    show a button to request permission.
-                            else -> {
-                                isCameraPermissionClicked = true
-                                if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
-                                    AppUtils.openAppSettings(context)
-                                } else {
-                                    cameraPermissionState.launchPermissionRequest()
-                                    isPermissionCheckedOnce = true
-                                }
-                            }
-                        }
-                    }
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_barcode_scanner),
-                        contentDescription = "Start Icon"
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(if (isScanning) "STOP" else "START", fontWeight = FontWeight.Bold)
-                }
-//                when {
-//                    // 2. If the permission is granted, show the camera preview or button
-//                    cameraPermissionState.status.isGranted -> {
-//                        Button(
-//                            onClick = {
-//                                isScanning = true
-//                            },
-//                            enabled = !isScanning
-//                        ) {
-//                            Text("Start Scan")
-//                        }
-//                    }
-//
-//                    // 3. If the user has denied the permission, show a rationale
-//                    //    or guide them to settings.
-//                    cameraPermissionState.status.shouldShowRationale -> {
-//                        Button(onClick = {
-//                            cameraPermissionState.launchPermissionRequest()
-//                            isPermissionCheckedOnce = true
-//                        }) {
-//                            Text("Request Permission")
-//                        }
-//                    }
-//
-//                    // 4. If it's the first time or they've denied permanently,
-//                    //    show a button to request permission.
-//                    else -> {
-//                        Button(onClick = {
-//                            if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
-//                                openAppSettings(context)
-//                            } else {
-//                                cameraPermissionState.launchPermissionRequest()
-//                                isPermissionCheckedOnce = true
-//                            }
-//
-//                        }) {
-//                            if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
-//                                Text("Open Settings to Enable Permission")
-//                            } else {
-//                                Text("Request Permission")
-//                            }
-//                        }
-//                    }
-//                }
-
-//                when {
-//                    allPermissionsGranted -> {
-////                    Text("Permission granted! You can use the feature.")
-//                        Button(
-//                            onClick = {
-//                                isScanning = true
-//                            },
-//                            enabled = !isScanning
-//                        ) {
-//                            Text("Start Scan")
-//                        }
-//                    }
-//
-//                    shouldShowRationale -> {
-//                        // Show rationale for the second or subsequent denial
-////                    Text("The app needs this permission to function. Please grant it.")
-//                        Button(onClick = { cameraPermissionState.launchPermissionRequest() }) {
-//                            Text("Request Permission")
-//                        }
-//                    }
-//
-//                    else -> {
-//                        // Permission permanently denied: ask user to go to settings
-////                    Text("Permission is permanently denied. Go to settings to enable it.")
-//                        Button(onClick = { openAppSettings(context) }) {
-//                            Text("Open App Settings")
-//                        }
-//                    }
-//                }
-//            Button(
-//                onClick = {
-//                    when (PackageManager.PERMISSION_GRANTED) {
-//                        ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) -> {
-//                            isScanning = true
-//                            scannedValue = "Scanning..."
-//                        }
-//                        else -> {
-//                            launcher.launch(Manifest.permission.CAMERA)
-//                        }
-//                    }
-//                },
-//                enabled = !isScanning
-//            ) {
-//                Text("Start Scan")
-//            }
-//                Button(
-//                    onClick = {
-//                        isScanning = false
-//                        scannedValue = ""
-//                    },
-//                    enabled = isScanning
-//                ) {
-//                    Text("Stop Scan")
-//                }
-            }
-            }
         }
-
     }
 }
 

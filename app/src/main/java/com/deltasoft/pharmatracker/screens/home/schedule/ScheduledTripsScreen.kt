@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -29,13 +31,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getListItemColors
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -108,7 +115,9 @@ fun ScheduledTripsScreen(
                     isDialogOpen = false
                     cancelApiResponseDialogMessage = ""
                     scheduledTripsViewModel.clearCancelScheduleState()
-                }) {
+                },
+                    colors = getTextButtonColors()
+                ) {
                     Text("OK", color = MaterialTheme.colorScheme.onSurface)
                 }
 
@@ -212,7 +221,7 @@ private fun ScheduleCancelConfirmationDialog(
                 )
             },
             confirmButton = {
-                TextButton(onClick = onConfirm) {
+                TextButton(onClick = onConfirm, colors = getTextButtonColors()) {
                     androidx.compose.material.Text(
                         "Confirm",
                         color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
@@ -220,7 +229,7 @@ private fun ScheduleCancelConfirmationDialog(
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = onDismiss, colors = getTextButtonColors()) {
                     androidx.compose.material.Text(
                         "Cancel",
                         color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
@@ -301,6 +310,47 @@ private fun SingleScheduledRowItem(key: String, value: String, style: TextStyle,
     }
 }
 
+
+
+@Composable
+private fun SingleScheduledRowItem(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal) {
+//    ListItem(
+//        modifier = Modifier.fillMaxWidth(),
+//        headlineContent = {
+//            Text(
+//                text = value,
+//                style = style,
+//                color = color,
+//                textAlign = TextAlign.Start
+//            )
+//        },
+//        leadingContent = {
+//            Icon(
+//                painter = painterResource(icon),
+//                contentDescription = "Icon",
+//                modifier = Modifier.size(24.dp)
+//            )
+//        },
+//        colors = getListItemColors(),
+//        supportingContent = null
+//    )
+    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = "Icon",
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = value,
+            style = style,
+            color = color,
+            textAlign = TextAlign.Start
+        )
+    }
+}
+
+
 @Composable
 private fun SingleScheduledTripCompose(scheduledTrip: ScheduledTrip,onItemClick: (scheduledTrip: ScheduledTrip) -> Unit = { a->}) {
     Card(
@@ -311,30 +361,56 @@ private fun SingleScheduledTripCompose(scheduledTrip: ScheduledTrip,onItemClick:
             .fillMaxWidth()
             .padding(16.dp)) {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+//                SingleScheduledRowItem(
+//                    key = "Trip ID",
+//                    value = scheduledTrip.tripId.toString(),
+//                    style = MaterialTheme.typography.titleSmall
+//                )
+//                SingleScheduledRowItem(
+//                    key = "Route",
+//                    value = scheduledTrip.route?:"",
+//                    style = MaterialTheme.typography.titleLarge,
+//                    fontWeight = FontWeight.Bold)
+//                SingleScheduledRowItem(
+//                    key = "Created By",
+//                    value = scheduledTrip.createdBy?:"",
+//                    style = MaterialTheme.typography.titleSmall)
+//                SingleScheduledRowItem(
+//                    key = "Created At",
+//                    value = scheduledTrip.createdAtFormatted?:"",
+//                    style = MaterialTheme.typography.titleSmall)
+//                SingleScheduledRowItem(
+//                    key = "Driver Name",
+//                    value = scheduledTrip.driverName ?: "",
+//                    style = MaterialTheme.typography.titleMedium)
+//                SingleScheduledRowItem(
+//                    key = "Vehicle Number",
+//                    value = scheduledTrip.vehicleNumber ?: "",
+//                    style = MaterialTheme.typography.titleMedium)
                 SingleScheduledRowItem(
-                    key = "Trip ID",
+                    icon = R.drawable.ic_hash,
                     value = scheduledTrip.tripId.toString(),
                     style = MaterialTheme.typography.titleSmall
                 )
                 SingleScheduledRowItem(
-                    key = "Route",
+                    icon = R.drawable.ic_route,
                     value = scheduledTrip.route?:"",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold)
                 SingleScheduledRowItem(
-                    key = "Created By",
+                    icon = R.drawable.ic_outline_person,
                     value = scheduledTrip.createdBy?:"",
                     style = MaterialTheme.typography.titleSmall)
                 SingleScheduledRowItem(
-                    key = "Created At",
+                    icon = R.drawable.ic_calendar_clock,
                     value = scheduledTrip.createdAtFormatted?:"",
                     style = MaterialTheme.typography.titleSmall)
                 SingleScheduledRowItem(
-                    key = "Driver Name",
+                    icon = R.drawable.ic_steering_wheel,
                     value = scheduledTrip.driverName ?: "",
                     style = MaterialTheme.typography.titleMedium)
                 SingleScheduledRowItem(
-                    key = "Vehicle Number",
+                    icon = R.drawable.ic_local_shipping,
                     value = scheduledTrip.vehicleNumber ?: "",
                     style = MaterialTheme.typography.titleMedium)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -342,7 +418,8 @@ private fun SingleScheduledTripCompose(scheduledTrip: ScheduledTrip,onItemClick:
                         onClick = {
                             onItemClick.invoke(scheduledTrip)
                         },
-                        modifier = Modifier
+                        modifier = Modifier,
+                        colors = getButtonColors()
                     ) {
                         Text("Cancel Trip")
                     }

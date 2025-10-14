@@ -24,6 +24,7 @@ import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
 
@@ -61,7 +62,7 @@ fun LoginScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     Scaffold(
         topBar = {
-            App_CommonTopBar(backButtonVisibility = false)
+            App_CommonTopBar(backButtonVisibility = false, useDefaultColor = true)
         },
     ) { paddingValues ->
         Column(
@@ -73,7 +74,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Top
         ) {
 
-            App_CommonTopBar(backButtonVisibility = false)
+            App_CommonTopBar(backButtonVisibility = false, useDefaultColor = true)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -148,7 +149,8 @@ fun LoginScreen(
                                 loginViewModel.login(phoneNumber)
                             },
                             enabled = loginState !is LoginState.Loading && isNumberValid && phoneNumber.isNotNullOrEmpty(),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = getButtonColors()
                         ) {
                             Text(text = stringResource(R.string.login_button_text))
                         }
