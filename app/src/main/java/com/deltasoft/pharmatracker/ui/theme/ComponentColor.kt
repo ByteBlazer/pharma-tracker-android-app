@@ -22,9 +22,9 @@ import com.deltasoft.pharmatracker.utils.AppUtils
 fun getCenterAlignedTopAppBarColors(): TopAppBarColors {
     return TopAppBarDefaults.centerAlignedTopAppBarColors(
         containerColor = AppPrimary,
-        titleContentColor = AppUtils.getTextColorBasedOnColortype(AppPrimary),
-        navigationIconContentColor = AppUtils.getTextColorBasedOnColortype(AppPrimary),
-        actionIconContentColor = AppUtils.getTextColorBasedOnColortype(AppPrimary)
+        titleContentColor = Color.White,
+        navigationIconContentColor = Color.White,
+        actionIconContentColor = Color.White
     )
 }
 
@@ -33,7 +33,7 @@ fun getCenterAlignedTopAppBarColors(): TopAppBarColors {
 fun getButtonColors(): ButtonColors {
     return ButtonDefaults.buttonColors(
         containerColor = AppPrimary,
-        contentColor = AppUtils.getTextColorBasedOnColortype(AppPrimary)
+        contentColor = Color.White
     )
 }
 

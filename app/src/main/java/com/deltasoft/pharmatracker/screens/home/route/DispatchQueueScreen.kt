@@ -20,6 +20,7 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -39,10 +40,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.route.entity.RouteSummaryList
@@ -117,7 +120,7 @@ fun DispatchQueueScreen(
                         Text(text = "Schedule Trip")
                     },
                     containerColor = AppPrimary,
-                    contentColor = AppUtils.getTextColorBasedOnColortype(AppPrimary)
+                    contentColor = Color.White
                 )
         }
     ) { paddingValues ->
@@ -211,7 +214,8 @@ fun RouteItemComposable(
         .padding(vertical = 8.dp)
         .clickable {
             item.isChecked.value = !item.isChecked.value
-        }) {
+        },
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))) {
         ListItem(
             headlineContent = {
                 Text(item.scannedByName?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )

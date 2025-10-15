@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -303,8 +304,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
                 ) {
                     // Only show the camera preview if scanning is active.
                     if (isScanning && scannedValue.isNullOrEmpty()) {
@@ -377,7 +377,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                         Icon(
                             painter = painterResource(R.drawable.ic_barcode_scanner),
                             contentDescription = "Start Icon",
-                            tint = AppUtils.getTextColorBasedOnColortype(AppPrimary)
+                            tint = Color.White
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(if (isScanning) "STOP" else "START", fontWeight = FontWeight.Bold)

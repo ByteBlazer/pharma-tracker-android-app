@@ -53,6 +53,7 @@ import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.login.OTPTextField
 import com.deltasoft.pharmatracker.screens.login.OtpTextFieldDefaults
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -328,7 +329,8 @@ fun OtpVerificationScreen(
                             otpVerificationViewModel.verifyOtp(phoneNumber, otp)
                         },
                         enabled = otpVerificationState !is OtpVerificationState.Loading,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = getButtonColors()
                     ) {
                         Text(text = "VERIFY & PROCEED")
                     }

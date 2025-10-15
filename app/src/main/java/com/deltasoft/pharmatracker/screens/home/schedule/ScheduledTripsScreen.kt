@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -355,7 +356,8 @@ private fun SingleScheduledRowItem(icon: Int, value: String, style: TextStyle, c
 private fun SingleScheduledTripCompose(scheduledTrip: ScheduledTrip,onItemClick: (scheduledTrip: ScheduledTrip) -> Unit = { a->}) {
     Card(
         modifier = Modifier
-            .padding(vertical = 8.dp)
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
     ) {
         Row(Modifier
             .fillMaxWidth()
