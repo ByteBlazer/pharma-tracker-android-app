@@ -49,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -143,49 +144,68 @@ fun ScheduleNewTrip(
         bottomBar = {
 //            if (selectedDriverId.isNotNullOrEmpty()) {
 //                BottomAppBar {
-            Column(Modifier.fillMaxWidth() .windowInsetsPadding(WindowInsets.navigationBars), horizontalAlignment = Alignment.CenterHorizontally) {
-                if (selectedDriver != null) {
-                    Card(
-                        modifier = Modifier,
-                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                    ) {
-                        Column(Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 16.dp)) {
-                            OutlinedTextField(
-                                value = vehicleNumber,
-                                onValueChange = { newText ->
-                                    vehicleNumber = newText
-                                },
-                                label = {
-                                    Text(
-                                        if (vehicleNumber.isNotNullOrEmpty()) stringResource(
-                                            R.string.schedule_new_trip_text_field_placeholder
-                                        ) else stringResource(
-                                            R.string.schedule_new_trip_text_field_placeholder2
+            Card(
+                modifier = Modifier,
+                shape = RoundedCornerShape(0.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (selectedDriver != null) {
+                        Card(
+                            modifier = Modifier,
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                        ) {
+                            Column(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                            ) {
+                                OutlinedTextField(
+                                    value = vehicleNumber,
+                                    onValueChange = { newText ->
+                                        vehicleNumber = newText
+                                    },
+                                    label = {
+                                        Text(
+                                            if (vehicleNumber.isNotNullOrEmpty()) stringResource(
+                                                R.string.schedule_new_trip_text_field_placeholder
+                                            ) else stringResource(
+                                                R.string.schedule_new_trip_text_field_placeholder2
+                                            )
                                         )
-                                    )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Text,
-                                    imeAction = ImeAction.Done
-                                ),
-                                maxLines = 1,
-                                enabled = scheduleNewTripState !is ScheduleNewTripState.Loading
-                            )
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Text,
+                                        imeAction = ImeAction.Done
+                                    ),
+                                    maxLines = 1,
+                                    enabled = scheduleNewTripState !is ScheduleNewTripState.Loading
+                                )
+                            }
                         }
                     }
-                }
-                Button(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp)
+                    Button(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                            .padding(bottom = 16.dp)
 //                    .navigationBarsPadding()
-                    , onClick = {
-                        scheduleNewTripViewModel.scheduleNewTrip(route,userIds?: arrayOf(),vehicleNumber,driverId,context)
+                        , onClick = {
+                            scheduleNewTripViewModel.scheduleNewTrip(
+                                route,
+                                userIds ?: arrayOf(),
+                                vehicleNumber,
+                                driverId,
+                                context
+                            )
 
-                }, enabled = scheduleNewTripState !is ScheduleNewTripState.Loading,
-                    colors = getButtonColors()
-                ) {
-                    Text("Schedule Trip")
+                        }, enabled = scheduleNewTripState !is ScheduleNewTripState.Loading,
+                        colors = getButtonColors()
+                    ) {
+                        Text("Schedule Trip")
+                    }
                 }
             }
 //                }
@@ -283,7 +303,8 @@ fun DriverListItem(
         .padding(vertical = 8.dp)
         .clickable {
             scheduleNewTripViewModel.updateSelectedDriver(driver.userId ?: "", clear = selected)
-        }) {
+        },
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))) {
         ListItem(
             headlineContent = {
                 Text(
