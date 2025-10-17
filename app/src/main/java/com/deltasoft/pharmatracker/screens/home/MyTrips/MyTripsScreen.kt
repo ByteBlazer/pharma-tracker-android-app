@@ -296,7 +296,7 @@ fun MyTripListCompose(myTripsViewModel: MyTripsViewModel, message: String?, onIt
             }
         }else{
             Column(Modifier.fillMaxWidth()) {
-                Text("The following trips have been assigned to you", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
+                Text("Trips assigned to you", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
                 Spacer(Modifier.height(16.dp))
                 LazyColumn {
                     items(scheduledTripList.size) { index ->

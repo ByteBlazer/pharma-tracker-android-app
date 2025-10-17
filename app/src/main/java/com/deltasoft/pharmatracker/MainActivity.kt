@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         Log.d(TAG, "App Hash: $list")
 //        enableEdgeToEdge()
         setContent {
-            PharmaTrackerAppTheme {
+            PharmaTrackerAppTheme(darkTheme = false) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

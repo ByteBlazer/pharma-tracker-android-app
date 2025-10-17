@@ -210,13 +210,13 @@ private fun ScheduleCancelConfirmationDialog(
             onDismissRequest = onDismiss,
             title = {
                 androidx.compose.material.Text(
-                    text = "Cancel Scheduled Item", style = MaterialTheme.typography.bodyLarge,
+                    text = "Cancel Scheduled Trip", style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 androidx.compose.material.Text(
-                    text = "Are you sure you want to cancel item Id : ${scheduleCancelNeededItem.tripId} for the ${scheduleCancelNeededItem.route} route?",
+                    text = "Are you sure you want to cancel Trip #${scheduleCancelNeededItem.tripId} for the ${scheduleCancelNeededItem.route} route?",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -263,7 +263,7 @@ private fun ScheduledTripListCompose(scheduledTripsViewModel: ScheduledTripsView
             }
         }else{
             Column(Modifier.fillMaxWidth()) {
-                Text("The following trips have been scheduled from your location", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
+                Text("Trips scheduled from your location", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
                 Spacer(Modifier.height(16.dp))
                 LazyColumn {
                     items(scheduledTripList.size) { index ->
