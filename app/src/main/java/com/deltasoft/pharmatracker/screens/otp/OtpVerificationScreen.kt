@@ -199,7 +199,7 @@ fun OtpVerificationScreen(
 
     Scaffold(
         topBar = {
-            App_CommonTopBar(onBackClick = {  navController.popBackStack() })
+            App_CommonTopBar(onBackClick = {  if (navController.previousBackStackEntry != null) { navController.popBackStack() } })
         },
     ) { paddingValues ->
         Column(

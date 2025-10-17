@@ -130,7 +130,7 @@ fun ScheduleNewTrip(
     Scaffold(
         modifier = Modifier.imePadding(),
         topBar = {
-            App_CommonTopBar(title = (route?:"")+" : New Trip", onBackClick = {  navController.popBackStack() })
+            App_CommonTopBar(title = (route?:"")+" : New Trip", onBackClick = {  if (navController.previousBackStackEntry != null) { navController.popBackStack() } })
 //            CenterAlignedTopAppBar(
 //                title = {
 //                    Text(

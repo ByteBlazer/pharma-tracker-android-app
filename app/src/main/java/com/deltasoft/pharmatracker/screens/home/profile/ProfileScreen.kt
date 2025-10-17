@@ -78,7 +78,7 @@ fun ProfileScreen(
 
     Scaffold(
         topBar = {
-            App_CommonTopBar(title = "Profile", onBackClick = {  navController.popBackStack() })
+            App_CommonTopBar(title = "Profile", onBackClick = {  if (navController.previousBackStackEntry != null) { navController.popBackStack() } })
         },
     ) { paddingValues ->
         Column(

@@ -190,7 +190,7 @@ fun SingleTripDetailsScreen(
     }
 
     Scaffold(modifier = Modifier.fillMaxSize(),
-        topBar = {   App_CommonTopBar(title = stringResource(R.string.single_trip_details_heading), onBackClick = {  navController.popBackStack() }) },
+        topBar = {   App_CommonTopBar(title = stringResource(R.string.single_trip_details_heading), onBackClick = {  if (navController.previousBackStackEntry != null) { navController.popBackStack() } }) },
         bottomBar = {
             Column(Modifier
                 .fillMaxWidth()
