@@ -132,5 +132,13 @@ dependencies {
     implementation(libs.play.services.location)
 
     implementation("com.google.android.gms:play-services-auth-api-phone:18.0.1")
+
+    //In app-update
+//    implementation("com.google.android.play:app-update-ktx:2.1.0")
+
+    // So, make sure you also include that repository in your project's build.gradle file.
+    implementation("com.google.android.play:app-update:2.1.0")
+// For Kotlin users also add the Kotlin extensions library for Play In-App Update:
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
 }
 
