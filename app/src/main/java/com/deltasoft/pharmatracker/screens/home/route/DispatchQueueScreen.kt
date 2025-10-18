@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -184,6 +185,8 @@ fun DispatchQueueListCompose(dispatchQueueViewModel: DispatchQueueViewModel, mes
             }
         }else{
             Column(Modifier.fillMaxWidth()) {
+                Text("Select docs from any one route", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
+                Spacer(Modifier.height(16.dp))
                 LazyColumn {
                     items(routeSummaryLists.size) { index ->
                         if (index in routeSummaryLists.indices) {
@@ -218,18 +221,16 @@ fun RouteItemComposable(
         elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))) {
         ListItem(
             headlineContent = {
-                Text(item.scannedByName?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
+                Text(("Documents Scanned: " + item.count) ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant )
             },
             modifier = Modifier,
             overlineContent = {
                 Text(item.scannedFromLocation?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
             },
             supportingContent = {
-                Text(("Count: " + item.count) ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant )
+                Text(item.scannedByName?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
             },
-            leadingContent = {
-
-            },
+            leadingContent = null,
             trailingContent = {
                 Checkbox(
                     checked = item.isChecked.value,
