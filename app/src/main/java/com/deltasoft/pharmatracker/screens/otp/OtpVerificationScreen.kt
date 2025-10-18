@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
@@ -39,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +51,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
@@ -212,24 +216,36 @@ fun OtpVerificationScreen(
         ) {
 
             App_CommonTopBar(backButtonVisibility = false, useDefaultColor = true)
-            Text(
-                text = "OTP verification",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(
-                text = "Enter the OTP sent to",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "+91-" + phoneNumber,
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(32.dp))
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
+            ) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "OTP verification",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Text(
+                        text = "Enter the OTP sent to",
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "+91-" + phoneNumber,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
 
 //        OutlinedTextField(
 //            value = otp,
@@ -240,74 +256,74 @@ fun OtpVerificationScreen(
 //        )
 
 
-            OTPTextField(
-                value = otp, // Initial value
-                onTextChanged = { otp = it },
-                numDigits = 6, // Number of digits in OTP
-                isMasked = false, // Mask digits for security
-                digitContainerStyle = OtpTextFieldDefaults.outlinedContainer(), // Choose style (outlined or underlined)
-                textStyle = MaterialTheme.typography.titleLarge, // Configure text style
-                isError = false // Indicate whether the OTP field is in an error state
-            )
+                    OTPTextField(
+                        value = otp, // Initial value
+                        onTextChanged = { otp = it },
+                        numDigits = 6, // Number of digits in OTP
+                        isMasked = false, // Mask digits for security
+                        digitContainerStyle = OtpTextFieldDefaults.outlinedContainer(), // Choose style (outlined or underlined)
+                        textStyle = MaterialTheme.typography.titleLarge, // Configure text style
+                        isError = false // Indicate whether the OTP field is in an error state
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            // Crossfade to smoothly transition between the timer and the button
-            Crossfade(targetState = isTimerRunning, label = "") { running ->
-                if (running) {
+                    // Crossfade to smoothly transition between the timer and the button
+                    Crossfade(targetState = isTimerRunning, label = "") { running ->
+                        if (running) {
 //                Text(
 //                    text = "Resend OTP in $timeLeft s",
 //                    color = MaterialTheme.colorScheme.onSurfaceVariant,
 //                    style = MaterialTheme.typography.bodyLarge
 //                )
-                    TextButton(
-                        onClick = {
-                            // Reset the timer and run the resend action
-                            timeLeft = 30
-                            isTimerRunning = true
+                            TextButton(
+                                onClick = {
+                                    // Reset the timer and run the resend action
+                                    timeLeft = 30
+                                    isTimerRunning = true
 //                        onResendClick()
-                        },
-                        enabled = false,
-                        colors = getTextButtonColors()
-                    ) {
-                        Text(
-                            "Resend OTP in $timeLeft s",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                } else {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Don't receive the OTP?",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                                },
+                                enabled = false,
+                                colors = getTextButtonColors()
+                            ) {
+                                Text(
+                                    "Resend OTP in $timeLeft s",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        } else {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Don't receive the OTP?",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
 //                    Spacer(modifier = Modifier.width(8.dp))
 //                    Text(text = "RESEND OTP", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                        TextButton(
-                            onClick = {
-                                // Reset the timer and run the resend action
-                                timeLeft = 30
-                                isTimerRunning = true
-                                otpVerificationViewModel.onResendClick(phoneNumber)
-                            },
-                            colors = getTextButtonColors()
-                        ) {
-                            Text(
-                                "Resend OTP",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                                TextButton(
+                                    onClick = {
+                                        // Reset the timer and run the resend action
+                                        timeLeft = 30
+                                        isTimerRunning = true
+                                        otpVerificationViewModel.onResendClick(phoneNumber)
+                                    },
+                                    colors = getTextButtonColors()
+                                ) {
+                                    Text(
+                                        "Resend OTP",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+                            }
+
                         }
                     }
 
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
 //        OtpTextField(
 //            otpText = otp,
@@ -321,30 +337,33 @@ fun OtpVerificationScreen(
 //        )
 
 
-            when (otpVerificationState) {
-                is OtpVerificationState.Loading -> CircularProgressIndicator()
-                else -> {
-                    Button(
-                        onClick = {
-                            otpVerificationViewModel.verifyOtp(phoneNumber, otp)
-                        },
-                        enabled = otpVerificationState !is OtpVerificationState.Loading,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = getButtonColors()
-                    ) {
-                        Text(text = "VERIFY & PROCEED")
+                    when (otpVerificationState) {
+                        is OtpVerificationState.Loading -> CircularProgressIndicator()
+                        else -> {
+                            Button(
+                                onClick = {
+                                    otpVerificationViewModel.verifyOtp(phoneNumber, otp)
+                                },
+                                enabled = otpVerificationState !is OtpVerificationState.Loading,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = getButtonColors()
+                            ) {
+                                Text(text = "VERIFY & PROCEED")
+                            }
+                        }
+                    }
+
+                    if (otpVerificationState is OtpVerificationState.Error) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = (otpVerificationState as OtpVerificationState.Error).message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }
 
-            if (otpVerificationState is OtpVerificationState.Error) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = (otpVerificationState as OtpVerificationState.Error).message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
         }
     }
 }
