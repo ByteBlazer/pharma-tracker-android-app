@@ -29,7 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
-import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
+import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey

@@ -54,7 +54,7 @@ import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
-import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
+import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.login.OTPTextField
 import com.deltasoft.pharmatracker.screens.login.OtpTextFieldDefaults
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors

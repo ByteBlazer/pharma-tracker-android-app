@@ -5,10 +5,9 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
-import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTripsResponse
+import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
+import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTripsResponse
 import com.deltasoft.pharmatracker.utils.AppUtils
-import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow

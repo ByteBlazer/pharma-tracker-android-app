@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -45,17 +43,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.Placeholder
-import androidx.compose.ui.text.PlaceholderVerticalAlign
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
@@ -63,8 +55,8 @@ import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
 import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
-import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
-import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
+import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
+import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTrip
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.google.accompanist.permissions.ExperimentalPermissionsApi

@@ -15,7 +15,7 @@ import com.deltasoft.pharmatracker.screens.splash.SplashScreen
 import com.deltasoft.pharmatracker.screens.home.HomeScreen
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.SingleTripDetailsScreen
 import com.deltasoft.pharmatracker.screens.home.profile.ProfileScreen
-import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.ScheduleNewTrip
+import com.deltasoft.pharmatracker.screens.home.queue.scheduletrip.ScheduleNewTrip
 import com.deltasoft.pharmatracker.screens.login.LoginScreen
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationScreen
 import com.deltasoft.pharmatracker.utils.AppUtils
