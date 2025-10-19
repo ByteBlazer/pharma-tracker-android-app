@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,6 +49,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.route.entity.RouteSummaryList
 import com.deltasoft.pharmatracker.screens.home.route.entity.UserSummaryList
@@ -193,7 +195,11 @@ fun DispatchQueueListCompose(dispatchQueueViewModel: DispatchQueueViewModel, mes
                         if (index in routeSummaryLists.indices) {
                             val route = routeSummaryLists[index]
                             RouteHeaderComposable(route,dispatchQueueViewModel)
-                            Spacer(Modifier.height(28.dp))
+                            if (routeSummaryLists.last() == route){
+                                App_CommonTopBar(backButtonVisibility = false, useDefaultColor = true)
+                            }else{
+                                Spacer(Modifier.height(28.dp))
+                            }
                         }
                     }
                 }
@@ -220,30 +226,40 @@ fun RouteItemComposable(
             item.isChecked.value = !item.isChecked.value
         },
         elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))) {
-        ListItem(
-            headlineContent = {
-                Text(("Documents Scanned: " + item.count) ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant )
-            },
-            modifier = Modifier,
-            overlineContent = {
-                Text(item.scannedFromLocation?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
-            },
-            supportingContent = {
-                Text(item.scannedByName?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
-            },
-            leadingContent = null,
-            trailingContent = {
-                Checkbox(
-                    checked = item.isChecked.value,
-                    onCheckedChange = {
-                        item.isChecked.value = it
-                    }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            ListItem(
+                headlineContent = {
+                    Text(("Documents Scanned: " + item.count) ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant )
+                },
+                modifier = Modifier.weight(1f),
+                overlineContent = {
+                    Text(item.scannedFromLocation?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
+                },
+                supportingContent = {
+                    Text(item.scannedByName?:"", color = MaterialTheme.colorScheme.onSurfaceVariant )
+                },
+                leadingContent = null,
+                trailingContent = null
+//                    {
+//                    Checkbox(
+//                        checked = item.isChecked.value,
+//                        onCheckedChange = {
+//                            item.isChecked.value = it
+//                        }
+//                    )
+//                }
+                ,
+                colors = ListItemDefaults.colors(
+                    containerColor = Color.Transparent
                 )
-            },
-            colors = ListItemDefaults.colors(
-                containerColor = Color.Transparent
             )
-        )
+            Checkbox(
+                checked = item.isChecked.value,
+                onCheckedChange = {
+                    item.isChecked.value = it
+                }
+            )
+        }
     }
 }
 
