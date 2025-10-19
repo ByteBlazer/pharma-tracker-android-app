@@ -109,7 +109,7 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                                      onDismiss: () -> Unit,
                                      title: String,
                                      message: String,
-                                     confirmButtonText: String = "Confirm" ,
+                                     confirmButtonText: String = "Submit" ,
                                      dismissButtonText: String = "Cancel",) {
     var commentText by remember { mutableStateOf("") }
     if (showDialog) {
@@ -138,7 +138,7 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                         OutlinedTextField(
                             value = commentText,
                             onValueChange = { commentText = it },
-                            label = { Text("Enter your comment") },
+                            label = { Text("Describe issue") },
                             // KEY PROPERTY: Forces the field to be 4 lines tall visually
                             minLines = 4,
                             // KEY PROPERTY: Prevents the field from growing beyond 4 lines
