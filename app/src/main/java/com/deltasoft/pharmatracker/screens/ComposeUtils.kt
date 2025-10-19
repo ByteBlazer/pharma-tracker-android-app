@@ -1,5 +1,6 @@
 package com.deltasoft.pharmatracker.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -312,6 +313,60 @@ fun SingleIconWithTextAnnotatedItem(icon: Int, value: String, style: TextStyle, 
         }
     }
     Row(Modifier.padding(vertical = 0.dp)) {
+        Text(
+            text = annotatedTextIcon,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+        Text(
+            text = annotatedText,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+    }
+}
+
+@Composable
+fun SingleIconWithTextAnnotatedItemWithOnCLick(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal,
+                                    itemsSpace: Dp = 4.dp,
+                                               onClick: () -> Unit,) {
+
+    val iconId = "IconId"
+
+    val inlineContentMap: Map<String, InlineTextContent> = mapOf(
+        iconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = "icon",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+    )
+
+    val annotatedText = buildAnnotatedString {
+        withStyle(SpanStyle(color = color)) {
+            append("$value  ") // Added padding spaces for separation
+        }
+    }
+
+    val annotatedTextIcon = buildAnnotatedString {
+        appendInlineContent(iconId, "[ID]")
+        withStyle(SpanStyle(color = color)) {
+            append(" ") // Added padding spaces for separation
+        }
+    }
+    Row(Modifier.padding(vertical = 0.dp).clickable { onClick.invoke() }) {
         Text(
             text = annotatedTextIcon,
             inlineContent = inlineContentMap,

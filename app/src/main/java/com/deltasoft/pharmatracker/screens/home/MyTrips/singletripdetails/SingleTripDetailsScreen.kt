@@ -25,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -59,6 +60,7 @@ import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
+import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItemWithOnCLick
 import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
 import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.Doc
@@ -626,18 +628,148 @@ fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(start = 8.dp)
+            .padding(start = 0.dp)
     ) {
         for (doc in docGroup.docs?: arrayListOf()) {
             Column(Modifier.fillMaxWidth()) {
-                SingleDoc(
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        horizontal = 0.dp,
+                        vertical = 0.dp
+                    ), // Adjust padding as needed
+                    thickness = 1.dp,
+                    color = Color.Gray
+                )
+                SingleDocNew(
                     singleTripDetailsViewModel,
                     doc,
                     deliverySuccessOnClick = deliverySuccessOnClick,
                     deliveryFailedOnClick = deliveryFailedOnClick
                 )
+//                if (docGroup.docs?.last() != doc) {
+//                    HorizontalDivider(
+//                        modifier = Modifier.padding(
+//                            horizontal = 0.dp,
+//                            vertical = 0.dp
+//                        ), // Adjust padding as needed
+//                        thickness = 1.dp,
+//                        color = Color.Gray
+//                    )
+//                }
             }
         }
+    }
+}
+
+@Composable
+fun SingleDocNew(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,deliverySuccessOnClick: (docId: String) -> Unit = { a -> },deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
+    val context = LocalContext.current
+    Card(
+        modifier = Modifier
+            .padding(vertical = 8.dp)
+    ) {
+        val address = (if (doc.customerAddress.isNotNullOrEmpty()) doc.customerAddress else "") +
+                (if (doc.customerCity.isNotNullOrEmpty()) " " + doc.customerCity else "") +
+                (if (doc.customerPincode.isNotNullOrEmpty()) " " + doc.customerPincode else "")
+
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.padding_of_entire_items_in_a_card)),
+            verticalArrangement = Arrangement.spacedBy(
+                dimensionResource(R.dimen.space_between_items_in_a_card))
+        ) {
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_store,
+                value = doc.customerFirmName ?: "",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_receipt,
+                value = "₹" + doc.docAmount.toString(),
+                style = MaterialTheme.typography.titleSmall
+            )
+            if (address.isNotNullOrEmpty()) {
+                SingleIconWithTextAnnotatedItem(
+                    icon = R.drawable.ic_business,
+                    value = address,
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
+            Row(Modifier.fillMaxWidth()) {
+                if (doc.customerPhone.isNotNullOrEmpty()) {
+                    Box(Modifier.fillMaxWidth().weight(1f)) {
+                        SingleIconWithTextAnnotatedItemWithOnCLick(
+                            icon = R.drawable.ic_phone,
+                            value = doc.customerPhone ?: "",
+                            style = MaterialTheme.typography.titleMedium,
+                            onClick = {
+                                AppUtils.dialPhoneNumber(
+                                    context = context,
+                                    phoneNumber = doc.customerPhone ?: ""
+                                )
+                            }
+                        )
+                    }
+                    Spacer(Modifier.width(16.dp))
+                }
+                Box(Modifier.fillMaxWidth().weight(1f)) {
+                    SingleIconWithTextAnnotatedItemWithOnCLick(
+                        icon = R.drawable.ic_location,
+                        value = "Navigate",
+                        style = MaterialTheme.typography.titleMedium,
+                        onClick = {
+                            AppUtils.startGoogleMapsDirections(
+                                context = context,
+                                latitude = doc.customerGeoLatitude ?: "",
+                                longitude = doc.customerGeoLongitude ?: "",
+                                destinationName = doc.customerFirmName ?: ""
+                            )
+                        }
+                    )
+                }
+            }
+            val deliveryIcon = if (doc.status?.equals(
+                    DeliveryStatusConstants.DELIVERED,
+                    ignoreCase = true
+                ) == true
+            ) R.drawable.ic__check_circle
+            else if (doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) R.drawable.ic_error_24 else R.drawable.ic_delivery_truck_speed
+            SingleIconWithTextAnnotatedItem(
+                icon = deliveryIcon,
+                value = if (doc.status?.equals(
+                        DeliveryStatusConstants.DELIVERED,
+                        ignoreCase = true
+                    ) == true
+                ) "Delivered"
+                else if (doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Row (Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                if (doc.status == DeliveryStatusConstants.ON_TRIP) {
+                    Box(Modifier.fillMaxWidth().weight(1f)) {
+                        Button(onClick = {
+                            deliveryFailedOnClick.invoke(doc.id ?: "")
+                        }, colors = getButtonColors()) {
+                            Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+                        }
+                    }
+                    Box(Modifier.fillMaxWidth().weight(1f)) {
+                        Button(onClick = {
+                            deliverySuccessOnClick.invoke(doc.id ?: "")
+                        },
+                            colors = getButtonColors()
+                        ) {
+                            Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
+                        }
+                    }
+                }
+
+            }
+        }
+
     }
 }
 
