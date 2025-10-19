@@ -272,6 +272,7 @@ fun DriverListCompose(scheduleNewTripViewModel: ScheduleNewTripViewModel, messag
             }
         }else{
             Column(Modifier.fillMaxWidth()) {
+                Spacer(Modifier.height(16.dp))
                 Text("Select a driver for this trip", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
                 Spacer(Modifier.height(16.dp))
                 LazyColumn {

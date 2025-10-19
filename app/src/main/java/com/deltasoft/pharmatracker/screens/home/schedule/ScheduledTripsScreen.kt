@@ -263,6 +263,7 @@ private fun ScheduledTripListCompose(scheduledTripsViewModel: ScheduledTripsView
             }
         }else{
             Column(Modifier.fillMaxWidth()) {
+                Spacer(Modifier.height(16.dp))
                 Text("Trips scheduled from your location", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
                 Spacer(Modifier.height(16.dp))
                 LazyColumn {

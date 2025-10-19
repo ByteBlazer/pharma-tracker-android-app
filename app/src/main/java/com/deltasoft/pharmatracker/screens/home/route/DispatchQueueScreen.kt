@@ -185,6 +185,7 @@ fun DispatchQueueListCompose(dispatchQueueViewModel: DispatchQueueViewModel, mes
             }
         }else{
             Column(Modifier.fillMaxWidth()) {
+                Spacer(Modifier.height(16.dp))
                 Text("Select docs from any one route", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
                 Spacer(Modifier.height(16.dp))
                 LazyColumn {
