@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,10 +24,9 @@ import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.NavConstants
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.MyTrips.MyTripsScreen
-import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
-import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueScreen
+import com.deltasoft.pharmatracker.screens.home.queue.DispatchQueueScreen
 import com.deltasoft.pharmatracker.screens.home.scan.BarCodeScanner
-import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsScreen
+import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsScreen
 import com.deltasoft.pharmatracker.ui.theme.getCenterAlignedTopAppBarColors
 import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getNavigationBarItemColors

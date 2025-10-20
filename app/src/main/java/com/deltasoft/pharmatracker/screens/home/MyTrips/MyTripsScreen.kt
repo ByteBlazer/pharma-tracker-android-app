@@ -46,14 +46,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
+import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
-import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
-import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
+import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
+import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTrip
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -296,13 +299,14 @@ fun MyTripListCompose(myTripsViewModel: MyTripsViewModel, message: String?, onIt
             }
         }else{
             Column(Modifier.fillMaxWidth()) {
+                Spacer(Modifier.height(16.dp))
                 Text("Trips assigned to you", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
                 Spacer(Modifier.height(16.dp))
                 LazyColumn {
                     items(scheduledTripList.size) { index ->
                         if (index in scheduledTripList.indices) {
                             val scheduledTrip = scheduledTripList[index]
-                            SingleMyTripCompose(scheduledTrip,onItemClick)
+                            SingleMyTripComposeNew(scheduledTrip,onItemClick)
                         }
                     }
                 }
@@ -344,8 +348,11 @@ private fun SingleMyTripRowItem(key: String, value: String, style: TextStyle, co
     }
 }
 
+
+
 @Composable
-private fun SingleMyTripRowItem(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal) {
+private fun SingleMyTripRowItem(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal,
+                                itemsSpace: Dp = 4.dp) {
 //    ListItem(
 //        modifier = Modifier.fillMaxWidth(),
 //        headlineContent = {
@@ -366,13 +373,13 @@ private fun SingleMyTripRowItem(icon: Int, value: String, style: TextStyle, colo
 //        colors = getListItemColors(),
 //        supportingContent = null
 //    )
-    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(
             painter = painterResource(icon),
             contentDescription = "Icon",
             modifier = Modifier.size(24.dp)
         )
-        Spacer(Modifier.width(4.dp))
+        Spacer(Modifier.width(itemsSpace))
         Text(
             text = value,
             style = style,
@@ -381,6 +388,54 @@ private fun SingleMyTripRowItem(icon: Int, value: String, style: TextStyle, colo
         )
     }
 }
+
+
+@Composable
+fun SingleMyTripComposeNew(scheduledTrip: ScheduledTrip, onItemClick: (scheduledTrip: ScheduledTrip) -> Unit = { a->}) {
+    Card(
+        modifier = Modifier
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.padding_of_entire_items_in_a_card)),
+            verticalArrangement = Arrangement.spacedBy(
+                dimensionResource(R.dimen.space_between_items_in_a_card)
+            )
+        ) {
+            TripIdWithRouteAnnotatedText(
+                tripId = scheduledTrip.tripId.toString(),
+                route = scheduledTrip.route ?: ""
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_local_shipping,
+                value = (scheduledTrip.vehicleNumber ?: "") + " - " + (scheduledTrip.driverName
+                    ?: ""),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Button(
+                    onClick = {
+                        onItemClick.invoke(scheduledTrip)
+                    },
+                    modifier = Modifier,
+                    colors = getButtonColors()
+                ) {
+                    Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
+                }
+            }
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_outline_person,
+                value = "Created By " + (scheduledTrip.createdBy
+                    ?: "") + " at " + (scheduledTrip.createdAtFormatted ?: ""),
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+    }
+}
+
 
 @Composable
 fun SingleMyTripCompose(scheduledTrip: ScheduledTrip, onItemClick: (scheduledTrip: ScheduledTrip) -> Unit = { a->}) {

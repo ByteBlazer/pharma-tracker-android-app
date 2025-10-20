@@ -541,4 +541,11 @@ object AppUtils {
     fun getTextColorBasedOnColortype(colorValue: androidx.compose.ui.graphics.Color): androidx.compose.ui.graphics.Color {
         return if (isColorDark(colorValue)) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
     }
+
+    fun dialPhoneNumber(context: Context, phoneNumber: String) {
+        val intent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:$phoneNumber")
+        }
+        context.startActivity(intent)
+    }
 }

@@ -1,18 +1,17 @@
 package com.deltasoft.pharmatracker.screens
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,16 +26,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
@@ -45,7 +47,6 @@ import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getCenterAlignedTopAppBarColors
 import com.deltasoft.pharmatracker.utils.AppUtils
-import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -198,4 +199,189 @@ fun AppButton(
         Text(text = text)
     }
 }
+
+@Composable
+fun TripIdWithRouteAnnotatedText(tripId: String,
+                                         route: String,
+                                         style: TextStyle = MaterialTheme.typography.titleLarge,
+                                         color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                         fontWeight: FontWeight = FontWeight.Normal,
+                                         itemsSpace: Dp = 4.dp) {
+    val hashIconId = "hashIconId"
+    val routeIconId = "routeIconId"
+
+    val inlineContentMap: Map<String, InlineTextContent> = mapOf(
+        hashIconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_hash),
+                contentDescription = "hash",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+
+        routeIconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_route),
+                contentDescription = "route",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    )
+
+    val annotatedText = buildAnnotatedString {
+//        appendInlineContent(hashIconId, "[ID]")
+        withStyle(SpanStyle(color = color)) {
+            append("$tripId  ") // Added padding spaces for separation
+        }
+        appendInlineContent(routeIconId, "[Route]")
+        withStyle(SpanStyle(color = color)) {
+            append(" $route")
+        }
+    }
+
+    val annotatedTextIcon = buildAnnotatedString {
+        appendInlineContent(hashIconId, "[ID]")
+        withStyle(SpanStyle(color = color)) {
+            append(" ") // Added padding spaces for separation
+        }
+    }
+    Row(Modifier.padding(vertical = 0.dp)) {
+        Text(
+            text = annotatedTextIcon,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+        Text(
+            text = annotatedText,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+    }
+}
+
+@Composable
+fun SingleIconWithTextAnnotatedItem(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal,
+                                itemsSpace: Dp = 4.dp) {
+
+    val iconId = "IconId"
+
+    val inlineContentMap: Map<String, InlineTextContent> = mapOf(
+        iconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = "icon",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+    )
+
+    val annotatedText = buildAnnotatedString {
+        withStyle(SpanStyle(color = color)) {
+            append("$value  ") // Added padding spaces for separation
+        }
+    }
+
+    val annotatedTextIcon = buildAnnotatedString {
+        appendInlineContent(iconId, "[ID]")
+        withStyle(SpanStyle(color = color)) {
+            append(" ") // Added padding spaces for separation
+        }
+    }
+    Row(Modifier.padding(vertical = 0.dp)) {
+        Text(
+            text = annotatedTextIcon,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+        Text(
+            text = annotatedText,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+    }
+}
+
+@Composable
+fun SingleIconWithTextAnnotatedItemWithOnCLick(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal,
+                                    itemsSpace: Dp = 4.dp,
+                                               onClick: () -> Unit,) {
+
+    val iconId = "IconId"
+
+    val inlineContentMap: Map<String, InlineTextContent> = mapOf(
+        iconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = "icon",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+    )
+
+    val annotatedText = buildAnnotatedString {
+        withStyle(SpanStyle(color = color)) {
+            append("$value  ") // Added padding spaces for separation
+        }
+    }
+
+    val annotatedTextIcon = buildAnnotatedString {
+        appendInlineContent(iconId, "[ID]")
+        withStyle(SpanStyle(color = color)) {
+            append(" ") // Added padding spaces for separation
+        }
+    }
+    Row(Modifier.padding(vertical = 0.dp).clickable { onClick.invoke() }) {
+        Text(
+            text = annotatedTextIcon,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+        Text(
+            text = annotatedText,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+    }
+}
+
 
