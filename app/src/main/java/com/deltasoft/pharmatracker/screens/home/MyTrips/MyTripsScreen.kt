@@ -40,7 +40,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -417,23 +419,70 @@ fun SingleMyTripComposeNew(scheduledTrip: ScheduledTrip, onItemClick: (scheduled
                 style = MaterialTheme.typography.titleMedium
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                Button(
-                    onClick = {
-                        onItemClick.invoke(scheduledTrip)
-                    },
-                    modifier = Modifier,
-                    colors = getButtonColors()
-                ) {
-                    if (scheduledTrip.status.equals("SCHEDULED")){
-                        ButtonContentCompose(icon = R.drawable.ic_play,
-                            text = "Start Trip")
-                    }else{
-                        ButtonContentCompose(icon = R.drawable.ic_pause,
-                            text = "Resume Trip")
+
+                if (scheduledTrip.status.equals("SCHEDULED")){
+                    //Start trip
+                    //here we put start trip button on top of resume trip button
+                    // find the width of resume trip button and set this width for start trip too
+                    var buttonWidth by remember { mutableStateOf(0) }
+                    Box {
+                        Button(
+                            onClick = {  },
+                            modifier = Modifier
+                                .onGloballyPositioned { coordinates ->
+                                    buttonWidth = coordinates.size.width
+                                }
+                        ) {
+                            ButtonContentCompose(icon = R.drawable.ic_pause,
+                                text = "Resume Trip")
+                        }
+
+                        Button(
+                            onClick = { onItemClick.invoke(scheduledTrip) },
+                            modifier = if (buttonWidth > 0) Modifier.width(with(LocalDensity.current) { buttonWidth.toDp() }) else Modifier
+                        ) {
+                            ButtonContentCompose(icon = R.drawable.ic_play,
+                                text = "Start  Trip")
+                        }
                     }
+                }else{
+                    //Resume trip
+                    Button(
+                        onClick = {
+                            onItemClick.invoke(scheduledTrip)
+                        },
+                        modifier = Modifier,
+                        colors = getButtonColors()
+                    ) {
+                        if (scheduledTrip.status.equals("SCHEDULED")){
+                            ButtonContentCompose(icon = R.drawable.ic_play,
+                                text = "Start  Trip")
+                        }else{
+                            ButtonContentCompose(icon = R.drawable.ic_pause,
+                                text = "Resume Trip")
+                        }
 //                    Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
+                    }
                 }
             }
+//            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+//                Button(
+//                    onClick = {
+//                        onItemClick.invoke(scheduledTrip)
+//                    },
+//                    modifier = Modifier,
+//                    colors = getButtonColors()
+//                ) {
+//                    if (scheduledTrip.status.equals("SCHEDULED")){
+//                        ButtonContentCompose(icon = R.drawable.ic_play,
+//                            text = "Start Trip")
+//                    }else{
+//                        ButtonContentCompose(icon = R.drawable.ic_pause,
+//                            text = "Resume Trip")
+//                    }
+////                    Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
+//                }
+//            }
             SingleIconWithTextAnnotatedItem(
                 icon = R.drawable.ic_outline_person,
                 value = "Created By " + (scheduledTrip.createdBy
