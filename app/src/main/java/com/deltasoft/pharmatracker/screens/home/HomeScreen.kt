@@ -2,6 +2,7 @@ package com.deltasoft.pharmatracker.screens.home
 
 
 import android.content.Context
+import androidx.activity.result.launch
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -9,6 +10,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -68,6 +70,35 @@ fun HomeScreen(
             bottomNavItems.size
         }
         val coroutineScope = rememberCoroutineScope()
+
+
+        // In your HomeScreen composable (or wherever your bottom navigation is managed)
+
+// Get the current back stack entry
+        val navBackStackEntry = navController.currentBackStackEntry
+
+// Observe the savedStateHandle for the result
+        LaunchedEffect(navBackStackEntry) {
+            // Check if we received the "navigateToSection" signal
+            val navigateToSection = navBackStackEntry?.savedStateHandle?.get<String>("navigateToSection")
+            if (navigateToSection == "trips") {
+
+                // --- YOUR CODE HERE ---
+                // Find the index of the "My Trips" item.
+                val tripsIndex = bottomNavItems.indexOfFirst { it.route == NavConstants.ROUTE_SCHEDULED_TRIPS_SCREEN }
+
+                // If the item exists in the list, switch to that page.
+                if (tripsIndex != -1) {
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(tripsIndex)
+                    }
+                }
+
+                // Important: Remove the value from the state handle so this code
+                // doesn't run again on recomposition or configuration change.
+                navBackStackEntry.savedStateHandle.remove<String>("navigateToSection")
+            }
+        }
 
         Scaffold(
             bottomBar = {
