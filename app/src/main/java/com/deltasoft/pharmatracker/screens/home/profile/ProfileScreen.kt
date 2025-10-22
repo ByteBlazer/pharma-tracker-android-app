@@ -121,11 +121,11 @@ fun ProfileScreen(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null  // disables ripple & press interaction
                             ) {
-//                                scope.launch {
-//                                    clipboard?.setClipEntry(
-//                                        ClipEntry(ClipData.newPlainText("App signature", appSignature))
-//                                    )
-//                                }
+                                scope.launch {
+                                    clipboard?.setClipEntry(
+                                        ClipEntry(ClipData.newPlainText("App signature", appSignature))
+                                    )
+                                }
                             },
                         colorFilter = ColorFilter.tint(AppPrimary)
                     )
