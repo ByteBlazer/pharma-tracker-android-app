@@ -89,6 +89,9 @@ class MainActivity : ComponentActivity() {
 
         appUpdateManager = AppUpdateManagerFactory.create(this)
         checkForAppUpdate()
+
+//        val appSignature = AppSignatureHashHelper(applicationContext).appSignatures.firstOrNull()
+//        Log.d(TAG, "App Signature: $appSignature")
     }
 
     private fun retryInAppUpdate() {

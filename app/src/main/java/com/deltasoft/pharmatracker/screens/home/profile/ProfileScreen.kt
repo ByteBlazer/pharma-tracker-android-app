@@ -1,8 +1,12 @@
 package com.deltasoft.pharmatracker.screens.home.profile
 
+import android.content.ClipData
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,11 +30,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -45,8 +56,10 @@ import com.deltasoft.pharmatracker.ui.theme.getListItemColors
 import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
+import com.deltasoft.pharmatracker.utils.createappsignature.AppSignatureHashHelper
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
+import kotlinx.coroutines.launch
 
 private const val TAG = "ProfileScreen"
 @Composable
@@ -57,6 +70,12 @@ fun ProfileScreen(
     val userName = sharedPrefsUtil.getString(PrefsKey.USER_NAME)
     val userId = sharedPrefsUtil.getString(PrefsKey.USER_ID)
     val phone = sharedPrefsUtil.getString(PrefsKey.PHONE_NUMBER)
+
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    val appSignature = AppSignatureHashHelper(context).appSignatures.firstOrNull()
 
     var showDialog by remember { mutableStateOf(false) }
     LogoutConfirmationDialog(
@@ -97,7 +116,17 @@ fun ProfileScreen(
                     Image(
                         painter = painterResource(R.drawable.ic_delivery_truck),
                         contentDescription = "",
-                        modifier = Modifier.size(96.dp),
+                        modifier = Modifier.size(96.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null  // disables ripple & press interaction
+                            ) {
+//                                scope.launch {
+//                                    clipboard?.setClipEntry(
+//                                        ClipEntry(ClipData.newPlainText("App signature", appSignature))
+//                                    )
+//                                }
+                            },
                         colorFilter = ColorFilter.tint(AppPrimary)
                     )
                     Spacer(Modifier.height(16.dp))

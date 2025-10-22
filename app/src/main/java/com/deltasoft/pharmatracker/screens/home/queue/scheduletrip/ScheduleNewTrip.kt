@@ -107,6 +107,10 @@ fun ScheduleNewTrip(
                 val message = (scheduleNewTripState as ScheduleNewTripState.Success).scheduleNewTripResponse.message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.d(TAG, "State: Success - Message: $message")
+
+                // Pass a result back to the previous screen to tell it to switch tabs.
+                navController.previousBackStackEntry?.savedStateHandle?.set("navigateToSection", "trips")
+
                 navController.popBackStack()
             }
             is ScheduleNewTripState.Error -> {

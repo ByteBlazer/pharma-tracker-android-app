@@ -52,6 +52,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.ButtonContentCompose
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
 import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
@@ -423,7 +424,14 @@ fun SingleMyTripComposeNew(scheduledTrip: ScheduledTrip, onItemClick: (scheduled
                     modifier = Modifier,
                     colors = getButtonColors()
                 ) {
-                    Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
+                    if (scheduledTrip.status.equals("SCHEDULED")){
+                        ButtonContentCompose(icon = R.drawable.ic_play,
+                            text = "Start Trip")
+                    }else{
+                        ButtonContentCompose(icon = R.drawable.ic_pause,
+                            text = "Resume Trip")
+                    }
+//                    Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
                 }
             }
             SingleIconWithTextAnnotatedItem(
@@ -508,7 +516,14 @@ fun SingleMyTripCompose(scheduledTrip: ScheduledTrip, onItemClick: (scheduledTri
                         modifier = Modifier,
                         colors = getButtonColors()
                     ) {
-                        Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
+                        if (scheduledTrip.status.equals("SCHEDULED")){
+                            ButtonContentCompose(icon = R.drawable.ic_play,
+                                text = "Start Trip")
+                        }else{
+                            ButtonContentCompose(icon = R.drawable.ic_pause,
+                                text = "Resume Trip")
+                        }
+//                        Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
                     }
                 }
             }

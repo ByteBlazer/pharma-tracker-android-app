@@ -256,7 +256,7 @@ fun TripIdWithRouteAnnotatedText(tripId: String,
     val annotatedTextIcon = buildAnnotatedString {
         appendInlineContent(hashIconId, "[ID]")
         withStyle(SpanStyle(color = color)) {
-            append(" ") // Added padding spaces for separation
+            append("") // Added padding spaces for separation
         }
     }
     Row(Modifier.padding(vertical = 0.dp)) {
@@ -382,6 +382,52 @@ fun SingleIconWithTextAnnotatedItemWithOnCLick(icon: Int, value: String, style: 
             color = color
         )
     }
+}
+
+
+@Composable
+fun ButtonContentCompose(
+    icon: Int,
+    text: String,
+    style: TextStyle = MaterialTheme.typography.labelSmall,
+    color: Color = Color.White
+) {
+    val iconId = "hashIconId"
+
+    val inlineContentMap: Map<String, InlineTextContent> = mapOf(
+        iconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = "hash",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    )
+
+    val annotatedText = buildAnnotatedString {
+        appendInlineContent(iconId, "IC")
+        withStyle(SpanStyle(color = color)) {
+            append("  $text") // Added padding spaces for separation
+        }
+    }
+
+    Text(
+        text = annotatedText,
+        inlineContent = inlineContentMap,
+        modifier = Modifier.padding(0.dp),
+        style = style,
+        color = color,
+//        maxLines = 1,
+//        overflow = TextOverflow.Ellipsis,
+    )
+    //                    Text(text)
 }
 
 
