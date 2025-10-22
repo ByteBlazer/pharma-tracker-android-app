@@ -20,7 +20,7 @@
     <string name="drop_off_at_hub_btn_txt">Drop Off At Hub</string>
     <string name="dropped_off_at_hub_txt">Dropped Off At Hub</string>
     <string name="mark_as_delivered_btn_txt">Mark delivered</string>
-    <string name="mark_as_un_delivered_btn_txt">Report Issue</string>
+    <string name="mark_as_un_delivered_btn_txt">Issue</string>
 
     <string name="drop_off_confirm_title">Drop Off At Hub</string>
     <string name="drop_off_confirm_message">Are you sure you want to drop off this lot at hub?</string>

@@ -389,7 +389,7 @@ fun SingleIconWithTextAnnotatedItemWithOnCLick(icon: Int, value: String, style: 
 fun ButtonContentCompose(
     icon: Int,
     text: String,
-    style: TextStyle = MaterialTheme.typography.labelSmall,
+    style: TextStyle = MaterialTheme.typography.labelLarge,
     color: Color = Color.White
 ) {
     val iconId = "hashIconId"
