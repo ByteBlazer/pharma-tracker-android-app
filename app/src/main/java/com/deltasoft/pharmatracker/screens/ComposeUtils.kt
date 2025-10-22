@@ -256,7 +256,7 @@ fun TripIdWithRouteAnnotatedText(tripId: String,
     val annotatedTextIcon = buildAnnotatedString {
         appendInlineContent(hashIconId, "[ID]")
         withStyle(SpanStyle(color = color)) {
-            append(" ") // Added padding spaces for separation
+            append("") // Added padding spaces for separation
         }
     }
     Row(Modifier.padding(vertical = 0.dp)) {
