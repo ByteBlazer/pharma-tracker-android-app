@@ -749,14 +749,14 @@ fun SingleDocNew(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Do
 
             Row (Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 if (doc.status == DeliveryStatusConstants.ON_TRIP) {
-                    Box(Modifier.fillMaxWidth().weight(1f)) {
+//                    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.CenterStart) {
                         Button(onClick = {
                             deliveryFailedOnClick.invoke(doc.id ?: "")
                         }, colors = getButtonColors()) {
                             Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
                         }
-                    }
-                    Box(Modifier.fillMaxWidth().weight(1f)) {
+//                    }
+//                    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.CenterEnd) {
                         Button(onClick = {
                             deliverySuccessOnClick.invoke(doc.id ?: "")
                         },
@@ -764,7 +764,7 @@ fun SingleDocNew(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Do
                         ) {
                             Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
                         }
-                    }
+//                    }
                 }
 
             }
