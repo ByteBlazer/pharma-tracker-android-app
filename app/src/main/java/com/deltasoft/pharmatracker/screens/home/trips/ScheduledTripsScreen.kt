@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.screens.ButtonContentCompose
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
 import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
@@ -390,7 +391,9 @@ private fun SingleScheduledTripComposeNew(
                     modifier = Modifier,
                     colors = getButtonColors()
                 ) {
-                    Text("Cancel Trip")
+                    ButtonContentCompose(icon = R.drawable.ic_close,
+                        text = "Cancel Trip")
+//                    Text(text)
                 }
             }
             SingleIconWithTextAnnotatedItem(

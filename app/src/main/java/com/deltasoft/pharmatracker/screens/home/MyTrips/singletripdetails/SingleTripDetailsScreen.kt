@@ -59,6 +59,7 @@ import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
+import com.deltasoft.pharmatracker.screens.ButtonContentCompose
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItemWithOnCLick
 import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
@@ -596,7 +597,9 @@ fun SingleDocGroup(
                         },
                             colors = getButtonColors()
                         ) {
-                            Text(text = stringResource(R.string.drop_off_at_hub_btn_txt))
+                            ButtonContentCompose(icon = R.drawable.ic_storefront_24,
+                                text =  stringResource(R.string.drop_off_at_hub_btn_txt))
+//                            Text(text = stringResource(R.string.drop_off_at_hub_btn_txt))
                         }
                     } else if (docGroup.droppable) {
                         TextButton(onClick = {
@@ -753,16 +756,21 @@ fun SingleDocNew(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Do
                         Button(onClick = {
                             deliveryFailedOnClick.invoke(doc.id ?: "")
                         }, colors = getButtonColors()) {
-                            Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+                            ButtonContentCompose(icon = R.drawable.ic_exclamation,
+                                text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+//                            Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
                         }
 //                    }
+                    Spacer(Modifier.width(8.dp))
 //                    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.CenterEnd) {
                         Button(onClick = {
                             deliverySuccessOnClick.invoke(doc.id ?: "")
                         },
                             colors = getButtonColors()
                         ) {
-                            Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
+                            ButtonContentCompose(icon = R.drawable.ic_check,
+                                text = stringResource(R.string.mark_as_delivered_btn_txt))
+//                            Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
                         }
 //                    }
                 }
