@@ -577,53 +577,61 @@ fun SingleDocGroup(
     }
     val isAnyItemNeedToDeliver = docGroup.docs?.any { it.status == DeliveryStatusConstants.ON_TRIP } == true
 
-    ListItem(
-        modifier = Modifier.clickable { onClick.invoke() },
-        headlineContent = { Text(text = docGroup.heading?:"") },
-        leadingContent = null,
-        trailingContent = {
-            Row {
-                if (isAnyItemNeedToDeliver) {
-                    if (docGroup.showDropOffButton) {
-                        Button(onClick = {
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        ListItem(
+            modifier = Modifier.clickable { onClick.invoke() },
+            headlineContent = { Text(text = docGroup.heading?:"") },
+            leadingContent = null,
+            trailingContent = {
+                Row {
+
+                    IconButton(onClick = {onClick.invoke() }, colors = getIconButtonColors()) {
+                        Icon(
+                            painter = expandIcon,
+                            contentDescription = "expandable button",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
+        if (isAnyItemNeedToDeliver) {
+            Column(Modifier.padding(end = 16.dp, bottom = 16.dp, start = 16.dp)) {
+                if (docGroup.showDropOffButton) {
+                    Button(onClick = {
 //                        singleTripDetailsViewModel.dropOffTrip(
 //                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
 //                            heading = docGroup.heading ?: ""
 //                        )
-                            dropOffOnClick.invoke(
-                                singleTripDetailsViewModel.selectedScheduledTripId ?: "",
-                                docGroup.heading ?: ""
-                            )
-                        },
-                            colors = getButtonColors()
-                        ) {
-                            ButtonContentCompose(icon = R.drawable.ic_storefront_24,
-                                text =  stringResource(R.string.drop_off_at_hub_btn_txt))
+                        dropOffOnClick.invoke(
+                            singleTripDetailsViewModel.selectedScheduledTripId ?: "",
+                            docGroup.heading ?: ""
+                        )
+                    },
+                        colors = getButtonColors(),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        ButtonContentCompose(icon = R.drawable.ic_storefront_24,
+                            text =  stringResource(R.string.drop_off_at_hub_btn_txt))
 //                            Text(text = stringResource(R.string.drop_off_at_hub_btn_txt))
-                        }
-                    } else if (docGroup.droppable) {
-                        TextButton(onClick = {
-                            onClick.invoke()
-                        },
-                            colors = getTextButtonColors()
-                        ) {
-                            Text(text = stringResource(R.string.dropped_off_at_hub_txt))
-                        }
-                    } else {
-                        null
                     }
-                }
-                IconButton(onClick = {onClick.invoke() }, colors = getIconButtonColors()) {
-                    Icon(
-                        painter = expandIcon,
-                        contentDescription = "expandable button",
-                        modifier = Modifier.size(24.dp)
-                    )
+                } else if (docGroup.droppable) {
+                    TextButton(onClick = {
+                        onClick.invoke()
+                    },
+                        colors = getTextButtonColors()
+                    ) {
+                        Text(text = stringResource(R.string.dropped_off_at_hub_txt))
+                    }
+                } else {
+                    null
                 }
             }
-        },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-    )
+
+        }
+    }
+
 }
 @Composable
 fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup,deliverySuccessOnClick: (docId: String) -> Unit = { a -> },deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
