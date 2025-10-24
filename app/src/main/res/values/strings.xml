@@ -19,15 +19,15 @@
     <string name="end_trip_btn_txt">End Trip</string>
     <string name="drop_off_at_hub_btn_txt">Drop Off At Hub</string>
     <string name="dropped_off_at_hub_txt">Dropped Off At Hub</string>
-    <string name="mark_as_delivered_btn_txt">Mark as delivered</string>
-    <string name="mark_as_un_delivered_btn_txt">Mark as un-delivered</string>
+    <string name="mark_as_delivered_btn_txt">Mark delivered</string>
+    <string name="mark_as_un_delivered_btn_txt">Issue</string>
 
     <string name="drop_off_confirm_title">Drop Off At Hub</string>
     <string name="drop_off_confirm_message">Are you sure you want to drop off this lot at hub?</string>
 
     <string name="delivery_success_confirm_title">Confirm Delivery</string>
     <string name="delivery_success_confirm_message">Delivery Successful</string>
-    <string name="delivery_failed_confirm_title">Confirm UnDelivery</string>
+    <string name="delivery_failed_confirm_title">Report Issue</string>
     <string name="delivery_failed_confirm_message">Delivery Successful</string>
 
     <string name="row_item_title_driver_name">Driver Name</string>

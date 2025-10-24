@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -21,7 +23,9 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,17 +40,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.ButtonContentCompose
+import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
+import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
-import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
-import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
+import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
+import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTrip
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -288,13 +302,14 @@ fun MyTripListCompose(myTripsViewModel: MyTripsViewModel, message: String?, onIt
             }
         }else{
             Column(Modifier.fillMaxWidth()) {
-                Text("The following trips have been assigned to you", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
+                Spacer(Modifier.height(16.dp))
+                Text("Trips assigned to you", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium )
                 Spacer(Modifier.height(16.dp))
                 LazyColumn {
                     items(scheduledTripList.size) { index ->
                         if (index in scheduledTripList.indices) {
                             val scheduledTrip = scheduledTripList[index]
-                            SingleMyTripCompose(scheduledTrip,onItemClick)
+                            SingleMyTripComposeNew(scheduledTrip,onItemClick)
                         }
                     }
                 }
@@ -336,40 +351,210 @@ private fun SingleMyTripRowItem(key: String, value: String, style: TextStyle, co
     }
 }
 
+
+
+@Composable
+private fun SingleMyTripRowItem(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal,
+                                itemsSpace: Dp = 4.dp) {
+//    ListItem(
+//        modifier = Modifier.fillMaxWidth(),
+//        headlineContent = {
+//            Text(
+//                text = value,
+//                style = style,
+//                color = color,
+//                textAlign = TextAlign.Start
+//            )
+//        },
+//        leadingContent = {
+//            Icon(
+//                painter = painterResource(icon),
+//                contentDescription = "Icon",
+//                modifier = Modifier.size(24.dp)
+//            )
+//        },
+//        colors = getListItemColors(),
+//        supportingContent = null
+//    )
+    Row(Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = "Icon",
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(itemsSpace))
+        Text(
+            text = value,
+            style = style,
+            color = color,
+            textAlign = TextAlign.Start
+        )
+    }
+}
+
+
+@Composable
+fun SingleMyTripComposeNew(scheduledTrip: ScheduledTrip, onItemClick: (scheduledTrip: ScheduledTrip) -> Unit = { a->}) {
+    Card(
+        modifier = Modifier
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.padding_of_entire_items_in_a_card)),
+            verticalArrangement = Arrangement.spacedBy(
+                dimensionResource(R.dimen.space_between_items_in_a_card)
+            )
+        ) {
+            TripIdWithRouteAnnotatedText(
+                tripId = scheduledTrip.tripId.toString(),
+                route = scheduledTrip.route ?: ""
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_local_shipping,
+                value = (scheduledTrip.vehicleNumber ?: "") + " - " + (scheduledTrip.driverName
+                    ?: ""),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+
+                if (scheduledTrip.status.equals("SCHEDULED")){
+                    //Start trip
+                    //here we put start trip button on top of resume trip button
+                    // find the width of resume trip button and set this width for start trip too
+                    var buttonWidth by remember { mutableStateOf(0) }
+                    Box {
+                        Button(
+                            onClick = {  },
+                            modifier = Modifier
+                                .onGloballyPositioned { coordinates ->
+                                    buttonWidth = coordinates.size.width
+                                }
+                        ) {
+                            ButtonContentCompose(icon = R.drawable.ic_pause,
+                                text = "Resume Trip")
+                        }
+
+                        Button(
+                            onClick = { onItemClick.invoke(scheduledTrip) },
+                            modifier = if (buttonWidth > 0) Modifier.width(with(LocalDensity.current) { buttonWidth.toDp() }) else Modifier
+                        ) {
+                            ButtonContentCompose(icon = R.drawable.ic_play,
+                                text = "Start  Trip")
+                        }
+                    }
+                }else{
+                    //Resume trip
+                    Button(
+                        onClick = {
+                            onItemClick.invoke(scheduledTrip)
+                        },
+                        modifier = Modifier,
+                        colors = getButtonColors()
+                    ) {
+                        if (scheduledTrip.status.equals("SCHEDULED")){
+                            ButtonContentCompose(icon = R.drawable.ic_play,
+                                text = "Start  Trip")
+                        }else{
+                            ButtonContentCompose(icon = R.drawable.ic_pause,
+                                text = "Resume Trip")
+                        }
+//                    Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
+                    }
+                }
+            }
+//            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+//                Button(
+//                    onClick = {
+//                        onItemClick.invoke(scheduledTrip)
+//                    },
+//                    modifier = Modifier,
+//                    colors = getButtonColors()
+//                ) {
+//                    if (scheduledTrip.status.equals("SCHEDULED")){
+//                        ButtonContentCompose(icon = R.drawable.ic_play,
+//                            text = "Start Trip")
+//                    }else{
+//                        ButtonContentCompose(icon = R.drawable.ic_pause,
+//                            text = "Resume Trip")
+//                    }
+////                    Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
+//                }
+//            }
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_outline_person,
+                value = "Created By " + (scheduledTrip.createdBy
+                    ?: "") + " at " + (scheduledTrip.createdAtFormatted ?: ""),
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+    }
+}
+
+
 @Composable
 fun SingleMyTripCompose(scheduledTrip: ScheduledTrip, onItemClick: (scheduledTrip: ScheduledTrip) -> Unit = { a->}) {
     Card(
         modifier = Modifier
-            .padding(vertical = 8.dp)
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
     ) {
         Row(Modifier
             .fillMaxWidth()
             .padding(16.dp)) {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+//                SingleMyTripRowItem(
+//                    key = "Trip ID",
+//                    value = scheduledTrip.tripId.toString(),
+//                    style = MaterialTheme.typography.titleSmall
+//                )
+//                SingleMyTripRowItem(
+//                    key = "Route",
+//                    value = scheduledTrip.route?:"",
+//                    style = MaterialTheme.typography.titleLarge,
+//                    fontWeight = FontWeight.Bold)
+//                SingleMyTripRowItem(
+//                    key = "Created By",
+//                    value = scheduledTrip.createdBy?:"",
+//                    style = MaterialTheme.typography.titleSmall)
+//                SingleMyTripRowItem(
+//                    key = "Created At",
+//                    value = scheduledTrip.createdAtFormatted?:"",
+//                    style = MaterialTheme.typography.titleSmall)
+//                SingleMyTripRowItem(
+//                    key = "Driver Name",
+//                    value = scheduledTrip.driverName ?: "",
+//                    style = MaterialTheme.typography.titleMedium)
+//                SingleMyTripRowItem(
+//                    key = "Vehicle Number",
+//                    value = scheduledTrip.vehicleNumber ?: "",
+//                    style = MaterialTheme.typography.titleMedium)
                 SingleMyTripRowItem(
-                    key = "Trip ID",
+                    icon = R.drawable.ic_hash,
                     value = scheduledTrip.tripId.toString(),
                     style = MaterialTheme.typography.titleSmall
                 )
                 SingleMyTripRowItem(
-                    key = "Route",
+                    icon = R.drawable.ic_route,
                     value = scheduledTrip.route?:"",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold)
                 SingleMyTripRowItem(
-                    key = "Created By",
+                    icon = R.drawable.ic_outline_person,
                     value = scheduledTrip.createdBy?:"",
                     style = MaterialTheme.typography.titleSmall)
                 SingleMyTripRowItem(
-                    key = "Created At",
+                    icon = R.drawable.ic_calendar_clock,
                     value = scheduledTrip.createdAtFormatted?:"",
                     style = MaterialTheme.typography.titleSmall)
                 SingleMyTripRowItem(
-                    key = "Driver Name",
+                    icon = R.drawable.ic_steering_wheel,
                     value = scheduledTrip.driverName ?: "",
                     style = MaterialTheme.typography.titleMedium)
                 SingleMyTripRowItem(
-                    key = "Vehicle Number",
+                    icon = R.drawable.ic_local_shipping,
                     value = scheduledTrip.vehicleNumber ?: "",
                     style = MaterialTheme.typography.titleMedium)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -377,9 +562,17 @@ fun SingleMyTripCompose(scheduledTrip: ScheduledTrip, onItemClick: (scheduledTri
                         onClick = {
                             onItemClick.invoke(scheduledTrip)
                         },
-                        modifier = Modifier
+                        modifier = Modifier,
+                        colors = getButtonColors()
                     ) {
-                        Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
+                        if (scheduledTrip.status.equals("SCHEDULED")){
+                            ButtonContentCompose(icon = R.drawable.ic_play,
+                                text = "Start Trip")
+                        }else{
+                            ButtonContentCompose(icon = R.drawable.ic_pause,
+                                text = "Resume Trip")
+                        }
+//                        Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
                     }
                 }
             }

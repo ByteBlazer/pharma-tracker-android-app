@@ -4,12 +4,12 @@ import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsUnDeliveredRequest
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
 import com.deltasoft.pharmatracker.screens.home.location.LocationData
-import com.deltasoft.pharmatracker.screens.home.route.entity.DispatchQueueResponse
-import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.DriverListResponse
-import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.ScheduleNewTripRequest
-import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.ScheduleNewTripResponse
+import com.deltasoft.pharmatracker.screens.home.queue.entity.DispatchQueueResponse
+import com.deltasoft.pharmatracker.screens.home.queue.scheduletrip.entity.DriverListResponse
+import com.deltasoft.pharmatracker.screens.home.queue.scheduletrip.entity.ScheduleNewTripRequest
+import com.deltasoft.pharmatracker.screens.home.queue.scheduletrip.entity.ScheduleNewTripResponse
 import com.deltasoft.pharmatracker.screens.home.scan.ScanDocSuccessResponse
-import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTripsResponse
+import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTripsResponse
 import com.deltasoft.pharmatracker.screens.login.LoginRequest
 import com.deltasoft.pharmatracker.screens.otp.OtpRequestBody
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationResponse

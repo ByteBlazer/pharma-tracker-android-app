@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -24,6 +25,7 @@ import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
 
@@ -61,7 +63,7 @@ fun LoginScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     Scaffold(
         topBar = {
-            App_CommonTopBar(backButtonVisibility = false)
+            App_CommonTopBar(backButtonVisibility = false, useDefaultColor = true)
         },
     ) { paddingValues ->
         Column(
@@ -73,7 +75,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Top
         ) {
 
-            App_CommonTopBar(backButtonVisibility = false)
+            App_CommonTopBar(backButtonVisibility = false, useDefaultColor = true)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -83,47 +85,54 @@ fun LoginScreen(
                 ,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = stringResource(R.string.login_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(32.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center) {
+                        Text(text = stringResource(R.string.login_heading), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(32.dp))
 
-                Text(text = annotatedMessageString, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+                        Text(text = annotatedMessageString, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
 
-                Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
 
-                OutlinedTextField(
-                    value = phoneNumber,
-                    onValueChange = { newText ->
+                        OutlinedTextField(
+                            value = phoneNumber,
+                            onValueChange = { newText ->
 //                phoneNumber = it
-                        // Only allow digits to be entered
-                        if (newText.length <= 10 && newText.all { it.isDigit() }) {
-                            phoneNumber = newText
-                        }
-                        // Validate the number as the user types
-                        validateNumber(phoneNumber)
-                        loginViewModel.clearLoginState()
-                    },
-                    label = { Text(stringResource(R.string.login_text_field_placeholder)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Phone,
-                        imeAction = ImeAction.Done
-                    ),
-                    maxLines = 1,
-                    leadingIcon = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                                // Only allow digits to be entered
+                                if (newText.length <= 10 && newText.all { it.isDigit() }) {
+                                    phoneNumber = newText
+                                }
+                                // Validate the number as the user types
+                                validateNumber(phoneNumber)
+                                loginViewModel.clearLoginState()
+                            },
+                            label = { Text(stringResource(R.string.login_text_field_placeholder)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Phone,
+                                imeAction = ImeAction.Done
+                            ),
+                            maxLines = 1,
+                            leadingIcon = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
 //                    Icon(
 //                        imageVector = Icons.Default.Phone,
 //                        contentDescription = "Phone Icon",
 //                        modifier = Modifier.padding(start = 16.dp, end = 4.dp)
 //                    )
-                            Text(
-                                text = "+91-",
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    },
+                                    Text(
+                                        text = "+91-",
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            },
 //            supportingText = {
 //                if (!isNumberValid) {
 //                    Text(
@@ -133,38 +142,42 @@ fun LoginScreen(
 //                }
 //            },
 //            isError = !isNumberValid,
-                    enabled = loginState !is LoginState.Loading
-                )
+                            enabled = loginState !is LoginState.Loading
+                        )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                when (loginState) {
-                    is LoginState.Loading ->
-                        CircularProgressIndicator()
-                    else -> {
-                        Button(
-                            onClick = {
-                                keyboardController?.hide()
-                                loginViewModel.login(phoneNumber)
-                            },
-                            enabled = loginState !is LoginState.Loading && isNumberValid && phoneNumber.isNotNullOrEmpty(),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(text = stringResource(R.string.login_button_text))
+                        when (loginState) {
+                            is LoginState.Loading ->
+                                CircularProgressIndicator()
+                            else -> {
+                                Button(
+                                    onClick = {
+                                        keyboardController?.hide()
+                                        loginViewModel.login(phoneNumber)
+                                    },
+                                    enabled = loginState !is LoginState.Loading && isNumberValid && phoneNumber.isNotNullOrEmpty(),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = getButtonColors()
+                                ) {
+                                    Text(text = stringResource(R.string.login_button_text))
+                                }
+                            }
+                        }
+
+                        if (loginState is LoginState.Error) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = (loginState as LoginState.Error).message,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
                 }
 
-                if (loginState is LoginState.Error) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = (loginState as LoginState.Error).message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center
-                    )
-                }
             }
         }
     }

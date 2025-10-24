@@ -28,6 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
 @Composable
@@ -77,7 +79,8 @@ fun DeliveryFailedConfirmationDialog(showDialog: Boolean,
                         onConfirm.invoke(commentText)
                     }
                 },
-                    enabled = commentText.isNotNullOrEmpty()
+                    enabled = commentText.isNotNullOrEmpty(),
+                    colors = getTextButtonColors()
                 ) {
                     androidx.compose.material.Text(
                         confirmButtonText,
@@ -86,7 +89,9 @@ fun DeliveryFailedConfirmationDialog(showDialog: Boolean,
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = onDismiss,
+                    colors = getTextButtonColors()
+                ) {
                     androidx.compose.material.Text(
                         dismissButtonText,
                         color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
@@ -104,7 +109,7 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                                      onDismiss: () -> Unit,
                                      title: String,
                                      message: String,
-                                     confirmButtonText: String = "Confirm" ,
+                                     confirmButtonText: String = "Submit" ,
                                      dismissButtonText: String = "Cancel",) {
     var commentText by remember { mutableStateOf("") }
     if (showDialog) {
@@ -133,7 +138,7 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                         OutlinedTextField(
                             value = commentText,
                             onValueChange = { commentText = it },
-                            label = { Text("Enter your comment") },
+                            label = { Text("Describe issue") },
                             // KEY PROPERTY: Forces the field to be 4 lines tall visually
                             minLines = 4,
                             // KEY PROPERTY: Prevents the field from growing beyond 4 lines
@@ -147,7 +152,9 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                             Button(onClick = {
                                 commentText = ""
                                 onDismiss.invoke()
-                            }) {
+                            },
+                                colors = getButtonColors()
+                            ) {
                                 Text(
                                     dismissButtonText
                                 )
@@ -158,7 +165,8 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                                     commentText = ""
                                 }
                             },
-                                enabled = commentText.isNotNullOrEmpty()
+                                enabled = commentText.isNotNullOrEmpty(),
+                                colors = getButtonColors()
                             ) {
                                 Text(
                                     confirmButtonText

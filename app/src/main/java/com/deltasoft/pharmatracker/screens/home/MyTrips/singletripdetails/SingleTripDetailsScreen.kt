@@ -3,6 +3,7 @@ package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,12 +17,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -43,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -54,10 +59,17 @@ import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
+import com.deltasoft.pharmatracker.screens.ButtonContentCompose
+import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
+import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItemWithOnCLick
+import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
 import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.Doc
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.DocGroup
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
@@ -183,7 +195,7 @@ fun SingleTripDetailsScreen(
     }
 
     Scaffold(modifier = Modifier.fillMaxSize(),
-        topBar = {   App_CommonTopBar(title = stringResource(R.string.single_trip_details_heading), onBackClick = {  navController.popBackStack() }) },
+        topBar = {   App_CommonTopBar(title = stringResource(R.string.single_trip_details_heading), onBackClick = {  if (navController.previousBackStackEntry != null) { navController.popBackStack() } }) },
         bottomBar = {
             Column(Modifier
                 .fillMaxWidth()
@@ -191,9 +203,11 @@ fun SingleTripDetailsScreen(
                 Button(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp), onClick = {
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp), onClick = {
                             singleTripDetailsViewModel.endTrip(selectedScheduledTripId)
-                    }
+                    },
+                    colors = getButtonColors()
                 ) {
                     Text(stringResource(R.string.end_trip_btn_txt))
                 }
@@ -319,7 +333,7 @@ fun SingleTripDetailsCompose(
             .fillMaxWidth(),
         verticalArrangement = Arrangement.Center
     ) {
-        TripBasicDetailsCompose(singleTripDetailsResponse)
+        TripBasicDetailsComposeNew(singleTripDetailsResponse)
         Spacer(Modifier.height(16.dp))
         for (docGroup in singleTripDetailsResponse.docGroups?:arrayListOf()) {
             DocGroupCompose(
@@ -333,43 +347,111 @@ fun SingleTripDetailsCompose(
     }
 }
 
+
+@Composable
+fun TripBasicDetailsComposeNew(singleTripDetailsResponse: SingleTripDetailsResponse) {
+    OutlinedCard(
+        modifier = Modifier
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.padding_of_entire_items_in_a_card)),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_between_items_in_a_card))
+        ) {
+            TripIdWithRouteAnnotatedText(
+                tripId = singleTripDetailsResponse.tripId.toString(),
+                route = singleTripDetailsResponse.route ?: ""
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_local_shipping,
+                value = (singleTripDetailsResponse.vehicleNumber ?: "") + " - " + (singleTripDetailsResponse.driverName
+                    ?: ""),
+                style = MaterialTheme.typography.titleMedium
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_outline_person,
+                value = "Created By " + (singleTripDetailsResponse.createdBy
+                    ?: "") + " at " + (singleTripDetailsResponse.createdAtFormatted ?: ""),
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+
+    }
+}
+
 @Composable
 fun TripBasicDetailsCompose(singleTripDetailsResponse: SingleTripDetailsResponse) {
     OutlinedCard(
         modifier = Modifier
-            .padding(vertical = 8.dp)
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
     ) {
         Column(Modifier
             .fillMaxWidth()
             .padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+//            SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_route),
+//                value = (singleTripDetailsResponse.route ?: "")+" : On Trip",
+//                style = MaterialTheme.typography.bodyLarge,
+//                fontWeight = FontWeight.Bold
+//            )
+//            SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_trip_id),
+//                value = singleTripDetailsResponse.tripId.toString(),
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//           SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_created_by),
+//                value = singleTripDetailsResponse.createdBy ?: "",
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//            SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_created_at),
+//                value = singleTripDetailsResponse.createdAtFormatted ?: "",
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//            SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_driver_name),
+//                value = singleTripDetailsResponse.driverName ?: "",
+//                style = MaterialTheme.typography.titleMedium
+//            )
+//            SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_vehicle_number),
+//                value = singleTripDetailsResponse.vehicleNumber ?: "",
+//                style = MaterialTheme.typography.titleMedium
+//            )
+
             SingleMyTripRowItem(
-                key = stringResource(R.string.row_item_title_route),
-                value = singleTripDetailsResponse.route ?: ""+" : On Trip",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
-            SingleMyTripRowItem(
-                key = stringResource(R.string.row_item_title_trip_id),
+                icon = R.drawable.ic_hash,
                 value = singleTripDetailsResponse.tripId.toString(),
                 style = MaterialTheme.typography.titleSmall
             )
+            SingleMyTripRowItem(
+                icon = R.drawable.ic_route,
+                value = (singleTripDetailsResponse.route ?: "")+" : On Trip",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
            SingleMyTripRowItem(
-                key = stringResource(R.string.row_item_title_created_by),
+                icon = R.drawable.ic_outline_person,
                 value = singleTripDetailsResponse.createdBy ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleMyTripRowItem(
-                key = stringResource(R.string.row_item_title_created_at),
+                icon = R.drawable.ic_calendar_clock,
                 value = singleTripDetailsResponse.createdAtFormatted ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleMyTripRowItem(
-                key = stringResource(R.string.row_item_title_driver_name),
+                icon = R.drawable.ic_steering_wheel,
                 value = singleTripDetailsResponse.driverName ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
             SingleMyTripRowItem(
-                key = stringResource(R.string.row_item_title_vehicle_number),
+                icon = R.drawable.ic_local_shipping,
                 value = singleTripDetailsResponse.vehicleNumber ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
@@ -405,6 +487,46 @@ private fun SingleMyTripRowItem(key: String, value: String, style: TextStyle, co
 }
 
 @Composable
+private fun SingleMyTripRowItem(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal) {
+//    ListItem(
+//        modifier = Modifier.fillMaxWidth(),
+//        headlineContent = {
+//            Text(
+//                text = value,
+//                style = style,
+//                color = color,
+//                textAlign = TextAlign.Start
+//            )
+//        },
+//        leadingContent = {
+//            Icon(
+//                painter = painterResource(icon),
+//                contentDescription = "Icon",
+//                modifier = Modifier.size(24.dp)
+//            )
+//        },
+//        colors = getListItemColors(),
+//        supportingContent = null
+//    )
+    Row(Modifier
+        .fillMaxWidth()
+        .padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = "Icon",
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = value,
+            style = style,
+            color = color,
+            textAlign = TextAlign.Start
+        )
+    }
+}
+
+@Composable
 fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup,
                     deliverySuccessOnClick: (docId: String) -> Unit = { a -> },
                     dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> },
@@ -412,7 +534,8 @@ fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docG
     var isExpanded by rememberSaveable { mutableStateOf(docGroup.expandGroupByDefault && !docGroup.dropOffCompleted) }
     Card(
         modifier = Modifier
-            .padding(vertical = 8.dp)
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
     ) {
         Column(Modifier.fillMaxWidth()) {
             SingleDocGroup(
@@ -454,47 +577,61 @@ fun SingleDocGroup(
     }
     val isAnyItemNeedToDeliver = docGroup.docs?.any { it.status == DeliveryStatusConstants.ON_TRIP } == true
 
-    ListItem(
-        modifier = Modifier.clickable { onClick.invoke() },
-        headlineContent = { Text(text = docGroup.heading?:"") },
-        leadingContent = null,
-        trailingContent = {
-            Row {
-                if (isAnyItemNeedToDeliver) {
-                    if (docGroup.showDropOffButton) {
-                        Button(onClick = {
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        ListItem(
+            modifier = Modifier.clickable { onClick.invoke() },
+            headlineContent = { Text(text = docGroup.heading?:"") },
+            leadingContent = null,
+            trailingContent = {
+                Row {
+
+                    IconButton(onClick = {onClick.invoke() }, colors = getIconButtonColors()) {
+                        Icon(
+                            painter = expandIcon,
+                            contentDescription = "expandable button",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
+        if (isAnyItemNeedToDeliver) {
+            Column(Modifier.padding(end = 16.dp, bottom = 16.dp, start = 16.dp)) {
+                if (docGroup.showDropOffButton) {
+                    Button(onClick = {
 //                        singleTripDetailsViewModel.dropOffTrip(
 //                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
 //                            heading = docGroup.heading ?: ""
 //                        )
-                            dropOffOnClick.invoke(
-                                singleTripDetailsViewModel.selectedScheduledTripId ?: "",
-                                docGroup.heading ?: ""
-                            )
-                        }) {
-                            Text(text = stringResource(R.string.drop_off_at_hub_btn_txt))
-                        }
-                    } else if (docGroup.droppable) {
-                        TextButton(onClick = {
-                            onClick.invoke()
-                        }) {
-                            Text(text = stringResource(R.string.dropped_off_at_hub_txt))
-                        }
-                    } else {
-                        null
+                        dropOffOnClick.invoke(
+                            singleTripDetailsViewModel.selectedScheduledTripId ?: "",
+                            docGroup.heading ?: ""
+                        )
+                    },
+                        colors = getButtonColors(),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        ButtonContentCompose(icon = R.drawable.ic_storefront_24,
+                            text =  stringResource(R.string.drop_off_at_hub_btn_txt))
+//                            Text(text = stringResource(R.string.drop_off_at_hub_btn_txt))
                     }
-                }
-                IconButton(onClick = {onClick.invoke() }) {
-                    Icon(
-                        painter = expandIcon,
-                        contentDescription = "expandable button",
-                        modifier = Modifier.size(24.dp)
-                    )
+                } else if (docGroup.droppable) {
+                    TextButton(onClick = {
+                        onClick.invoke()
+                    },
+                        colors = getTextButtonColors()
+                    ) {
+                        Text(text = stringResource(R.string.dropped_off_at_hub_txt))
+                    }
+                } else {
+                    null
                 }
             }
-        },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-    )
+
+        }
+    }
+
 }
 @Composable
 fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup,deliverySuccessOnClick: (docId: String) -> Unit = { a -> },deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
@@ -502,18 +639,153 @@ fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(start = 8.dp)
+            .padding(start = 0.dp)
     ) {
         for (doc in docGroup.docs?: arrayListOf()) {
             Column(Modifier.fillMaxWidth()) {
-                SingleDoc(
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        horizontal = 0.dp,
+                        vertical = 0.dp
+                    ), // Adjust padding as needed
+                    thickness = 1.dp,
+                    color = Color.Gray
+                )
+                SingleDocNew(
                     singleTripDetailsViewModel,
                     doc,
                     deliverySuccessOnClick = deliverySuccessOnClick,
                     deliveryFailedOnClick = deliveryFailedOnClick
                 )
+//                if (docGroup.docs?.last() != doc) {
+//                    HorizontalDivider(
+//                        modifier = Modifier.padding(
+//                            horizontal = 0.dp,
+//                            vertical = 0.dp
+//                        ), // Adjust padding as needed
+//                        thickness = 1.dp,
+//                        color = Color.Gray
+//                    )
+//                }
             }
         }
+    }
+}
+
+@Composable
+fun SingleDocNew(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,deliverySuccessOnClick: (docId: String) -> Unit = { a -> },deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
+    val context = LocalContext.current
+    Card(
+        modifier = Modifier
+            .padding(vertical = 8.dp)
+    ) {
+        val address = (if (doc.customerAddress.isNotNullOrEmpty()) doc.customerAddress else "") +
+                (if (doc.customerCity.isNotNullOrEmpty()) " " + doc.customerCity else "") +
+                (if (doc.customerPincode.isNotNullOrEmpty()) " " + doc.customerPincode else "")
+
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.padding_of_entire_items_in_a_card)),
+            verticalArrangement = Arrangement.spacedBy(
+                dimensionResource(R.dimen.space_between_items_in_a_card))
+        ) {
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_store,
+                value = doc.customerFirmName ?: "",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_receipt,
+                value = "₹" + doc.docAmount.toString(),
+                style = MaterialTheme.typography.titleSmall
+            )
+            if (address.isNotNullOrEmpty()) {
+                SingleIconWithTextAnnotatedItem(
+                    icon = R.drawable.ic_business,
+                    value = address,
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
+            Row(Modifier.fillMaxWidth()) {
+                if (doc.customerPhone.isNotNullOrEmpty()) {
+                    Box(Modifier.fillMaxWidth().weight(1f)) {
+                        SingleIconWithTextAnnotatedItemWithOnCLick(
+                            icon = R.drawable.ic_phone,
+                            value = doc.customerPhone ?: "",
+                            style = MaterialTheme.typography.titleMedium,
+                            onClick = {
+                                AppUtils.dialPhoneNumber(
+                                    context = context,
+                                    phoneNumber = doc.customerPhone ?: ""
+                                )
+                            }
+                        )
+                    }
+                    Spacer(Modifier.width(16.dp))
+                }
+                Box(Modifier.fillMaxWidth().weight(1f)) {
+                    SingleIconWithTextAnnotatedItemWithOnCLick(
+                        icon = R.drawable.ic_location,
+                        value = "Navigate",
+                        style = MaterialTheme.typography.titleMedium,
+                        onClick = {
+                            AppUtils.startGoogleMapsDirections(
+                                context = context,
+                                latitude = doc.customerGeoLatitude ?: "",
+                                longitude = doc.customerGeoLongitude ?: "",
+                                destinationName = doc.customerFirmName ?: ""
+                            )
+                        }
+                    )
+                }
+            }
+            val deliveryIcon = if (doc.status?.equals(
+                    DeliveryStatusConstants.DELIVERED,
+                    ignoreCase = true
+                ) == true
+            ) R.drawable.ic__check_circle
+            else if (doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) R.drawable.ic_error_24 else R.drawable.ic_delivery_truck_speed
+            SingleIconWithTextAnnotatedItem(
+                icon = deliveryIcon,
+                value = if (doc.status?.equals(
+                        DeliveryStatusConstants.DELIVERED,
+                        ignoreCase = true
+                    ) == true
+                ) "Delivered"
+                else if (doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Row (Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                if (doc.status == DeliveryStatusConstants.ON_TRIP) {
+//                    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.CenterStart) {
+                        Button(onClick = {
+                            deliveryFailedOnClick.invoke(doc.id ?: "")
+                        }, colors = getButtonColors()) {
+                            ButtonContentCompose(icon = R.drawable.ic_exclamation,
+                                text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+//                            Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+                        }
+//                    }
+                    Spacer(Modifier.width(8.dp))
+//                    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.CenterEnd) {
+                        Button(onClick = {
+                            deliverySuccessOnClick.invoke(doc.id ?: "")
+                        },
+                            colors = getButtonColors()
+                        ) {
+                            ButtonContentCompose(icon = R.drawable.ic_check,
+                                text = stringResource(R.string.mark_as_delivered_btn_txt))
+//                            Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
+                        }
+//                    }
+                }
+
+            }
+        }
+
     }
 }
 
@@ -526,56 +798,97 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
     ) {
         Column(Modifier
             .fillMaxWidth()
-            .padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            SingleDocRowItem(
-                key = stringResource(R.string.row_item_title_firm_name),
-                value = doc.customerFirmName ?: "",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
-            SingleDocRowItem(
-                key = stringResource(R.string.row_item_title_amount),
-                value = doc.docAmount.toString(),
-                style = MaterialTheme.typography.titleSmall
-            )
-            SingleDocRowItem(
-                key = stringResource(R.string.row_item_title_address),
-                value = doc.customerAddress ?: "",
-                style = MaterialTheme.typography.titleSmall
-            )
-            SingleDocRowItem(
-                key = stringResource(R.string.row_item_title_city),
-                value = doc.customerCity ?: "",
-                style = MaterialTheme.typography.titleSmall
-            )
-            SingleDocRowItem(
-                key = stringResource(R.string.row_item_title_pin_code),
-                value = doc.customerPincode ?: "",
-                style = MaterialTheme.typography.titleMedium
-            )
-            SingleDocRowItem(
-                key = stringResource(R.string.row_item_title_phone),
-                value = doc.customerPhone ?: "",
-                style = MaterialTheme.typography.titleMedium
-            )
-            SingleDocRowItem(
-                key = stringResource(R.string.row_item_title_status),
-                value = if (doc.status?.equals(DeliveryStatusConstants.DELIVERED,ignoreCase = true) == true) "Delivered"
-                else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Column (Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = Alignment.End) {
-                if (doc.status == DeliveryStatusConstants.ON_TRIP) {
-                    Button(onClick = {
-                        deliverySuccessOnClick.invoke(doc.id ?: "")
-                    }) {
-                        Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
+            .padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_firm_name),
+//                value = doc.customerFirmName ?: "",
+//                style = MaterialTheme.typography.bodyLarge,
+//                fontWeight = FontWeight.Bold
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_amount),
+//                value = doc.docAmount.toString(),
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_address),
+//                value = doc.customerAddress ?: "",
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_city),
+//                value = doc.customerCity ?: "",
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_pin_code),
+//                value = doc.customerPincode ?: "",
+//                style = MaterialTheme.typography.titleMedium
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_phone),
+//                value = doc.customerPhone ?: "",
+//                style = MaterialTheme.typography.titleMedium
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_status),
+//                value = if (doc.status?.equals(DeliveryStatusConstants.DELIVERED,ignoreCase = true) == true) "Delivered"
+//                else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
+//                style = MaterialTheme.typography.titleMedium
+//            )
+
+            Row(Modifier.fillMaxWidth()) {
+                Column(Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SingleDocRowItem(
+                        icon = R.drawable.ic_store,
+                        value = doc.customerFirmName ?: "",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    SingleDocRowItem(
+                        icon = R.drawable.ic_receipt,
+                        value = "₹"+ doc.docAmount.toString(),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    if (doc.customerAddress.isNotNullOrEmpty()) {
+                        SingleDocRowItem(
+                            icon = R.drawable.ic_business,
+                            value = doc.customerAddress ?: "",
+                            style = MaterialTheme.typography.titleSmall
+                        )
                     }
-                    Button(onClick = {
-                        deliveryFailedOnClick.invoke(doc.id ?: "")
-                    }) {
-                        Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+                    if (doc.customerCity.isNotNullOrEmpty()) {
+                        SingleDocRowItem(
+                            icon = R.drawable.ic_location_city,
+                            value = doc.customerCity ?: "",
+                            style = MaterialTheme.typography.titleSmall
+                        )
                     }
+                    if (doc.customerPincode.isNotNullOrEmpty()) {
+                        SingleDocRowItem(
+                            icon = R.drawable.ic_markunread_mailbox,
+                            value = doc.customerPincode ?: "",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    if (doc.customerPhone.isNotNullOrEmpty()) {
+                        SingleDocRowItem(
+                            icon = R.drawable.ic_mobile,
+                            value = doc.customerPhone ?: "",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    val deliveryIcon =  if (doc.status?.equals(DeliveryStatusConstants.DELIVERED,ignoreCase = true) == true) R.drawable.ic__check_circle
+                    else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) R.drawable.ic_error_24 else R.drawable.ic_delivery_truck_speed
+                    SingleDocRowItem(
+                        icon = deliveryIcon,
+                        value = if (doc.status?.equals(DeliveryStatusConstants.DELIVERED,ignoreCase = true) == true) "Delivered"
+                        else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
                 IconButton(
                     onClick = {
@@ -586,7 +899,8 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
                             destinationName = doc.customerFirmName?:""
                         )
                     },
-                    modifier = Modifier
+                    modifier = Modifier,
+                    colors = getIconButtonColors()
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_location),
@@ -594,6 +908,25 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,d
                         modifier = Modifier.size(24.dp),
                     )
                 }
+
+            }
+
+            Column (Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(0.dp), horizontalAlignment = Alignment.End) {
+                if (doc.status == DeliveryStatusConstants.ON_TRIP) {
+                    Button(onClick = {
+                        deliverySuccessOnClick.invoke(doc.id ?: "")
+                    },
+                        colors = getButtonColors()
+                    ) {
+                        Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
+                    }
+                    Button(onClick = {
+                        deliveryFailedOnClick.invoke(doc.id ?: "")
+                    }, colors = getButtonColors()) {
+                        Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+                    }
+                }
+
             }
         }
 
@@ -622,6 +955,48 @@ private fun SingleDocRowItem(key: String, value: String, style: TextStyle, color
             style = style,
             color = color,
             modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Start
+        )
+    }
+}
+
+
+
+@Composable
+private fun SingleDocRowItem(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal) {
+//    ListItem(
+//        modifier = Modifier.fillMaxWidth(),
+//        headlineContent = {
+//            Text(
+//                text = value,
+//                style = style,
+//                color = color,
+//                textAlign = TextAlign.Start
+//            )
+//        },
+//        leadingContent = {
+//            Icon(
+//                painter = painterResource(icon),
+//                contentDescription = "Icon",
+//                modifier = Modifier.size(24.dp)
+//            )
+//        },
+//        colors = getListItemColors(),
+//        supportingContent = null
+//    )
+    Row(Modifier
+        .fillMaxWidth()
+        .padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = "Icon",
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = value,
+            style = style,
+            color = color,
             textAlign = TextAlign.Start
         )
     }

@@ -44,6 +44,7 @@ import android.graphics.Matrix
 import android.util.Base64
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.toArgb
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -152,7 +153,8 @@ fun SignaturePadScreen() {
                     paths = emptyList()
                     currentPath = Path()
                 },
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = getButtonColors()
             ) {
                 Text("Clear Signature")
             }
@@ -184,7 +186,8 @@ fun SignaturePadScreen() {
                         Log.w("SignaturePad", "Cannot save: No signature drawn or size not yet measured.")
                     }
                 },
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = getButtonColors()
             ) {
                 Text("Save Signature")
             }

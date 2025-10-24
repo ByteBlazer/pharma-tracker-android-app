@@ -12,10 +12,10 @@ import androidx.compose.ui.graphics.Color
 
 
 // Your Primary Color: #084C50 (Dark Teal)
-val AppPrimary = Color(0xFF084C50)
+val AppPrimary = Color(0xFF49979b)
 
 // Your Secondary Color: #49979b (Medium Teal/Cyan)
 val AppSecondary = Color(0xFF49979b)
 
 // Your Tertiary Color: #6FBABD (Light Blue/Cyan)
-val AppTertiary = Color(0xFF6FBABD)
+val AppTertiary = Color(0xFF91C8CB)

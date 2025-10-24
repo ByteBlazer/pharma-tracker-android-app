@@ -24,6 +24,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -39,11 +41,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.AppUtils.showToastMessage
@@ -159,7 +166,8 @@ fun DeliverySuccessConfirmationDialog(showDialog: Boolean,
                                 paths = emptyList()
                                 currentPath = Path()
                             },
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(8.dp),
+                            colors = getButtonColors()
                         ) {
                             Text("Clear Signature")
                         }
@@ -216,7 +224,8 @@ fun DeliverySuccessConfirmationDialog(showDialog: Boolean,
                             )
                         }
                     },
-                    enabled = true
+                    enabled = true,
+                    colors = getTextButtonColors()
                 ) {
                     androidx.compose.material.Text(
                         confirmButtonText,
@@ -225,7 +234,9 @@ fun DeliverySuccessConfirmationDialog(showDialog: Boolean,
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = onDismiss,
+                    colors = getTextButtonColors()
+                ) {
                     androidx.compose.material.Text(
                         dismissButtonText,
                         color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
@@ -306,7 +317,7 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                         Spacer(Modifier.height(16.dp))
 
                         Text(
-                            text = "Sign Below",
+                            text = "Customer Signature Below",
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
@@ -319,54 +330,72 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                             shape = RoundedCornerShape(12.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                         ) {
-                            SignaturePad(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(Color.White) // Signature area background
-                                    // Capture the size of the Composable in pixels
-                                    .onGloballyPositioned { layoutCoordinates ->
-                                        signaturePadSizePx = layoutCoordinates.size
-                                    },
-                                paths = paths,
-                                currentPath = currentPath,
-                                onSignatureDrawn = { path, dragEnd ->
-                                    if (dragEnd) {
-                                        // Drag ended, save the current path to the list of finished paths
-                                        paths = paths + DrawingPath(path, signatureColor, signatureStrokeWidth)
-                                        currentPath = Path() // Start a new current path
-                                    } else {
-                                        // FIX: Create a new Path object by copying the content of the mutated 'path'
-                                        // This forces Compose to see a state change (new object reference) and recompose the Canvas.
-                                        currentPath = Path().apply { addPath(path) }
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopEnd) {
+                                SignaturePad(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(Color.White) // Signature area background
+                                        // Capture the size of the Composable in pixels
+                                        .onGloballyPositioned { layoutCoordinates ->
+                                            signaturePadSizePx = layoutCoordinates.size
+                                        },
+                                    paths = paths,
+                                    currentPath = currentPath,
+                                    onSignatureDrawn = { path, dragEnd ->
+                                        if (dragEnd) {
+                                            // Drag ended, save the current path to the list of finished paths
+                                            paths = paths + DrawingPath(path, signatureColor, signatureStrokeWidth)
+                                            currentPath = Path() // Start a new current path
+                                        } else {
+                                            // FIX: Create a new Path object by copying the content of the mutated 'path'
+                                            // This forces Compose to see a state change (new object reference) and recompose the Canvas.
+                                            currentPath = Path().apply { addPath(path) }
+                                        }
                                     }
+                                )
+                                IconButton(
+                                    onClick = {
+                                        paths = emptyList()
+                                        currentPath = Path()
+                                    },
+                                    modifier = Modifier,
+                                    colors = getIconButtonColors()
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_close),
+                                        contentDescription = "clear signature",
+                                        modifier = Modifier.size(24.dp),
+                                    )
                                 }
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.size(32.dp))
-
-                        // Control Buttons
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround
-                        ) {
-                            Button(
-                                onClick = {
-                                    paths = emptyList()
-                                    currentPath = Path()
-                                },
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Text("Clear Signature")
                             }
 
-
                         }
+
+//                        Spacer(modifier = Modifier.size(32.dp))
+
+                        // Control Buttons
+//                        Row(
+//                            modifier = Modifier.fillMaxWidth(),
+//                            horizontalArrangement = Arrangement.SpaceAround
+//                        ) {
+//                            Button(
+//                                onClick = {
+//                                    paths = emptyList()
+//                                    currentPath = Path()
+//                                },
+//                                shape = RoundedCornerShape(8.dp),
+//                                colors = getButtonColors()
+//                            ) {
+//                                Text("Clear Signature")
+//                            }
+//
+//
+//                        }
 
                         OutlinedTextField(
                             value = commentText,
                             onValueChange = { commentText = it },
-                            label = { Text("Enter your comment") },
+                            label = { Text("Comments (optional)") },
                             // KEY PROPERTY: Forces the field to be 4 lines tall visually
                             minLines = 4,
                             // KEY PROPERTY: Prevents the field from growing beyond 4 lines
@@ -401,7 +430,9 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                                 paths = emptyList()
                                 currentPath = Path()
                                 onDismiss.invoke()
-                            }) {
+                            },
+                                colors = getButtonColors()
+                            ) {
                                 Text(
                                     dismissButtonText
                                 )
@@ -443,7 +474,8 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                                         "Cannot save: No signature drawn or size not yet measured."
                                     )
                                 }
-                            }
+                            },
+                                colors = getButtonColors()
                             ) {
                                 Text(
                                     confirmButtonText

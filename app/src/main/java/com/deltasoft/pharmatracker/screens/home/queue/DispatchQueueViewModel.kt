@@ -1,0 +1,105 @@
+package com.deltasoft.pharmatracker.screens.home.queue
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.deltasoft.pharmatracker.screens.home.queue.entity.DispatchQueueResponse
+import com.deltasoft.pharmatracker.screens.home.queue.entity.RouteSummaryList
+import com.deltasoft.pharmatracker.screens.home.queue.entity.UserDetails
+import com.deltasoft.pharmatracker.screens.home.queue.entity.UserDetailsList
+import com.deltasoft.pharmatracker.utils.AppUtils
+import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
+import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
+import com.google.gson.Gson
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlin.collections.ArrayList
+
+class DispatchQueueViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = DispatchQueueRepository(this)
+
+    private val _dispatchQueueState = MutableStateFlow<DispatchQueueState>(DispatchQueueState.Idle)
+    val dispatchQueueState = _dispatchQueueState.asStateFlow()
+
+    var token = ""
+
+    init {
+        val appContext = getApplication<Application>().applicationContext
+        val sharedPrefsUtil = SharedPreferencesUtil(appContext)
+        token = AppUtils.createBearerToken(sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN)?:"")
+//        getDispatchQueueList()
+    }
+
+    fun getDispatchQueueList() {
+        _dispatchQueueState.value = DispatchQueueState.Loading
+        try {
+            repository.getDispatchQueueList(token)
+        } catch (e: Exception) {
+            _dispatchQueueState.value = DispatchQueueState.Error("Login failed: ${e.message}")
+        }
+    }
+
+    fun updateDispatchQueueListState(code: Int, errorMessage: String,dispatchQueueResponse: DispatchQueueResponse? = null){
+        when(code){
+            200->{
+                _dispatchQueueState.value = DispatchQueueState.Success(dispatchQueueResponse?:DispatchQueueResponse())
+            }
+            400->{
+                _dispatchQueueState.value = DispatchQueueState.Error(errorMessage)
+            }
+            500->{
+                _dispatchQueueState.value = DispatchQueueState.Error(errorMessage)
+            }
+            else->{
+                _dispatchQueueState.value = DispatchQueueState.Error(errorMessage)
+            }
+        }
+    }
+
+    fun clearState() {
+        _dispatchQueueState.value = DispatchQueueState.Idle
+    }
+
+    private val _dispatchQueueList = MutableStateFlow<ArrayList<RouteSummaryList>>(arrayListOf())
+    val dispatchQueueList = _dispatchQueueList.asStateFlow()
+
+    fun updateDispatchQueueList(dispatchQueueList: ArrayList<RouteSummaryList>){
+        _dispatchQueueList.value = dispatchQueueList
+    }
+
+    fun getSelectedRouteCount(): Int {
+        // Filter the categories to find those with at least one selected item
+        val categoriesWithSelection = _dispatchQueueList.value.filter { item ->
+            item.userSummaryList.any { item ->
+                item.isChecked.value
+            }
+        }
+
+        // Return the count of the filtered list
+        return categoriesWithSelection.size
+    }
+    fun getSelectedRoute(): String {
+        val categoriesWithSelection = _dispatchQueueList.value.filter { item ->
+            item.userSummaryList.any { item ->
+                item.isChecked.value
+            }
+        }
+        return categoriesWithSelection?.first()?.route?:""
+    }
+
+    fun getSelectedUsersDetsils(): String {
+        val categoriesWithSelection = _dispatchQueueList.value.filter { item ->
+            item.userSummaryList.any { item ->
+                item.isChecked.value
+            }
+        }
+        val allSelectedUsers = categoriesWithSelection.flatMap { it.userSummaryList }.filter { it.isChecked.value }
+        val allUsers = allSelectedUsers.map { UserDetails(
+            scannedByUserId = it.scannedByUserId,
+            scannedByName = it.scannedByName,
+            scannedFromLocation = it.scannedFromLocation,
+            count = it.count) }
+        val userDetailsList = UserDetailsList(allUsers as ArrayList<UserDetails>)
+        return Gson().toJson(userDetailsList)
+    }
+}
+
