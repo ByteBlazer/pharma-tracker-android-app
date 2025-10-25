@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
@@ -132,7 +133,7 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                         .padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = title, style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                            color = AppPrimary, fontWeight = FontWeight.Bold
                         )
                         Spacer(Modifier.height(16.dp))
                         OutlinedTextField(

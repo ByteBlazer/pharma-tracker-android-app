@@ -152,7 +152,7 @@ fun AppConfirmationDialog(
             title = {
                 androidx.compose.material.Text(
                     text = title, style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                    color = AppPrimary, fontWeight = FontWeight.Bold
                 )
             },
             text = {

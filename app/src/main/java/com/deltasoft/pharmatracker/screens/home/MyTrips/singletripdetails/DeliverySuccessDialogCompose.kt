@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
@@ -312,7 +313,7 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                         .verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = title, style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                            color = AppPrimary, fontWeight = FontWeight.Bold
                         )
                         Spacer(Modifier.height(16.dp))
 
