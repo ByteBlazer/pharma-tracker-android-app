@@ -383,6 +383,16 @@ private fun SingleScheduledTripComposeNew(
                     ?: ""),
                 style = MaterialTheme.typography.titleMedium
             )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_notes_24,
+                value = scheduledTrip?.deliveryCountStatusMsg?:"",
+                style = MaterialTheme.typography.titleMedium
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_notes_24,
+                value = scheduledTrip?.dropOffCountStatusMsg?:"",
+                style = MaterialTheme.typography.titleMedium
+            )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 Button(
                     onClick = {

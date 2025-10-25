@@ -372,6 +372,16 @@ fun TripBasicDetailsComposeNew(singleTripDetailsResponse: SingleTripDetailsRespo
                 style = MaterialTheme.typography.titleMedium
             )
             SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_notes_24,
+                value = singleTripDetailsResponse?.deliveryCountStatusMsg?:"",
+                style = MaterialTheme.typography.titleMedium
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_notes_24,
+                value = singleTripDetailsResponse?.dropOffCountStatusMsg?:"",
+                style = MaterialTheme.typography.titleMedium
+            )
+            SingleIconWithTextAnnotatedItem(
                 icon = R.drawable.ic_outline_person,
                 value = "Created By " + (singleTripDetailsResponse.createdBy
                     ?: "") + " at " + (singleTripDetailsResponse.createdAtFormatted ?: ""),
@@ -690,6 +700,12 @@ fun SingleDocNew(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Do
             verticalArrangement = Arrangement.spacedBy(
                 dimensionResource(R.dimen.space_between_items_in_a_card))
         ) {
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_hash,
+                value = doc.id ?: "",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
             SingleIconWithTextAnnotatedItem(
                 icon = R.drawable.ic_store,
                 value = doc.customerFirmName ?: "",
