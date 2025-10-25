@@ -1,6 +1,5 @@
 package com.deltasoft.pharmatracker.screens.login
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -9,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -26,6 +26,7 @@ import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
 
@@ -35,6 +36,7 @@ fun LoginScreen(
     prefillPhoneNumber:String?="",
     loginViewModel: LoginViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     var phoneNumber by remember { mutableStateOf(prefillPhoneNumber?:"") }
     val loginState by loginViewModel.loginState.collectAsState()
 
@@ -59,6 +61,8 @@ fun LoginScreen(
             navController.navigate(Screen.OtpVerification.createRoute(phoneNumber))
         }
     }
+
+    val appCode = AppUtils.getAppCode(context)
 
     val keyboardController = LocalSoftwareKeyboardController.current
     Scaffold(
@@ -154,7 +158,7 @@ fun LoginScreen(
                                 Button(
                                     onClick = {
                                         keyboardController?.hide()
-                                        loginViewModel.login(phoneNumber)
+                                        loginViewModel.login(phoneNumber = phoneNumber, appCode = appCode)
                                     },
                                     enabled = loginState !is LoginState.Loading && isNumberValid && phoneNumber.isNotNullOrEmpty(),
                                     modifier = Modifier.fillMaxWidth(),
