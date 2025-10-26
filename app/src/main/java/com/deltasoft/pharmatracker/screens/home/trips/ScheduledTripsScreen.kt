@@ -44,6 +44,7 @@ import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
 import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTrip
+import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import kotlinx.coroutines.CoroutineScope
@@ -212,7 +213,7 @@ private fun ScheduleCancelConfirmationDialog(
             title = {
                 androidx.compose.material.Text(
                     text = "Cancel Scheduled Trip", style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                    color = AppPrimary, fontWeight = FontWeight.Bold
                 )
             },
             text = {
@@ -381,6 +382,16 @@ private fun SingleScheduledTripComposeNew(
                 icon = R.drawable.ic_local_shipping,
                 value = (scheduledTrip.vehicleNumber ?: "") + " - " + (scheduledTrip.driverName
                     ?: ""),
+                style = MaterialTheme.typography.titleMedium
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_notes_24,
+                value = scheduledTrip?.deliveryCountStatusMsg?:"",
+                style = MaterialTheme.typography.titleMedium
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_notes_24,
+                value = scheduledTrip?.dropOffCountStatusMsg?:"",
                 style = MaterialTheme.typography.titleMedium
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {

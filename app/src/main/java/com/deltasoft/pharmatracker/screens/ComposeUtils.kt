@@ -47,6 +47,17 @@ import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getCenterAlignedTopAppBarColors
 import com.deltasoft.pharmatracker.utils.AppUtils
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.unit.dp
+import com.deltasoft.pharmatracker.ui.theme.AppTertiary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -141,7 +152,7 @@ fun AppConfirmationDialog(
             title = {
                 androidx.compose.material.Text(
                     text = title, style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                    color = AppPrimary, fontWeight = FontWeight.Bold
                 )
             },
             text = {
@@ -279,8 +290,8 @@ fun TripIdWithRouteAnnotatedText(tripId: String,
 
 @Composable
 fun SingleIconWithTextAnnotatedItem(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal,
-                                itemsSpace: Dp = 4.dp) {
-
+                                itemsSpace: Dp = 4.dp,searchQuery:String="") {
+    val highlightColor = AppTertiary
     val iconId = "IconId"
 
     val inlineContentMap: Map<String, InlineTextContent> = mapOf(
@@ -300,11 +311,56 @@ fun SingleIconWithTextAnnotatedItem(icon: Int, value: String, style: TextStyle, 
         },
     )
 
-    val annotatedText = buildAnnotatedString {
-        withStyle(SpanStyle(color = color)) {
-            append("$value  ") // Added padding spaces for separation
+    val annotatedText = if (searchQuery.isBlank()) {
+        buildAnnotatedString {
+            withStyle(SpanStyle(color = color)) {
+                append("$value  ") // Added padding spaces for separation
+            }
+        }
+    }else{
+//        buildAnnotatedString {
+//            withStyle(SpanStyle(color = color)) {
+//                append("$value  ") // Added padding spaces for separation
+//            }
+//        }
+        buildAnnotatedString {
+            val lowerCaseText = value.lowercase()
+            val lowerCaseQuery = searchQuery.lowercase()
+
+            var currentPosition = 0 // Tracks the position we last left off in the fullText
+
+            while (currentPosition < value.length) {
+                // Find the next occurrence of the query string
+                val matchIndex = lowerCaseText.indexOf(lowerCaseQuery, currentPosition)
+
+                if (matchIndex >= 0) {
+                    // Match found!
+
+                    // 1. Append the text *before* the match (unstyled)
+                    append(value.substring(currentPosition, matchIndex))
+
+                    // 2. Append the match itself, with the highlight style
+                    val matchEnd = matchIndex + searchQuery.length
+                    withStyle(style = SpanStyle(background = highlightColor, color = color)) {
+                        append(value.substring(matchIndex, matchEnd))
+                    }
+
+                    // 3. Update the starting position for the next search to be AFTER the match
+                    currentPosition = matchEnd
+                } else {
+                    // No more matches found. Append the rest of the string and break the loop.
+                    withStyle(SpanStyle(color = color)) {
+                        append("${value.substring(currentPosition)}  ") // Added padding spaces for separation
+                    }
+//                    append(value.substring(currentPosition))
+                    break
+                }
+            }
         }
     }
+
+
+
 
     val annotatedTextIcon = buildAnnotatedString {
         appendInlineContent(iconId, "[ID]")
@@ -366,7 +422,9 @@ fun SingleIconWithTextAnnotatedItemWithOnCLick(icon: Int, value: String, style: 
             append(" ") // Added padding spaces for separation
         }
     }
-    Row(Modifier.padding(vertical = 0.dp).clickable { onClick.invoke() }) {
+    Row(Modifier
+        .padding(vertical = 0.dp)
+        .clickable { onClick.invoke() }) {
         Text(
             text = annotatedTextIcon,
             inlineContent = inlineContentMap,
@@ -428,6 +486,37 @@ fun ButtonContentCompose(
 //        overflow = TextOverflow.Ellipsis,
     )
     //                    Text(text)
+}
+
+@Composable
+fun SimpleSearchView(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+        placeholder = { Text("Search") },
+        singleLine = true,
+        // Left side icon
+        leadingIcon = {
+            Icon(Icons.Default.Search, contentDescription = "Search Icon")
+        },
+        // Right side icon (Clear button)
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(Icons.Default.Close, contentDescription = "Clear search")
+                }
+            }
+        },
+        // Apply Material 3 shapes (e.g., rounded corners)
+        shape = MaterialTheme.shapes.extraLarge
+    )
 }
 
 

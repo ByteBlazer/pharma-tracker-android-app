@@ -75,8 +75,9 @@ fun OtpVerificationScreen(
     phoneNumber: String,
     otpVerificationViewModel: OtpVerificationViewModel = viewModel()
 ) {
-
     val context = LocalContext.current
+
+    val appCode = AppUtils.getAppCode(context)
 
     val apiState by otpVerificationViewModel.scheduledTripsState.collectAsState()
 
@@ -308,7 +309,7 @@ fun OtpVerificationScreen(
                                         // Reset the timer and run the resend action
                                         timeLeft = 30
                                         isTimerRunning = true
-                                        otpVerificationViewModel.onResendClick(phoneNumber)
+                                        otpVerificationViewModel.onResendClick(phoneNumber = phoneNumber, appCode = appCode)
                                     },
                                     colors = getTextButtonColors()
                                 ) {

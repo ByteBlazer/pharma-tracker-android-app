@@ -59,8 +59,8 @@ class OtpVerificationViewModel(application: Application) :  AndroidViewModel(app
 
     }
 
-    fun onResendClick(phoneNumber: String) {
-        repository.resendOTP(phoneNumber)
+    fun onResendClick(phoneNumber: String,appCode : String) {
+        repository.resendOTP(phoneNumber = phoneNumber, appCode = appCode)
     }
 
 

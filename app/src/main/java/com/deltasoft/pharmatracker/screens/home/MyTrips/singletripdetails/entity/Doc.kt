@@ -12,6 +12,8 @@ data class Doc(
     val lot: String? = null,
     val comment: String? = null,
     val customerId: String? = null,
+    val transitHubLatitude: String? = null,
+    val transitHubLongitude: String? = null,
     val createdAt: String? = null,
     val lastUpdatedAt: String? = null,
     val customerFirmName: String? = null,

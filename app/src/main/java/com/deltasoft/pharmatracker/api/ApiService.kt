@@ -13,6 +13,7 @@ import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTripsRespo
 import com.deltasoft.pharmatracker.screens.login.LoginRequest
 import com.deltasoft.pharmatracker.screens.otp.OtpRequestBody
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationResponse
+import com.deltasoft.pharmatracker.utils.AppUtils
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -20,10 +21,13 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @POST("auth/generate-otp")
-    suspend fun generateOtp(@Body loginRequest: LoginRequest): Response<Unit>
+    suspend fun generateOtp(
+        @Query("appCode") appCode : String,
+        @Body loginRequest: LoginRequest,): Response<Unit>
 
     @POST("auth/validate-otp")
     suspend fun verifyOtp(@Body otpRequestBody: OtpRequestBody): Response<OtpVerificationResponse>

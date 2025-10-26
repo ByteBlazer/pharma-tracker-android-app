@@ -13,10 +13,10 @@ class LoginViewModel : ViewModel() {
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState = _loginState.asStateFlow()
 
-    fun login(phoneNumber: String) {
+    fun login(phoneNumber: String,appCode : String) {
         _loginState.value = LoginState.Loading
         try {
-            repository.generateOtp(phoneNumber)
+            repository.generateOtp(phoneNumber = phoneNumber,appCode = appCode)
         } catch (e: Exception) {
             _loginState.value = LoginState.Error("Login failed: ${e.message}")
         }
