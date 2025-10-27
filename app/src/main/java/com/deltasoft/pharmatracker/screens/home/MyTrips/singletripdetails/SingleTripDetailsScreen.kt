@@ -67,6 +67,7 @@ import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.ButtonContentCompose
+import com.deltasoft.pharmatracker.screens.CustomSearchField
 import com.deltasoft.pharmatracker.screens.DocIdWithAmountAnnotatedText
 import com.deltasoft.pharmatracker.screens.SimpleSearchView
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
@@ -607,7 +608,7 @@ fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docG
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     if (!docGroup.droppable){
                         // droppable measn direct delivery
-                        SimpleSearchView(
+                        CustomSearchField(
                             query = searchQuery,
                             onQueryChange = { searchQuery = it }
                         )
