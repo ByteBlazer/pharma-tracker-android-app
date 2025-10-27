@@ -349,7 +349,7 @@ fun TripIdWithRouteAnnotatedText(tripId: String,
 @Composable
 fun DocIdWithAmountAnnotatedText(docId: String,
                                  amount: String,
-                                 style: TextStyle = MaterialTheme.typography.titleLarge,
+                                 style: TextStyle = MaterialTheme.typography.bodyLarge,
                                  color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
                                  fontWeight: FontWeight = FontWeight.Normal,
                                  itemsSpace: Dp = 4.dp) {

@@ -777,14 +777,14 @@ fun SingleDocNew(
             verticalArrangement = Arrangement.spacedBy(
                 dimensionResource(R.dimen.space_between_items_in_a_card))
         ) {
-            SingleIconWithTextAnnotatedItem(
-                icon = R.drawable.ic_hash,
-                value = doc.id ?: "",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                searchQuery = searchQuery
-            )
-//            DocIdWithAmountAnnotatedText(docId = doc.id ?: "", amount = doc.docAmount.toString())
+//            SingleIconWithTextAnnotatedItem(
+//                icon = R.drawable.ic_hash,
+//                value = doc.id ?: "",
+//                style = MaterialTheme.typography.bodyLarge,
+//                fontWeight = FontWeight.Bold,
+//                searchQuery = searchQuery
+//            )
+            DocIdWithAmountAnnotatedText(docId = doc.id ?: "", amount = doc.docAmount.toString())
             SingleIconWithTextAnnotatedItem(
                 icon = R.drawable.ic_store,
                 value = doc.customerFirmName ?: "",
@@ -792,11 +792,11 @@ fun SingleDocNew(
                 fontWeight = FontWeight.Bold,
                 searchQuery = searchQuery
             )
-            SingleIconWithTextAnnotatedItem(
-                icon = R.drawable.ic_receipt,
-                value = "₹" + doc.docAmount.toString(),
-                style = MaterialTheme.typography.titleSmall
-            )
+//            SingleIconWithTextAnnotatedItem(
+//                icon = R.drawable.ic_receipt,
+//                value = "₹" + doc.docAmount.toString(),
+//                style = MaterialTheme.typography.titleSmall
+//            )
             if (address.isNotNullOrEmpty()) {
                 SingleIconWithTextAnnotatedItem(
                     icon = R.drawable.ic_business,
