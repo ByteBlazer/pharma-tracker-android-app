@@ -67,6 +67,7 @@ import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.ButtonContentCompose
+import com.deltasoft.pharmatracker.screens.DocIdWithAmountAnnotatedText
 import com.deltasoft.pharmatracker.screens.SimpleSearchView
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItemWithOnCLick
@@ -401,12 +402,12 @@ fun TripBasicDetailsComposeNew(singleTripDetailsResponse: SingleTripDetailsRespo
                 style = MaterialTheme.typography.titleMedium
             )
             SingleIconWithTextAnnotatedItem(
-                icon = R.drawable.ic_notes_24,
+                icon = R.drawable.ic_hand_package_24,
                 value = singleTripDetailsResponse?.deliveryCountStatusMsg?:"",
                 style = MaterialTheme.typography.titleMedium
             )
             SingleIconWithTextAnnotatedItem(
-                icon = R.drawable.ic_notes_24,
+                icon = R.drawable.ic_package_2_24,
                 value = singleTripDetailsResponse?.dropOffCountStatusMsg?:"",
                 style = MaterialTheme.typography.titleMedium
             )
@@ -782,6 +783,7 @@ fun SingleDocNew(
                 fontWeight = FontWeight.Bold,
                 searchQuery = searchQuery
             )
+//            DocIdWithAmountAnnotatedText(docId = doc.id ?: "", amount = doc.docAmount.toString())
             SingleIconWithTextAnnotatedItem(
                 icon = R.drawable.ic_store,
                 value = doc.customerFirmName ?: "",
@@ -861,7 +863,7 @@ fun SingleDocNew(
                         Button(onClick = {
                             deliveryFailedOnClick.invoke(doc.id ?: "")
                         }, colors = getButtonColors()) {
-                            ButtonContentCompose(icon = R.drawable.ic_exclamation,
+                            ButtonContentCompose(icon = R.drawable.icon_warning_24,
                                 text = stringResource(R.string.mark_as_un_delivered_btn_txt))
 //                            Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
                         }
