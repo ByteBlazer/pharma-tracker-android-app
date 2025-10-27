@@ -212,6 +212,59 @@ fun AppButton(
 }
 
 @Composable
+fun TripIdAnnotatedText(tripId: String,
+                                 style: TextStyle = MaterialTheme.typography.titleLarge,
+                                 color: Color = MaterialTheme.colorScheme.onSurfaceVariant) {
+    val hashIconId = "hashIconId"
+
+    val inlineContentMap: Map<String, InlineTextContent> = mapOf(
+        hashIconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_hash),
+                contentDescription = "hash",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    )
+
+    val annotatedText = buildAnnotatedString {
+        withStyle(SpanStyle(color = color)) {
+            append("$tripId  ") // Added padding spaces for separation
+        }
+    }
+
+    val annotatedTextIcon = buildAnnotatedString {
+        appendInlineContent(hashIconId, "[ID]")
+        withStyle(SpanStyle(color = color)) {
+            append("") // Added padding spaces for separation
+        }
+    }
+    Row(Modifier.padding(vertical = 0.dp)) {
+        Text(
+            text = annotatedTextIcon,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+        Text(
+            text = annotatedText,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+    }
+}
+
+@Composable
 fun TripIdWithRouteAnnotatedText(tripId: String,
                                          route: String,
                                          style: TextStyle = MaterialTheme.typography.titleLarge,

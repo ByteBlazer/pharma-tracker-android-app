@@ -110,6 +110,9 @@ fun SingleTripDetailsScreen(
     var showDeliverySuccesDocId by remember { mutableStateOf("") }
     var showDeliveryFailedDocId by remember { mutableStateOf("") }
 
+    val initialTopAppBarTitle = stringResource(R.string.single_trip_details_heading)
+    var topAppBarTitle by remember { mutableStateOf(initialTopAppBarTitle) }
+
     LaunchedEffect(dropOffTripState) {
         when (dropOffTripState) {
             is AppCommonApiState.Idle -> {
@@ -204,7 +207,7 @@ fun SingleTripDetailsScreen(
     }
 
     Scaffold(modifier = Modifier.fillMaxSize(),
-        topBar = {   App_CommonTopBar(title = stringResource(R.string.single_trip_details_heading), onBackClick = {  if (navController.previousBackStackEntry != null) { navController.popBackStack() } }) },
+        topBar = {   App_CommonTopBar(title = topAppBarTitle, onBackClick = {  if (navController.previousBackStackEntry != null) { navController.popBackStack() } }) },
         bottomBar = {
 //            AnimatedVisibility(
 //                visible = !WindowInsets.isImeVisible,
@@ -263,6 +266,7 @@ fun SingleTripDetailsScreen(
                             val singleTripDetailsResponse =
                                 (singleTripDetailsState as SingleTripDetailsState.Success).singleTripDetailsResponse
                             singleTripDetailsResponse?.let {
+                                topAppBarTitle = "Trip no : "+(it?.tripId?:0).toString()+" details"
                                 SingleTripDetailsCompose(it, singleTripDetailsViewModel, dropOffOnClick = { tripId, heading ->
                                     dropOffTripId = tripId
                                     dropOffHeading = heading
@@ -381,9 +385,14 @@ fun TripBasicDetailsComposeNew(singleTripDetailsResponse: SingleTripDetailsRespo
                 .padding(dimensionResource(R.dimen.padding_of_entire_items_in_a_card)),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_between_items_in_a_card))
         ) {
-            TripIdWithRouteAnnotatedText(
-                tripId = singleTripDetailsResponse.tripId.toString(),
-                route = singleTripDetailsResponse.route ?: ""
+//            TripIdWithRouteAnnotatedText(
+//                tripId = singleTripDetailsResponse.tripId.toString(),
+//                route = singleTripDetailsResponse.route ?: ""
+//            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_route,
+                value = singleTripDetailsResponse.route ?: "",
+                style = MaterialTheme.typography.titleLarge
             )
             SingleIconWithTextAnnotatedItem(
                 icon = R.drawable.ic_local_shipping,

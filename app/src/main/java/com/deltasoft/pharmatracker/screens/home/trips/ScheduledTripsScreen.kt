@@ -41,6 +41,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.screens.ButtonContentCompose
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
+import com.deltasoft.pharmatracker.screens.TripIdAnnotatedText
 import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTrip
@@ -374,9 +375,30 @@ private fun SingleScheduledTripComposeNew(
                 dimensionResource(R.dimen.space_between_items_in_a_card)
             )
         ) {
-            TripIdWithRouteAnnotatedText(
-                tripId = scheduledTrip.tripId.toString(),
-                route = scheduledTrip.route ?: ""
+//            TripIdWithRouteAnnotatedText(
+//                tripId = scheduledTrip.tripId.toString(),
+//                route = scheduledTrip.route ?: ""
+//            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                TripIdAnnotatedText(
+                    tripId = scheduledTrip.tripId.toString()
+                )
+                Button(
+                    onClick = {
+                        onItemClick.invoke(scheduledTrip)
+                    },
+                    modifier = Modifier,
+                    colors = getButtonColors()
+                ) {
+                    ButtonContentCompose(icon = R.drawable.ic_close,
+                        text = "Cancel Trip")
+//                    Text(text)
+                }
+            }
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_route,
+                value = scheduledTrip.route ?: "",
+                style = MaterialTheme.typography.titleLarge
             )
             SingleIconWithTextAnnotatedItem(
                 icon = R.drawable.ic_local_shipping,
@@ -394,19 +416,19 @@ private fun SingleScheduledTripComposeNew(
                 value = scheduledTrip?.dropOffCountStatusMsg?:"",
                 style = MaterialTheme.typography.titleMedium
             )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                Button(
-                    onClick = {
-                        onItemClick.invoke(scheduledTrip)
-                    },
-                    modifier = Modifier,
-                    colors = getButtonColors()
-                ) {
-                    ButtonContentCompose(icon = R.drawable.ic_close,
-                        text = "Cancel Trip")
-//                    Text(text)
-                }
-            }
+//            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+//                Button(
+//                    onClick = {
+//                        onItemClick.invoke(scheduledTrip)
+//                    },
+//                    modifier = Modifier,
+//                    colors = getButtonColors()
+//                ) {
+//                    ButtonContentCompose(icon = R.drawable.ic_close,
+//                        text = "Cancel Trip")
+////                    Text(text)
+//                }
+//            }
             SingleIconWithTextAnnotatedItem(
                 icon = R.drawable.ic_outline_person,
                 value = "Created By " + (scheduledTrip.createdBy
