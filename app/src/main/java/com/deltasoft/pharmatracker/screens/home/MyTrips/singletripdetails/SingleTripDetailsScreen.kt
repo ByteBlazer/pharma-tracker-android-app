@@ -211,7 +211,7 @@ fun SingleTripDetailsScreen(
 //                enter = slideInVertically(initialOffsetY = { it }), // Slide in from bottom
 //                exit = slideOutVertically(targetOffsetY = { it })   // Slide out to bottom
 //            ) {
-                if (!WindowInsets.isImeVisible) {
+//                if (!WindowInsets.isImeVisible) {
                     Column(
                         Modifier
                             .fillMaxWidth()
@@ -229,7 +229,7 @@ fun SingleTripDetailsScreen(
                             Text(stringResource(R.string.end_trip_btn_txt))
                         }
                     }
-                }
+//                }
 //            }
         }) { paddingValues ->
         val modifier = Modifier.padding(paddingValues)
