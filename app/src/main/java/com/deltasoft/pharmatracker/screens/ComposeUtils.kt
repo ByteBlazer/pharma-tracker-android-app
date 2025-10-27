@@ -342,6 +342,83 @@ fun TripIdWithRouteAnnotatedText(tripId: String,
 }
 
 @Composable
+fun DocIdWithAmountAnnotatedText(docId: String,
+                                 amount: String,
+                                 style: TextStyle = MaterialTheme.typography.titleLarge,
+                                 color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                 fontWeight: FontWeight = FontWeight.Normal,
+                                 itemsSpace: Dp = 4.dp) {
+    val docIconId = "hashIconId"
+    val amountIconId = "routeIconId"
+
+    val inlineContentMap: Map<String, InlineTextContent> = mapOf(
+        docIconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_hash),
+                contentDescription = "hash",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+
+        amountIconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_currency_rupee_24),
+                contentDescription = "amount",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    )
+
+    val annotatedText = buildAnnotatedString {
+//        appendInlineContent(hashIconId, "[ID]")
+        withStyle(SpanStyle(color = color)) {
+            append("$docId  ") // Added padding spaces for separation
+        }
+        appendInlineContent(amountIconId, "[Route]")
+        withStyle(SpanStyle(color = color)) {
+            append(" $amount")
+        }
+    }
+
+    val annotatedTextIcon = buildAnnotatedString {
+        appendInlineContent(docIconId, "[ID]")
+        withStyle(SpanStyle(color = color)) {
+            append("") // Added padding spaces for separation
+        }
+    }
+    Row(Modifier.padding(vertical = 0.dp)) {
+        Text(
+            text = annotatedTextIcon,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+        Text(
+            text = annotatedText,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+    }
+}
+
+@Composable
 fun SingleIconWithTextAnnotatedItem(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal,
                                 itemsSpace: Dp = 4.dp,searchQuery:String="") {
     val highlightColor = AppTertiary
