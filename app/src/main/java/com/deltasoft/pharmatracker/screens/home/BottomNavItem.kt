@@ -41,7 +41,7 @@ sealed class BottomNavItem(
     )
 
     object Drive : BottomNavItem(
-        NavConstants.ROUTE_MY_TRIPS_SCREEN,  R.drawable.ic_local_shipping, "My Trip",
+        NavConstants.ROUTE_MY_TRIPS_SCREEN,  R.drawable.ic_local_shipping, "My Trips",
         setOf(
             UserType.APP_ADMIN,
             UserType.APP_TRIP_DRIVER

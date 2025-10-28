@@ -14,7 +14,6 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import com.deltasoft.pharmatracker.screens.home.UserType
 import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
@@ -32,6 +31,7 @@ import android.graphics.Paint
 import android.location.Location
 import android.util.Base64
 import androidx.compose.ui.graphics.toArgb
+import com.deltasoft.pharmatracker.utils.createappsignature.AppSignatureHashHelper
 import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -547,5 +547,9 @@ object AppUtils {
             data = Uri.parse("tel:$phoneNumber")
         }
         context.startActivity(intent)
+    }
+
+    fun getAppCode(context: Context): String {
+        return if (AppSignatureHashHelper(context).appSignatures.first().isNotNullOrEmpty()) AppSignatureHashHelper(context).appSignatures.first() else ""
     }
 }

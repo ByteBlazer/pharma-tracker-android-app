@@ -50,11 +50,11 @@ class OtpVerificationRepository(var viewModel: OtpVerificationViewModel) {
         }
     }
 
-    fun resendOTP(phoneNumber: String) {
+    fun resendOTP(phoneNumber: String,appCode : String) {
         val loginRequest = LoginRequest(phoneNumber)
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.generateOtp(loginRequest)
+                val response = RetrofitClient.apiService.generateOtp(loginRequest = loginRequest, appCode = appCode)
                 if (response.isSuccessful) {
                 } else {
 

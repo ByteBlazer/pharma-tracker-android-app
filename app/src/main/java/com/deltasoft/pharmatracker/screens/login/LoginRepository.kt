@@ -12,11 +12,11 @@ import kotlinx.coroutines.launch
 class LoginRepository(var viewModel: LoginViewModel) {
     var viewModelScope = CoroutineScope(Dispatchers.IO)
 
-    fun generateOtp(phoneNumber: String){
+    fun generateOtp(phoneNumber: String,appCode : String){
         val loginRequest = LoginRequest(phoneNumber)
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.generateOtp(loginRequest)
+                val response = RetrofitClient.apiService.generateOtp(loginRequest = loginRequest, appCode = appCode)
                 if (response.isSuccessful) {
                     viewModel.updateLoginState(response.code(),response.message())
                 } else {

@@ -12,9 +12,18 @@ data class ScheduledTrip(
     var status : String? = null,
     var route : String? = null,
     var createdAt : String? = null,
+    var startedAt : String? = null,
     var lastUpdatedAt : String? = null,
     var creatorLocation : String? = null,
     var driverLocation : String? = null,
+    var driverLastKnownLatitude : String? = null,
+    var driverLastKnownLongitude : String? = null,
+    var driverLastLocationUpdateTime : String? = null,
+    var pendingDirectDeliveries : Int? = null,
+    var totalDirectDeliveries : Int? = null,
+    var deliveryCountStatusMsg : String? = null,
+    var pendingLotDropOffs : Int? = null,
+    var dropOffCountStatusMsg : String? = null,
 ){
     val createdAtFormatted: String? get() = createdAt?.let { AppUtils.convertIso8601ToIst(it) }
 }
