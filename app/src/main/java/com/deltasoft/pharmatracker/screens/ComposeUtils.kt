@@ -1,5 +1,8 @@
 package com.deltasoft.pharmatracker.screens
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -51,11 +54,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import com.deltasoft.pharmatracker.ui.theme.AppTertiary
 
@@ -212,6 +217,59 @@ fun AppButton(
 }
 
 @Composable
+fun TripIdAnnotatedText(tripId: String,
+                                 style: TextStyle = MaterialTheme.typography.titleLarge,
+                                 color: Color = MaterialTheme.colorScheme.onSurfaceVariant) {
+    val hashIconId = "hashIconId"
+
+    val inlineContentMap: Map<String, InlineTextContent> = mapOf(
+        hashIconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_hash),
+                contentDescription = "hash",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    )
+
+    val annotatedText = buildAnnotatedString {
+        withStyle(SpanStyle(color = color)) {
+            append("$tripId  ") // Added padding spaces for separation
+        }
+    }
+
+    val annotatedTextIcon = buildAnnotatedString {
+        appendInlineContent(hashIconId, "[ID]")
+        withStyle(SpanStyle(color = color)) {
+            append("") // Added padding spaces for separation
+        }
+    }
+    Row(Modifier.padding(vertical = 0.dp)) {
+        Text(
+            text = annotatedTextIcon,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+        Text(
+            text = annotatedText,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+    }
+}
+
+@Composable
 fun TripIdWithRouteAnnotatedText(tripId: String,
                                          route: String,
                                          style: TextStyle = MaterialTheme.typography.titleLarge,
@@ -266,6 +324,83 @@ fun TripIdWithRouteAnnotatedText(tripId: String,
 
     val annotatedTextIcon = buildAnnotatedString {
         appendInlineContent(hashIconId, "[ID]")
+        withStyle(SpanStyle(color = color)) {
+            append("") // Added padding spaces for separation
+        }
+    }
+    Row(Modifier.padding(vertical = 0.dp)) {
+        Text(
+            text = annotatedTextIcon,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+        Text(
+            text = annotatedText,
+            inlineContent = inlineContentMap,
+            modifier = Modifier.padding(0.dp),
+            style = style,
+            color = color
+        )
+    }
+}
+
+@Composable
+fun DocIdWithAmountAnnotatedText(docId: String,
+                                 amount: String,
+                                 style: TextStyle = MaterialTheme.typography.bodyLarge,
+                                 color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                 fontWeight: FontWeight = FontWeight.Normal,
+                                 itemsSpace: Dp = 4.dp) {
+    val docIconId = "hashIconId"
+    val amountIconId = "routeIconId"
+
+    val inlineContentMap: Map<String, InlineTextContent> = mapOf(
+        docIconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_hash),
+                contentDescription = "hash",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+
+        amountIconId to InlineTextContent(
+            placeholder = Placeholder(
+                width = style.fontSize,
+                height = style.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_currency_rupee_24),
+                contentDescription = "amount",
+                tint = color,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    )
+
+    val annotatedText = buildAnnotatedString {
+//        appendInlineContent(hashIconId, "[ID]")
+        withStyle(SpanStyle(color = color)) {
+            append("$docId  ") // Added padding spaces for separation
+        }
+        appendInlineContent(amountIconId, "[Route]")
+        withStyle(SpanStyle(color = color)) {
+            append(" $amount")
+        }
+    }
+
+    val annotatedTextIcon = buildAnnotatedString {
+        appendInlineContent(docIconId, "[ID]")
         withStyle(SpanStyle(color = color)) {
             append("") // Added padding spaces for separation
         }
@@ -518,5 +653,57 @@ fun SimpleSearchView(
         shape = MaterialTheme.shapes.extraLarge
     )
 }
+
+@Composable
+fun CustomSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline), RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+            .padding(horizontal = 8.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxSize()) {
+            Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Box(modifier = Modifier.weight(1f)) {
+                BasicTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+//                        .align(Alignment.CenterVertically)
+                    ,
+                    singleLine = true,
+                    textStyle = TextStyle(fontSize = 14.sp),
+                    decorationBox = { innerTextField ->
+                        if (query.isEmpty()) {
+                            Text(
+                                "Search",
+                                color = Color.Gray,
+                                fontSize = 14.sp,
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            )
+                        }
+                        innerTextField()
+                    }
+                )
+            }
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }, modifier = Modifier.size(20.dp)) {
+                    Icon(Icons.Default.Close, contentDescription = "Clear Search")
+                }
+            }
+        }
+    }
+}
+
+
 
 

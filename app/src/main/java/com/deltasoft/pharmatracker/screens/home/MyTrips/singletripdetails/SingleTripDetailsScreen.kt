@@ -67,6 +67,8 @@ import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
 import com.deltasoft.pharmatracker.screens.ButtonContentCompose
+import com.deltasoft.pharmatracker.screens.CustomSearchField
+import com.deltasoft.pharmatracker.screens.DocIdWithAmountAnnotatedText
 import com.deltasoft.pharmatracker.screens.SimpleSearchView
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItemWithOnCLick
@@ -109,6 +111,9 @@ fun SingleTripDetailsScreen(
 
     var showDeliverySuccesDocId by remember { mutableStateOf("") }
     var showDeliveryFailedDocId by remember { mutableStateOf("") }
+
+    val initialTopAppBarTitle = stringResource(R.string.single_trip_details_heading)
+    var topAppBarTitle by remember { mutableStateOf(initialTopAppBarTitle) }
 
     LaunchedEffect(dropOffTripState) {
         when (dropOffTripState) {
@@ -204,14 +209,14 @@ fun SingleTripDetailsScreen(
     }
 
     Scaffold(modifier = Modifier.fillMaxSize(),
-        topBar = {   App_CommonTopBar(title = stringResource(R.string.single_trip_details_heading), onBackClick = {  if (navController.previousBackStackEntry != null) { navController.popBackStack() } }) },
+        topBar = {   App_CommonTopBar(title = topAppBarTitle, onBackClick = {  if (navController.previousBackStackEntry != null) { navController.popBackStack() } }) },
         bottomBar = {
 //            AnimatedVisibility(
 //                visible = !WindowInsets.isImeVisible,
 //                enter = slideInVertically(initialOffsetY = { it }), // Slide in from bottom
 //                exit = slideOutVertically(targetOffsetY = { it })   // Slide out to bottom
 //            ) {
-                if (!WindowInsets.isImeVisible) {
+//                if (!WindowInsets.isImeVisible) {
                     Column(
                         Modifier
                             .fillMaxWidth()
@@ -229,7 +234,7 @@ fun SingleTripDetailsScreen(
                             Text(stringResource(R.string.end_trip_btn_txt))
                         }
                     }
-                }
+//                }
 //            }
         }) { paddingValues ->
         val modifier = Modifier.padding(paddingValues)
@@ -263,6 +268,7 @@ fun SingleTripDetailsScreen(
                             val singleTripDetailsResponse =
                                 (singleTripDetailsState as SingleTripDetailsState.Success).singleTripDetailsResponse
                             singleTripDetailsResponse?.let {
+                                topAppBarTitle = "Trip no : "+(it?.tripId?:0).toString()+" details"
                                 SingleTripDetailsCompose(it, singleTripDetailsViewModel, dropOffOnClick = { tripId, heading ->
                                     dropOffTripId = tripId
                                     dropOffHeading = heading
@@ -381,9 +387,14 @@ fun TripBasicDetailsComposeNew(singleTripDetailsResponse: SingleTripDetailsRespo
                 .padding(dimensionResource(R.dimen.padding_of_entire_items_in_a_card)),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_between_items_in_a_card))
         ) {
-            TripIdWithRouteAnnotatedText(
-                tripId = singleTripDetailsResponse.tripId.toString(),
-                route = singleTripDetailsResponse.route ?: ""
+//            TripIdWithRouteAnnotatedText(
+//                tripId = singleTripDetailsResponse.tripId.toString(),
+//                route = singleTripDetailsResponse.route ?: ""
+//            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_route,
+                value = singleTripDetailsResponse.route ?: "",
+                style = MaterialTheme.typography.titleLarge
             )
             SingleIconWithTextAnnotatedItem(
                 icon = R.drawable.ic_local_shipping,
@@ -392,12 +403,12 @@ fun TripBasicDetailsComposeNew(singleTripDetailsResponse: SingleTripDetailsRespo
                 style = MaterialTheme.typography.titleMedium
             )
             SingleIconWithTextAnnotatedItem(
-                icon = R.drawable.ic_notes_24,
+                icon = R.drawable.ic_hand_package_24,
                 value = singleTripDetailsResponse?.deliveryCountStatusMsg?:"",
                 style = MaterialTheme.typography.titleMedium
             )
             SingleIconWithTextAnnotatedItem(
-                icon = R.drawable.ic_notes_24,
+                icon = R.drawable.ic_package_2_24,
                 value = singleTripDetailsResponse?.dropOffCountStatusMsg?:"",
                 style = MaterialTheme.typography.titleMedium
             )
@@ -597,7 +608,7 @@ fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docG
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     if (!docGroup.droppable){
                         // droppable measn direct delivery
-                        SimpleSearchView(
+                        CustomSearchField(
                             query = searchQuery,
                             onQueryChange = { searchQuery = it }
                         )
@@ -766,13 +777,14 @@ fun SingleDocNew(
             verticalArrangement = Arrangement.spacedBy(
                 dimensionResource(R.dimen.space_between_items_in_a_card))
         ) {
-            SingleIconWithTextAnnotatedItem(
-                icon = R.drawable.ic_hash,
-                value = doc.id ?: "",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                searchQuery = searchQuery
-            )
+//            SingleIconWithTextAnnotatedItem(
+//                icon = R.drawable.ic_hash,
+//                value = doc.id ?: "",
+//                style = MaterialTheme.typography.bodyLarge,
+//                fontWeight = FontWeight.Bold,
+//                searchQuery = searchQuery
+//            )
+            DocIdWithAmountAnnotatedText(docId = doc.id ?: "", amount = doc.docAmount.toString())
             SingleIconWithTextAnnotatedItem(
                 icon = R.drawable.ic_store,
                 value = doc.customerFirmName ?: "",
@@ -780,11 +792,11 @@ fun SingleDocNew(
                 fontWeight = FontWeight.Bold,
                 searchQuery = searchQuery
             )
-            SingleIconWithTextAnnotatedItem(
-                icon = R.drawable.ic_receipt,
-                value = "₹" + doc.docAmount.toString(),
-                style = MaterialTheme.typography.titleSmall
-            )
+//            SingleIconWithTextAnnotatedItem(
+//                icon = R.drawable.ic_receipt,
+//                value = "₹" + doc.docAmount.toString(),
+//                style = MaterialTheme.typography.titleSmall
+//            )
             if (address.isNotNullOrEmpty()) {
                 SingleIconWithTextAnnotatedItem(
                     icon = R.drawable.ic_business,
@@ -852,7 +864,7 @@ fun SingleDocNew(
                         Button(onClick = {
                             deliveryFailedOnClick.invoke(doc.id ?: "")
                         }, colors = getButtonColors()) {
-                            ButtonContentCompose(icon = R.drawable.ic_exclamation,
+                            ButtonContentCompose(icon = R.drawable.icon_warning_24,
                                 text = stringResource(R.string.mark_as_un_delivered_btn_txt))
 //                            Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
                         }

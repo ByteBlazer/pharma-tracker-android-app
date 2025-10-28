@@ -56,6 +56,7 @@ import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.ButtonContentCompose
 import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
+import com.deltasoft.pharmatracker.screens.TripIdAnnotatedText
 import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
 import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
@@ -408,28 +409,14 @@ fun SingleMyTripComposeNew(scheduledTrip: ScheduledTrip, onItemClick: (scheduled
                 dimensionResource(R.dimen.space_between_items_in_a_card)
             )
         ) {
-            TripIdWithRouteAnnotatedText(
-                tripId = scheduledTrip.tripId.toString(),
-                route = scheduledTrip.route ?: ""
-            )
-            SingleIconWithTextAnnotatedItem(
-                icon = R.drawable.ic_local_shipping,
-                value = (scheduledTrip.vehicleNumber ?: "") + " - " + (scheduledTrip.driverName
-                    ?: ""),
-                style = MaterialTheme.typography.titleMedium
-            )
-            SingleIconWithTextAnnotatedItem(
-                icon = R.drawable.ic_notes_24,
-                value = scheduledTrip?.deliveryCountStatusMsg?:"",
-                style = MaterialTheme.typography.titleMedium
-            )
-            SingleIconWithTextAnnotatedItem(
-                icon = R.drawable.ic_notes_24,
-                value = scheduledTrip?.dropOffCountStatusMsg?:"",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-
+//            TripIdWithRouteAnnotatedText(
+//                tripId = scheduledTrip.tripId.toString(),
+//                route = scheduledTrip.route ?: ""
+//            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                TripIdAnnotatedText(
+                    tripId = scheduledTrip.tripId.toString()
+                )
                 if (scheduledTrip.status.equals("SCHEDULED")){
                     //Start trip
                     //here we put start trip button on top of resume trip button
@@ -475,6 +462,74 @@ fun SingleMyTripComposeNew(scheduledTrip: ScheduledTrip, onItemClick: (scheduled
                     }
                 }
             }
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_route,
+                value = scheduledTrip.route ?: "",
+                style = MaterialTheme.typography.titleLarge
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_local_shipping,
+                value = (scheduledTrip.vehicleNumber ?: "") + " - " + (scheduledTrip.driverName
+                    ?: ""),
+                style = MaterialTheme.typography.titleMedium
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_hand_package_24,
+                value = scheduledTrip?.deliveryCountStatusMsg?:"",
+                style = MaterialTheme.typography.titleMedium
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_package_2_24,
+                value = scheduledTrip?.dropOffCountStatusMsg?:"",
+                style = MaterialTheme.typography.titleMedium
+            )
+//            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+//
+//                if (scheduledTrip.status.equals("SCHEDULED")){
+//                    //Start trip
+//                    //here we put start trip button on top of resume trip button
+//                    // find the width of resume trip button and set this width for start trip too
+//                    var buttonWidth by remember { mutableStateOf(0) }
+//                    Box {
+//                        Button(
+//                            onClick = {  },
+//                            modifier = Modifier
+//                                .onGloballyPositioned { coordinates ->
+//                                    buttonWidth = coordinates.size.width
+//                                }
+//                        ) {
+//                            ButtonContentCompose(icon = R.drawable.ic_pause,
+//                                text = "Resume Trip")
+//                        }
+//
+//                        Button(
+//                            onClick = { onItemClick.invoke(scheduledTrip) },
+//                            modifier = if (buttonWidth > 0) Modifier.width(with(LocalDensity.current) { buttonWidth.toDp() }) else Modifier
+//                        ) {
+//                            ButtonContentCompose(icon = R.drawable.ic_play,
+//                                text = "Start  Trip")
+//                        }
+//                    }
+//                }else{
+//                    //Resume trip
+//                    Button(
+//                        onClick = {
+//                            onItemClick.invoke(scheduledTrip)
+//                        },
+//                        modifier = Modifier,
+//                        colors = getButtonColors()
+//                    ) {
+//                        if (scheduledTrip.status.equals("SCHEDULED")){
+//                            ButtonContentCompose(icon = R.drawable.ic_play,
+//                                text = "Start  Trip")
+//                        }else{
+//                            ButtonContentCompose(icon = R.drawable.ic_pause,
+//                                text = "Resume Trip")
+//                        }
+////                    Text(if (scheduledTrip.status.equals("SCHEDULED")) "Start Trip" else "Resume Trip")
+//                    }
+//                }
+//            }
 //            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
 //                Button(
 //                    onClick = {
