@@ -268,7 +268,7 @@ fun SingleTripDetailsScreen(
                             val singleTripDetailsResponse =
                                 (singleTripDetailsState as SingleTripDetailsState.Success).singleTripDetailsResponse
                             singleTripDetailsResponse?.let {
-                                topAppBarTitle = "Trip no : "+(it?.tripId?:0).toString()+" details"
+                                topAppBarTitle = "Trip #"+(it?.tripId?:0).toString()+" details"
                                 SingleTripDetailsCompose(it, singleTripDetailsViewModel, dropOffOnClick = { tripId, heading ->
                                     dropOffTripId = tripId
                                     dropOffHeading = heading
