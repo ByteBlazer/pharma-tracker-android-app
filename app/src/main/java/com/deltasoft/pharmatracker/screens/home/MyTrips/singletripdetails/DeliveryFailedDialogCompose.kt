@@ -146,7 +146,7 @@ fun DeliveryFailedConfirmationDialogCustom(showDialog: Boolean,
                             maxLines = 4,
                             modifier = Modifier
                                 .fillMaxWidth() // Makes the field take up the full width
-                                .padding(16.dp)
+                                .padding(vertical = 16.dp)
                         )
                         Spacer(Modifier.height(16.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

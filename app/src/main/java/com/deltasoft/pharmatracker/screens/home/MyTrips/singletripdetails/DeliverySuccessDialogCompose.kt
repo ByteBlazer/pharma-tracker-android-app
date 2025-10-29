@@ -398,12 +398,12 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                             onValueChange = { commentText = it },
                             label = { Text("Comments (optional)") },
                             // KEY PROPERTY: Forces the field to be 4 lines tall visually
-                            minLines = 4,
+                            minLines = 1,
                             // KEY PROPERTY: Prevents the field from growing beyond 4 lines
-                            maxLines = 4,
+                            maxLines = 1,
                             modifier = Modifier
                                 .fillMaxWidth() // Makes the field take up the full width
-                                .padding(16.dp)
+                                .padding(top = 16.dp)
                         )
 
 
