@@ -2,8 +2,12 @@ package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 
 import DrawingPath
 import SignaturePad
+import android.location.Location
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +28,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +36,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +55,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
+import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.Doc
 import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
@@ -250,12 +260,14 @@ fun DeliverySuccessConfirmationDialog(showDialog: Boolean,
 
 @Composable
 fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
-                                      onConfirm: (comment: String,signature:String,isChecked:Boolean) -> Unit = { a,b,c-> },
+                                      onConfirm: (comment: String,signature:String,isChecked:Boolean,location:Location?) -> Unit = { a,b,c,d-> },
                                       onDismiss: () -> Unit,
                                       title: String,
                                       message: String,
                                       confirmButtonText: String = "Confirm" ,
-                                      dismissButtonText: String = "Cancel",) {
+                                      dismissButtonText: String = "Cancel",
+                                            singleTripDetailsViewModel: SingleTripDetailsViewModel,
+                                            doc: Doc?) {
     // 1. State to hold the user's input
     var commentText by remember { mutableStateOf("") }
     var signatureEncodedString by remember { mutableStateOf<String?>("") }
@@ -289,7 +301,25 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
     }
     var isChecked by remember { mutableStateOf(true) }
 
+
+    val latestLocationState by singleTripDetailsViewModel.latestLocationState.collectAsState()
+
+    val customerGeoLatitude = doc?.customerGeoLatitude
+    val customerGeoLongitude = doc?.customerGeoLongitude
+    val isValidCustomerLocationAvailable = customerGeoLatitude.isNotNullOrEmpty() && customerGeoLongitude.isNotNullOrEmpty()
+
+    var isValidLocation by remember { mutableStateOf(!isValidCustomerLocationAvailable) } // if not valid customer location available no location validation needed
+
+    var currentLocation by remember { mutableStateOf<Location?>(null) }
+
     if (showDialog) {
+
+        // LaunchedEffect triggers whenever clickEvent changes
+        LaunchedEffect(Unit) {
+            if (isValidCustomerLocationAvailable) {
+                singleTripDetailsViewModel.fetchLatestLocation()
+            }
+        }
         Dialog(
             onDismissRequest = {
                 isChecked = true
@@ -409,6 +439,115 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
 
 
                         Spacer(Modifier.height(16.dp))
+
+                        if (isValidCustomerLocationAvailable) {
+                            //Show customer location validation message only when valid customer location available
+//                        LaunchedEffect(latestLocationState) {
+                            when (latestLocationState) {
+                                is LocationState.Idle -> {
+                                    Row(Modifier.fillMaxWidth()) {
+                                        Text("Fetching location...")
+                                        CircularProgressIndicator()
+                                    }
+                                }
+
+                                is LocationState.Loading -> {
+                                    Row(Modifier.fillMaxWidth()) {
+                                        Text("Fetching location...")
+                                        CircularProgressIndicator()
+                                    }
+                                }
+
+                                is LocationState.Success -> {
+                                    val location1 =
+                                        (latestLocationState as LocationState.Success).location
+                                    val lat2 = AppUtils.convertLocationStringToDouble(doc?.customerGeoLatitude?:"")
+                                    val long2 = AppUtils.convertLocationStringToDouble(doc?.customerGeoLongitude?:"")
+                                    val distanceBetweenLocationInMeter = AppUtils.haversineDistanceMeters(
+                                        lat1 = location1.latitude,
+                                        lon1 = location1.longitude,
+                                        lat2 = lat2,
+                                        lon2 = long2
+                                    )
+                                    if (distanceBetweenLocationInMeter<=500) {
+                                        currentLocation = location1
+                                        isValidLocation = true
+                                    }else{
+
+                                        currentLocation = null
+                                        isValidLocation = false
+
+                                        val yellowBorder = BorderStroke(
+                                            width = 2.dp, // Adjust the thickness of the border line
+                                            color = Color.Yellow // Set the color to yellow
+                                        )
+
+                                        // Define the shape with rounded corners
+                                        val cornerShape = RoundedCornerShape(12.dp)
+                                        Row(Modifier.fillMaxWidth()
+//                                            .border(
+//                                            border = yellowBorder,
+//                                            shape = cornerShape)
+                                            .background(Color.Yellow.copy(alpha = 0.2f)).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            Text("You seem to be far from this customer's usual delivery spot", style = MaterialTheme.typography.bodySmall,
+                                                modifier = Modifier.weight(1f))
+//                                            IconButton(
+//                                                onClick = {
+//                                                   singleTripDetailsViewModel.fetchLatestLocation()
+//                                                },
+//                                                modifier = Modifier,
+//                                                colors = getIconButtonColors()
+//                                            ) {
+//                                                Icon(
+//                                                    painter = painterResource(id = R.drawable.ic_refresh),
+//                                                    contentDescription = "retry location",
+//                                                    modifier = Modifier.size(24.dp),
+//                                                )
+//                                            }
+                                        }
+                                    }
+                                }
+
+                                is LocationState.Error -> {
+                                    currentLocation = null
+                                    isValidLocation = false
+                                    val message =
+                                        (latestLocationState as LocationState.Error).message
+
+                                    val yellowBorder = BorderStroke(
+                                        width = 2.dp, // Adjust the thickness of the border line
+                                        color = Color.Yellow // Set the color to yellow
+                                    )
+
+                                    // Define the shape with rounded corners
+                                    val cornerShape = RoundedCornerShape(12.dp)
+                                    Row(Modifier.fillMaxWidth()
+//                                            .border(
+//                                            border = yellowBorder,
+//                                            shape = cornerShape)
+                                        .background(Color.Yellow.copy(alpha = 0.2f)).padding(8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("$message Please retry", style = MaterialTheme.typography.bodySmall)
+//                                        IconButton(
+//                                            onClick = {
+//                                                singleTripDetailsViewModel.fetchLatestLocation()
+//                                            },
+//                                            modifier = Modifier,
+//                                            colors = getIconButtonColors()
+//                                        ) {
+//                                            Icon(
+//                                                painter = painterResource(id = R.drawable.ic_refresh),
+//                                                contentDescription = "retry location",
+//                                                modifier = Modifier.size(24.dp),
+//                                            )
+//                                        }
+                                    }
+                                }
+                            }
+//                        }
+
+                            Spacer(Modifier.height(16.dp))
+                        }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -456,7 +595,7 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                                         signaturePadSizePx.height
                                     )
                                     if (signatureEncodedString.isNotNullOrEmpty()) {
-                                        onConfirm.invoke(commentText, signatureEncodedString?:"",isChecked)
+                                        onConfirm.invoke(commentText, signatureEncodedString?:"",isChecked,currentLocation)
                                         commentText = ""
                                         paths = emptyList()
                                         currentPath = Path()

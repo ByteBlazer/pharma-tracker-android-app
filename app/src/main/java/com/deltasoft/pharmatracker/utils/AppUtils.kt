@@ -44,6 +44,7 @@ import java.io.IOException
 
 import java.util.Date
 import java.util.Locale
+import kotlin.math.*
 
 private const val TAG = "AppUtils"
 object AppUtils {
@@ -551,5 +552,38 @@ object AppUtils {
 
     fun getAppCode(context: Context): String {
         return if (AppSignatureHashHelper(context).appSignatures.first().isNotNullOrEmpty()) AppSignatureHashHelper(context).appSignatures.first() else ""
+    }
+
+    /* Calculates the distance between two GPS coordinates using the Haversine formula.
+    *
+    * @param lat1 Latitude of first point (in degrees)
+    * @param lon1 Longitude of first point (in degrees)
+    * @param lat2 Latitude of second point (in degrees)
+    * @param lon2 Longitude of second point (in degrees)
+    * @return Distance in meters
+    */
+    fun haversineDistanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        Log.d(TAG, "haversineDistanceMeters: lat1 "+lat1)
+        Log.d(TAG, "haversineDistanceMeters: lon1 "+lon1)
+        Log.d(TAG, "haversineDistanceMeters: lat2 "+lat2)
+        Log.d(TAG, "haversineDistanceMeters: lon2 "+lon2)
+        val R = 6371000.0 // Earth radius in meters
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+
+        val a = sin(dLat / 2).pow(2.0) +
+                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+                sin(dLon / 2).pow(2.0)
+
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return R * c // returns distance in meters
+    }
+
+    fun convertLocationStringToDouble(value :String?):Double{
+        return if (value.isNullOrEmpty()){
+            0.0
+        }else{
+            value.toDoubleOrNull() ?: 0.0
+        }
     }
 }
