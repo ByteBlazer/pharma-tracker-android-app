@@ -109,7 +109,7 @@ fun SingleTripDetailsScreen(
     var dropOffHeading by remember { mutableStateOf("") }
 
 
-    var showDeliverySuccesDocId by remember { mutableStateOf("") }
+    var showDeliverySuccesDoc by remember { mutableStateOf<Doc?>(null) }
     var showDeliveryFailedDocId by remember { mutableStateOf("") }
 
     val initialTopAppBarTitle = stringResource(R.string.single_trip_details_heading)
@@ -272,8 +272,8 @@ fun SingleTripDetailsScreen(
                                 SingleTripDetailsCompose(it, singleTripDetailsViewModel, dropOffOnClick = { tripId, heading ->
                                     dropOffTripId = tripId
                                     dropOffHeading = heading
-                                }, deliverySuccessOnClick = {docId ->
-                                    showDeliverySuccesDocId = docId
+                                }, deliverySuccessOnClick = {doc ->
+                                    showDeliverySuccesDoc = doc
                                 }, deliveryFailedOnClick = { docId ->
                                     showDeliveryFailedDocId = docId
                                 })
@@ -309,21 +309,24 @@ fun SingleTripDetailsScreen(
     )
 
     DeliverySuccessConfirmationDialogCustom(
-        showDialog = showDeliverySuccesDocId.isNotNullOrEmpty(),
-        onConfirm = { comment,signature,isChecked ->
+        showDialog = showDeliverySuccesDoc != null,
+        onConfirm = { comment,signature,isChecked,location ->
             singleTripDetailsViewModel.markAsDelivered(
-                docId = showDeliverySuccesDocId,
+                docId = showDeliverySuccesDoc?.id?:"",
                 signatureEncodedString = signature,
                 deliveryComment = comment,
-                isChecked = isChecked
+                isChecked = isChecked,
+                location = location
             )
-            showDeliverySuccesDocId = ""
+            showDeliverySuccesDoc = null
         },
         onDismiss = {
-            showDeliverySuccesDocId = ""
+            showDeliverySuccesDoc = null
         },
         title = stringResource(R.string.delivery_success_confirm_title),
-        message = stringResource(R.string.delivery_success_confirm_message)
+        message = stringResource(R.string.delivery_success_confirm_message),
+        singleTripDetailsViewModel = singleTripDetailsViewModel,
+        doc = showDeliverySuccesDoc
     )
     DeliveryFailedConfirmationDialogCustom(
         showDialog = showDeliveryFailedDocId.isNotNullOrEmpty(),
@@ -351,7 +354,7 @@ fun SingleTripDetailsCompose(
     singleTripDetailsResponse: SingleTripDetailsResponse,
     singleTripDetailsViewModel: SingleTripDetailsViewModel,
     dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> },
-    deliverySuccessOnClick: (docId: String) -> Unit = { a -> },
+    deliverySuccessOnClick: (doc: Doc) -> Unit = { a -> },
     deliveryFailedOnClick: (docId: String) -> Unit = { a -> }
 ) {
     Column(
@@ -569,7 +572,7 @@ private fun SingleMyTripRowItem(icon: Int, value: String, style: TextStyle, colo
 
 @Composable
 fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup,
-                    deliverySuccessOnClick: (docId: String) -> Unit = { a -> },
+                    deliverySuccessOnClick: (doc: Doc) -> Unit = { a -> },
                     dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> },
     deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
     var isExpanded by rememberSaveable { mutableStateOf(docGroup.expandGroupByDefault && !docGroup.dropOffCompleted) }
@@ -710,7 +713,7 @@ fun SingleDocGroup(
 fun ExpandedDocGroup(
     singleTripDetailsViewModel: SingleTripDetailsViewModel,
     docGroup: DocGroup,
-    deliverySuccessOnClick: (docId: String) -> Unit = { a -> },
+    deliverySuccessOnClick: (doc: Doc) -> Unit = { a -> },
     deliveryFailedOnClick: (docId: String) -> Unit = { a -> },
     allDocs: List<Doc>,
     searchQuery: String
@@ -757,7 +760,7 @@ fun ExpandedDocGroup(
 fun SingleDocNew(
     singleTripDetailsViewModel: SingleTripDetailsViewModel,
     doc: Doc,
-    deliverySuccessOnClick: (docId: String) -> Unit = { a -> },
+    deliverySuccessOnClick: (doc: Doc) -> Unit = { a -> },
     deliveryFailedOnClick: (docId: String) -> Unit = { a -> },
     searchQuery: String
 ) {
@@ -872,7 +875,7 @@ fun SingleDocNew(
                     Spacer(Modifier.width(8.dp))
 //                    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.CenterEnd) {
                         Button(onClick = {
-                            deliverySuccessOnClick.invoke(doc.id ?: "")
+                            deliverySuccessOnClick.invoke(doc)
                         },
                             colors = getButtonColors()
                         ) {
