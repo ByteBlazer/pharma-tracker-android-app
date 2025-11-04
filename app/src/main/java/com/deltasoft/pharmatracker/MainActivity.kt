@@ -1,7 +1,9 @@
 package com.deltasoft.pharmatracker
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -24,16 +26,27 @@ import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
 import androidx.activity.result.ActivityResult
+import androidx.activity.viewModels
 
 import com.google.android.play.core.ktx.isFlexibleUpdateAllowed
 import com.google.android.play.core.ktx.isImmediateUpdateAllowed
 import com.google.android.play.core.ktx.startUpdateFlowForResult
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
+import com.deltasoft.pharmatracker.utils.AppUtils
+import kotlinx.coroutines.launch
 
 private const val TAG = "MainActivity"
 class MainActivity : ComponentActivity() {
 
     private lateinit var appUpdateManager: AppUpdateManager
+
+    private val viewModel: MainActivityViewModel by viewModels()
 
     private val updateLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
@@ -68,7 +81,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation(applicationContext)
+                    AppNavigation(applicationContext = applicationContext, mainActivityViewModel = viewModel)
                 }
             }
         }
@@ -92,6 +105,83 @@ class MainActivity : ComponentActivity() {
 
 //        val appSignature = AppSignatureHashHelper(applicationContext).appSignatures.firstOrNull()
 //        Log.d(TAG, "App Signature: $appSignature")
+
+        listenViewModel()
+    }
+
+    private fun listenViewModel() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+
+                // --- 1. Launch a coroutine for the first flow (Last Login Time) ---
+                launch {
+                    viewModel.lastLogInTimeInMills.collect { timeInMills ->
+                        if (timeInMills != null) {
+                            val currentTime = System.currentTimeMillis()
+                            val timeDifference = currentTime - timeInMills
+                            val isRecent = timeDifference <= 5 * 1000L
+
+                            if (isRecent) {
+                                Log.d("VMListener", "✅ Login is recent (within 5s).")
+                                if (isFineLocationPermissionGranted(this@MainActivity)) {
+                                    Log.d("VMListener", "✅ Location permission given")
+                                    viewModel.getMyTripsList()
+                                }else{
+                                    Log.d("VMListener", "❌ Location permission not given")
+                                }
+                            } else {
+                                Log.d("VMListener", "❌ Login is old (Diff: $timeDifference ms).")
+                            }
+                        } else {
+                            Log.d("VMListener", "Login time is null.")
+                        }
+                    }
+                }
+
+                // --- 2. Launch a coroutine for the second flow (Scheduled Trips State) ---
+                launch {
+                    viewModel.scheduledTripsState.collect { state ->
+                        when (state) {
+                            is ScheduledTripsState.Idle -> {
+                                Log.i("VMListener", "Trips State: Idle.")
+                            }
+                            is ScheduledTripsState.Loading -> {
+                                Log.i("VMListener", "Trips State: Loading...")
+                                // UI: Show progress spinner
+                            }
+                            is ScheduledTripsState.Success -> {
+                                val scheduledTripsResponse =
+                                    (state as ScheduledTripsState.Success).scheduledTripsResponse
+                                val anyTripIsCurrentlyActive =
+                                    scheduledTripsResponse?.trips?.any { it?.status.equals("STARTED") }?:false
+                                Log.d("VMListener", "anyTripIsCurrentlyActive $anyTripIsCurrentlyActive")
+                                if (anyTripIsCurrentlyActive){
+                                    AppUtils.restartForegroundService(applicationContext)
+                                }
+                            }
+                            is ScheduledTripsState.Error -> {
+                                val message = (state as ScheduledTripsState.Error).message
+                                Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+                                viewModel.clearState()
+
+                                Log.d("VMListener", "apiRetryAttempt "+viewModel.apiRetryAttempt)
+                                if (viewModel.apiRetryAttempt <= 5) {
+                                    viewModel.apiRetryAttempt += 1
+                                    viewModel.getMyTripsList(delay = 1000)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun isFineLocationPermissionGranted(activity: MainActivity): Boolean {
+        return ContextCompat.checkSelfPermission(
+            activity,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun retryInAppUpdate() {

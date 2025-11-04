@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.deltasoft.pharmatracker.MainActivityViewModel
 import com.deltasoft.pharmatracker.api.AuthEvent
 import com.deltasoft.pharmatracker.api.AuthManager
 import com.deltasoft.pharmatracker.screens.splash.SplashScreen
@@ -24,6 +25,7 @@ import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 
 @Composable
 fun AppNavigation(applicationContext: Context,
+                  mainActivityViewModel: MainActivityViewModel,
                   authManager: AuthManager = AuthManager
 ) {
     val navController = rememberNavController()
@@ -54,6 +56,7 @@ fun AppNavigation(applicationContext: Context,
                     val phone = sharedPrefsUtil.getString(PrefsKey.PHONE_NUMBER)
                     AppUtils.stopService(applicationContext)
                     sharedPrefsUtil.saveString(PrefsKey.USER_ACCESS_TOKEN,"")
+                    mainActivityViewModel.setLastLogInTimeInMills(null)
 
                     // --- Navigation ---
                     navController.navigate(Screen.Login.createRoute(phone)) {
@@ -68,7 +71,7 @@ fun AppNavigation(applicationContext: Context,
 
     NavHost(navController = navController, startDestination = Screen.Splash.route) {
         composable(Screen.Splash.route) {
-            SplashScreen(navController,applicationContext)
+            SplashScreen(navController = navController, context = applicationContext, mainActivityViewModel = mainActivityViewModel)
         }
         composable(
             route = Screen.Login.route,
@@ -84,13 +87,13 @@ fun AppNavigation(applicationContext: Context,
         composable(Screen.OtpVerification.route,
             arguments = listOf(navArgument(NavConstants.ARG_PHONE_NUMBER) { type = NavType.StringType })) {backStackEntry ->
             val phoneNumber = backStackEntry.arguments?.getString(NavConstants.ARG_PHONE_NUMBER) ?: ""
-            OtpVerificationScreen(navController,phoneNumber)
+            OtpVerificationScreen(navController = navController, mainActivityViewModel = mainActivityViewModel, phoneNumber = phoneNumber)
         }
         composable(Screen.Home.route) {
             HomeScreen(navController,applicationContext)
         }
         composable(Screen.Profile.route) {
-            ProfileScreen(navController,applicationContext)
+            ProfileScreen(navController,applicationContext,mainActivityViewModel = mainActivityViewModel)
         }
         composable(
             route = Screen.ScheduleNewTrip.route,
