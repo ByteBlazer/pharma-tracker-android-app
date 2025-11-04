@@ -157,6 +157,8 @@ class MainActivity : ComponentActivity() {
                                 Log.d("VMListener", "anyTripIsCurrentlyActive $anyTripIsCurrentlyActive")
                                 if (anyTripIsCurrentlyActive){
                                     AppUtils.restartForegroundService(applicationContext)
+                                }else{
+                                    AppUtils.stopService(applicationContext)
                                 }
                             }
                             is ScheduledTripsState.Error -> {
