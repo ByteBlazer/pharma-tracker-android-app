@@ -105,7 +105,8 @@ interface ApiService {
     suspend fun markAsDelivered(
         @Header("Authorization") token: String,
         @Path("docId") docId: String,
-        @Body body : MarkAsDeliveredRequest
+        @Body body : MarkAsDeliveredRequest,
+        @Query("updateCustomerLocation") updateCustomerLocation : Boolean
     ): Response<ApiResponse>
 
     @PUT("doc/mark-delivery-failed/{docId}")

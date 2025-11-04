@@ -109,11 +109,12 @@ class SingleTripDetailsRepository(var viewModel: SingleTripDetailsViewModel) {
     fun markAsDelivered(
         token: String,
         docId: String,
-        markAsDeliveredRequest: MarkAsDeliveredRequest
+        markAsDeliveredRequest: MarkAsDeliveredRequest,
+        updateCustomerLocation : Boolean
     ) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.markAsDelivered(token = token, docId = docId, body = markAsDeliveredRequest)
+                val response = RetrofitClient.apiService.markAsDelivered(token = token, docId = docId, body = markAsDeliveredRequest,updateCustomerLocation = updateCustomerLocation)
                 if (response.isSuccessful) {
                     viewModel.updateMarkAsDeliveredStateState(response?.body()?.message?:"",true)
                 } else {
