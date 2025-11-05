@@ -27,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.MainActivityViewModel
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
@@ -43,87 +44,111 @@ private const val TAG = "SplashScreen"
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SplashScreen(navController: NavHostController, context: Context,
+                 mainActivityViewModel: MainActivityViewModel,
                  splashViewModel: SplashViewModel = viewModel()
 ) {
     val sharedPrefsUtil = SharedPreferencesUtil(context)
     val token = sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN)
     val phoneNumber = sharedPrefsUtil.getString(PrefsKey.PHONE_NUMBER)
 
-    val apiState by splashViewModel.scheduledTripsState.collectAsState()
-
-    val locationPermissionState = rememberPermissionState(
-        Manifest.permission.ACCESS_FINE_LOCATION
-    )
-
-    LaunchedEffect(apiState) {
-        when (apiState) {
-            is ScheduledTripsState.Idle -> {
-                Log.d(TAG, "State: Idle")
-            }
-            is ScheduledTripsState.Loading -> {
-                Log.d(TAG, "State: Loading")
-            }
-            is ScheduledTripsState.Success -> {
-                val scheduledTripsResponse =
-                    (apiState as ScheduledTripsState.Success).scheduledTripsResponse
-                val anyTripIsCurrentlyActive =
-                    scheduledTripsResponse?.trips?.any { it?.status.equals("STARTED") }?:false
-                Log.d(TAG, "SplashScreen: anyTripIsCurrentlyActive $anyTripIsCurrentlyActive")
-                if (anyTripIsCurrentlyActive){
-                    AppUtils.restartForegroundService(context)
-                }
-                navController.navigate(Screen.Home.route) {
-                    popUpTo(Screen.Splash.route) {
-                        inclusive = true
-                    }
-                }
-            }
-            is ScheduledTripsState.Error -> {
-                val message = (apiState as ScheduledTripsState.Error).message
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                splashViewModel.clearState()
-
-                Log.d(TAG, "SplashScreen: splashViewModel.apiRetryAttempt "+splashViewModel.apiRetryAttempt)
-                if (splashViewModel.apiRetryAttempt <= 5) {
-                    splashViewModel.apiRetryAttempt += 1
-                    splashViewModel.getMyTripsList(delay = 1000)
-                }else{
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Splash.route) {
-                            inclusive = true
-                        }
-                    }
-                }
-            }
-        }
-    }
-
+//    val apiState by splashViewModel.scheduledTripsState.collectAsState()
+//
+//    val locationPermissionState = rememberPermissionState(
+//        Manifest.permission.ACCESS_FINE_LOCATION
+//    )
+//
+//    LaunchedEffect(apiState) {
+//        when (apiState) {
+//            is ScheduledTripsState.Idle -> {
+//                Log.d(TAG, "State: Idle")
+//            }
+//            is ScheduledTripsState.Loading -> {
+//                Log.d(TAG, "State: Loading")
+//            }
+//            is ScheduledTripsState.Success -> {
+//                val scheduledTripsResponse =
+//                    (apiState as ScheduledTripsState.Success).scheduledTripsResponse
+//                val anyTripIsCurrentlyActive =
+//                    scheduledTripsResponse?.trips?.any { it?.status.equals("STARTED") }?:false
+//                Log.d(TAG, "SplashScreen: anyTripIsCurrentlyActive $anyTripIsCurrentlyActive")
+//                if (anyTripIsCurrentlyActive){
+//                    AppUtils.restartForegroundService(context)
+//                }
+//                navController.navigate(Screen.Home.route) {
+//                    popUpTo(Screen.Splash.route) {
+//                        inclusive = true
+//                    }
+//                }
+//            }
+//            is ScheduledTripsState.Error -> {
+//                val message = (apiState as ScheduledTripsState.Error).message
+//                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+//                splashViewModel.clearState()
+//
+//                Log.d(TAG, "SplashScreen: splashViewModel.apiRetryAttempt "+splashViewModel.apiRetryAttempt)
+//                if (splashViewModel.apiRetryAttempt <= 5) {
+//                    splashViewModel.apiRetryAttempt += 1
+//                    splashViewModel.getMyTripsList(delay = 1000)
+//                }else{
+//                    navController.navigate(Screen.Home.route) {
+//                        popUpTo(Screen.Splash.route) {
+//                            inclusive = true
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     LaunchedEffect(key1 = true) {
-        if (AppUtils.isValidToken(token)){
-            AppUtils.storePayLoadDetailsToSharedPreferences(sharedPrefsUtil,token)
-            if (locationPermissionState.status.isGranted) {
-                // If permission granted call api to check any trip is currently active
-                splashViewModel.getMyTripsList()
-            } else {
-                delay(1000)
-                // permission not granted so directly move to home
-                navController.navigate(Screen.Home.route) {
-                    popUpTo(Screen.Splash.route) {
-                        inclusive = true
-                    }
+        if (AppUtils.isValidToken(token)) {
+            AppUtils.storePayLoadDetailsToSharedPreferences(sharedPrefsUtil, token)
+            delay(1000)
+            navController.navigate(Screen.Home.route) {
+                mainActivityViewModel.setLastLogInTimeInMills(System.currentTimeMillis())
+                popUpTo(Screen.Splash.route) {
+                    inclusive = true
                 }
             }
-        }else {
-            val phn = if(phoneNumber.isNotNullOrEmpty()) phoneNumber else null
+        } else {
+            mainActivityViewModel.setLastLogInTimeInMills(null)
+            val phn = if (phoneNumber.isNotNullOrEmpty()) phoneNumber else null
             navController.navigate(Screen.Login.createRoute(phn)) {
-                popUpTo(Screen.Splash
-                    .route) {
+                popUpTo(
+                    Screen.Splash
+                        .route
+                ) {
                     inclusive = true
                 }
             }
         }
     }
+
+//    LaunchedEffect(key1 = true) {
+//        if (AppUtils.isValidToken(token)){
+//            AppUtils.storePayLoadDetailsToSharedPreferences(sharedPrefsUtil,token)
+//            if (locationPermissionState.status.isGranted) {
+//                // If permission granted call api to check any trip is currently active
+//                splashViewModel.getMyTripsList()
+//            } else {
+//                delay(1000)
+//                // permission not granted so directly move to home
+//                navController.navigate(Screen.Home.route) {
+//                    popUpTo(Screen.Splash.route) {
+//                        inclusive = true
+//                    }
+//                }
+//            }
+//        }else {
+//            val phn = if(phoneNumber.isNotNullOrEmpty()) phoneNumber else null
+//            navController.navigate(Screen.Login.createRoute(phn)) {
+//                popUpTo(Screen.Splash
+//                    .route) {
+//                    inclusive = true
+//                }
+//            }
+//        }
+//    }
 
     val infiniteTransition = rememberInfiniteTransition()
 

@@ -204,7 +204,10 @@ class LocationPingService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy: ")
-        handler.removeCallbacks(runnable)
+        if (::runnable.isInitialized) {
+            handler.removeCallbacks(runnable)
+        }
+//        handler.removeCallbacks(runnable)
         fusedLocationClient.removeLocationUpdates(locationCallback)
         serviceScope.cancel() // Cancel all coroutines when the service is destroyed
 
