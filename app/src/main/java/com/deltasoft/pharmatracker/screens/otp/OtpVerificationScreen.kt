@@ -1,10 +1,12 @@
 package com.deltasoft.pharmatracker.screens.otp
 
 
+import android.Manifest
 import android.content.Context
 import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,6 +18,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
@@ -37,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -46,23 +51,84 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.MainActivityViewModel
+import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
+import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.login.OTPTextField
 import com.deltasoft.pharmatracker.screens.login.OtpTextFieldDefaults
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
+import com.deltasoft.pharmatracker.utils.AppUtils
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.auth.api.phone.SmsRetriever
 import kotlinx.coroutines.delay
 
 
 private const val TAG = "OtpVerificationScreen"
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun OtpVerificationScreen(
     navController: NavHostController,
+    mainActivityViewModel: MainActivityViewModel,
     phoneNumber: String,
     otpVerificationViewModel: OtpVerificationViewModel = viewModel()
 ) {
-
     val context = LocalContext.current
+
+    val appCode = AppUtils.getAppCode(context)
+
+//    val apiState by otpVerificationViewModel.scheduledTripsState.collectAsState()
+//
+//    val locationPermissionState = rememberPermissionState(
+//        Manifest.permission.ACCESS_FINE_LOCATION
+//    )
+//
+//    LaunchedEffect(apiState) {
+//        when (apiState) {
+//            is ScheduledTripsState.Idle -> {
+//                Log.d(TAG, "State: Idle")
+//            }
+//            is ScheduledTripsState.Loading -> {
+//                Log.d(TAG, "State: Loading")
+//            }
+//            is ScheduledTripsState.Success -> {
+//                val scheduledTripsResponse =
+//                    (apiState as ScheduledTripsState.Success).scheduledTripsResponse
+//                val anyTripIsCurrentlyActive =
+//                    scheduledTripsResponse?.trips?.any { it?.status.equals("STARTED") }?:false
+//                Log.d(TAG, "SplashScreen: anyTripIsCurrentlyActive $anyTripIsCurrentlyActive")
+//                if (anyTripIsCurrentlyActive){
+//                    AppUtils.restartForegroundService(context)
+//                }
+//                navController.navigate(Screen.Home.route) {
+//                    popUpTo(Screen.Login.route) {
+//                        inclusive = true
+//                    }
+//                }
+//            }
+//            is ScheduledTripsState.Error -> {
+//                val message = (apiState as ScheduledTripsState.Error).message
+//                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+//                otpVerificationViewModel.clearState()
+//
+//                Log.d(TAG, "SplashScreen: splashViewModel.apiRetryAttempt "+otpVerificationViewModel.apiRetryAttempt)
+//                if (otpVerificationViewModel.apiRetryAttempt <= 5) {
+//                    otpVerificationViewModel.apiRetryAttempt += 1
+//                    otpVerificationViewModel.getMyTripsList(delay = 1000)
+//                }else{
+//                    navController.navigate(Screen.Home.route) {
+//                        popUpTo(Screen.Login.route) {
+//                            inclusive = true
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     var otp by remember { mutableStateOf("") }
     val otpVerificationState by otpVerificationViewModel.otpVerificationState.collectAsState()
@@ -84,8 +150,15 @@ fun OtpVerificationScreen(
         }
     }
 
+    LaunchedEffect(key1 = otp) {
+        if (otp.length == 6) {
+            otpVerificationViewModel.verifyOtp(phoneNumber, otp)
+        }
+    }
+
     LaunchedEffect(otpVerificationState) {
         if (otpVerificationState is OtpVerificationState.Success) {
+            mainActivityViewModel.setLastLogInTimeInMills(System.currentTimeMillis())
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) {
                     inclusive = true
@@ -93,6 +166,22 @@ fun OtpVerificationScreen(
             }
         }
     }
+
+//    LaunchedEffect(otpVerificationState) {
+//        if (otpVerificationState is OtpVerificationState.Success) {
+//            if (locationPermissionState.status.isGranted) {
+//                // If permission granted call api to check any trip is currently active
+//                otpVerificationViewModel.getMyTripsList()
+//            } else {
+//                // permission not granted so directly move to home
+//                navController.navigate(Screen.Home.route) {
+//                    popUpTo(Screen.Login.route) {
+//                        inclusive = true
+//                    }
+//                }
+//            }
+//        }
+//    }
     val annotatedMessageString = buildAnnotatedString {
         append("Enter the OTP sent to  ")
         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
@@ -128,7 +217,7 @@ fun OtpVerificationScreen(
 
     Scaffold(
         topBar = {
-            App_CommonTopBar(onBackClick = {  navController.popBackStack() })
+            App_CommonTopBar(onBackClick = {  if (navController.previousBackStackEntry != null) { navController.popBackStack() } })
         },
     ) { paddingValues ->
         Column(
@@ -140,25 +229,37 @@ fun OtpVerificationScreen(
             verticalArrangement = Arrangement.Top
         ) {
 
-            App_CommonTopBar(backButtonVisibility = false)
-            Text(
-                text = "OTP verification",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(
-                text = "Enter the OTP sent to",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "+91-" + phoneNumber,
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(32.dp))
+            App_CommonTopBar(backButtonVisibility = false, useDefaultColor = true)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
+            ) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "OTP verification",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Text(
+                        text = "Enter the OTP sent to",
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "+91-" + phoneNumber,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
 
 //        OutlinedTextField(
 //            value = otp,
@@ -169,72 +270,74 @@ fun OtpVerificationScreen(
 //        )
 
 
-            OTPTextField(
-                value = otp, // Initial value
-                onTextChanged = { otp = it },
-                numDigits = 6, // Number of digits in OTP
-                isMasked = false, // Mask digits for security
-                digitContainerStyle = OtpTextFieldDefaults.outlinedContainer(), // Choose style (outlined or underlined)
-                textStyle = MaterialTheme.typography.titleLarge, // Configure text style
-                isError = false // Indicate whether the OTP field is in an error state
-            )
+                    OTPTextField(
+                        value = otp, // Initial value
+                        onTextChanged = { otp = it },
+                        numDigits = 6, // Number of digits in OTP
+                        isMasked = false, // Mask digits for security
+                        digitContainerStyle = OtpTextFieldDefaults.outlinedContainer(), // Choose style (outlined or underlined)
+                        textStyle = MaterialTheme.typography.titleLarge, // Configure text style
+                        isError = false // Indicate whether the OTP field is in an error state
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            // Crossfade to smoothly transition between the timer and the button
-            Crossfade(targetState = isTimerRunning, label = "") { running ->
-                if (running) {
+                    // Crossfade to smoothly transition between the timer and the button
+                    Crossfade(targetState = isTimerRunning, label = "") { running ->
+                        if (running) {
 //                Text(
 //                    text = "Resend OTP in $timeLeft s",
 //                    color = MaterialTheme.colorScheme.onSurfaceVariant,
 //                    style = MaterialTheme.typography.bodyLarge
 //                )
-                    TextButton(
-                        onClick = {
-                            // Reset the timer and run the resend action
-                            timeLeft = 30
-                            isTimerRunning = true
+                            TextButton(
+                                onClick = {
+                                    // Reset the timer and run the resend action
+                                    timeLeft = 30
+                                    isTimerRunning = true
 //                        onResendClick()
-                        },
-                        enabled = false
-                    ) {
-                        Text(
-                            "Resend OTP in $timeLeft s",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                } else {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Don't receive the OTP?",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                                },
+                                enabled = false,
+                                colors = getTextButtonColors()
+                            ) {
+                                Text(
+                                    "Resend OTP in $timeLeft s",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        } else {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Don't receive the OTP?",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
 //                    Spacer(modifier = Modifier.width(8.dp))
 //                    Text(text = "RESEND OTP", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                        TextButton(
-                            onClick = {
-                                // Reset the timer and run the resend action
-                                timeLeft = 30
-                                isTimerRunning = true
-                                otpVerificationViewModel.onResendClick(phoneNumber)
-                            },
-                        ) {
-                            Text(
-                                "Resend OTP",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                                TextButton(
+                                    onClick = {
+                                        // Reset the timer and run the resend action
+                                        timeLeft = 30
+                                        isTimerRunning = true
+                                        otpVerificationViewModel.onResendClick(phoneNumber = phoneNumber, appCode = appCode)
+                                    },
+                                    colors = getTextButtonColors()
+                                ) {
+                                    Text(
+                                        "Resend OTP",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+                            }
+
                         }
                     }
 
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
 //        OtpTextField(
 //            otpText = otp,
@@ -248,29 +351,33 @@ fun OtpVerificationScreen(
 //        )
 
 
-            when (otpVerificationState) {
-                is OtpVerificationState.Loading -> CircularProgressIndicator()
-                else -> {
-                    Button(
-                        onClick = {
-                            otpVerificationViewModel.verifyOtp(phoneNumber, otp)
-                        },
-                        enabled = otpVerificationState !is OtpVerificationState.Loading,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = "VERIFY & PROCEED")
+                    when (otpVerificationState) {
+                        is OtpVerificationState.Loading -> CircularProgressIndicator()
+                        else -> {
+                            Button(
+                                onClick = {
+                                    otpVerificationViewModel.verifyOtp(phoneNumber, otp)
+                                },
+                                enabled = otpVerificationState !is OtpVerificationState.Loading,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = getButtonColors()
+                            ) {
+                                Text(text = "VERIFY & PROCEED")
+                            }
+                        }
+                    }
+
+                    if (otpVerificationState is OtpVerificationState.Error) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = (otpVerificationState as OtpVerificationState.Error).message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }
 
-            if (otpVerificationState is OtpVerificationState.Error) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = (otpVerificationState as OtpVerificationState.Error).message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
         }
     }
 }

@@ -14,4 +14,8 @@
     <color name="purple_40">#6650A4</color>
     <color name="purple_grey_40">#625B71</color>
     <color name="pink_40">#7D5260</color>
+
+    <color name="app_primary_color">#49979b</color>
+    <color name="app_secondary_color">#6FBABD</color>
+    <color name="app_tertiary_color">#9ED6D9</color>
 </resources>

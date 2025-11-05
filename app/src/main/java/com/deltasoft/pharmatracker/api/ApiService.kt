@@ -1,26 +1,33 @@
 package com.deltasoft.pharmatracker.api
 
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsDeliveredRequest
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsUnDeliveredRequest
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
 import com.deltasoft.pharmatracker.screens.home.location.LocationData
-import com.deltasoft.pharmatracker.screens.home.route.entity.DispatchQueueResponse
-import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.DriverListResponse
-import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.ScheduleNewTripRequest
-import com.deltasoft.pharmatracker.screens.home.route.scheduletrip.entity.ScheduleNewTripResponse
+import com.deltasoft.pharmatracker.screens.home.queue.entity.DispatchQueueResponse
+import com.deltasoft.pharmatracker.screens.home.queue.scheduletrip.entity.DriverListResponse
+import com.deltasoft.pharmatracker.screens.home.queue.scheduletrip.entity.ScheduleNewTripRequest
+import com.deltasoft.pharmatracker.screens.home.queue.scheduletrip.entity.ScheduleNewTripResponse
 import com.deltasoft.pharmatracker.screens.home.scan.ScanDocSuccessResponse
-import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTripsResponse
+import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTripsResponse
 import com.deltasoft.pharmatracker.screens.login.LoginRequest
 import com.deltasoft.pharmatracker.screens.otp.OtpRequestBody
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationResponse
+import com.deltasoft.pharmatracker.utils.AppUtils
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @POST("auth/generate-otp")
-    suspend fun generateOtp(@Body loginRequest: LoginRequest): Response<Unit>
+    suspend fun generateOtp(
+        @Query("appCode") appCode : String,
+        @Body loginRequest: LoginRequest,): Response<Unit>
 
     @POST("auth/validate-otp")
     suspend fun verifyOtp(@Body otpRequestBody: OtpRequestBody): Response<OtpVerificationResponse>
@@ -92,6 +99,21 @@ interface ApiService {
     suspend fun endTrip(
         @Header("Authorization") token: String,
         @Path("tripId") tripId: String
+    ): Response<ApiResponse>
+
+    @PUT("doc/mark-delivery/{docId}")
+    suspend fun markAsDelivered(
+        @Header("Authorization") token: String,
+        @Path("docId") docId: String,
+        @Body body : MarkAsDeliveredRequest,
+        @Query("updateCustomerLocation") updateCustomerLocation : Boolean
+    ): Response<ApiResponse>
+
+    @PUT("doc/mark-delivery-failed/{docId}")
+    suspend fun markAsUnDelivered(
+        @Header("Authorization") token: String,
+        @Path("docId") docId: String,
+        @Body body : MarkAsUnDeliveredRequest
     ): Response<ApiResponse>
 
 }

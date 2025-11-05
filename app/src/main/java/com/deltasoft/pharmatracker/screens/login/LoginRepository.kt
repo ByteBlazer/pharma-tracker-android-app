@@ -2,6 +2,7 @@ package com.deltasoft.pharmatracker.screens.login
 
 import com.deltasoft.pharmatracker.api.ApiResponse
 import com.deltasoft.pharmatracker.api.RetrofitClient
+import com.deltasoft.pharmatracker.utils.AppConstants
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,11 +12,11 @@ import kotlinx.coroutines.launch
 class LoginRepository(var viewModel: LoginViewModel) {
     var viewModelScope = CoroutineScope(Dispatchers.IO)
 
-    fun generateOtp(phoneNumber: String){
+    fun generateOtp(phoneNumber: String,appCode : String){
         val loginRequest = LoginRequest(phoneNumber)
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.generateOtp(loginRequest)
+                val response = RetrofitClient.apiService.generateOtp(loginRequest = loginRequest, appCode = appCode)
                 if (response.isSuccessful) {
                     viewModel.updateLoginState(response.code(),response.message())
                 } else {
@@ -35,7 +36,7 @@ class LoginRepository(var viewModel: LoginViewModel) {
             } catch (e: Exception) {
                 // Handle network errors
                 println("Network error: ${e.message}")
-                viewModel.updateLoginState(0, "${e.message}")
+                viewModel.updateLoginState(0, AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }

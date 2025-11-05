@@ -3,26 +3,34 @@ package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -35,15 +43,20 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -51,14 +64,27 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
+import com.deltasoft.pharmatracker.screens.ButtonContentCompose
+import com.deltasoft.pharmatracker.screens.CustomSearchField
+import com.deltasoft.pharmatracker.screens.DocIdWithAmountAnnotatedText
+import com.deltasoft.pharmatracker.screens.SimpleSearchView
+import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItem
+import com.deltasoft.pharmatracker.screens.SingleIconWithTextAnnotatedItemWithOnCLick
+import com.deltasoft.pharmatracker.screens.TripIdWithRouteAnnotatedText
 import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.Doc
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.DocGroup
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
+import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
+import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 
 private const val TAG = "SingleTripDetailsScreen"
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SingleTripDetailsScreen(
     navController: NavHostController,
@@ -75,6 +101,19 @@ fun SingleTripDetailsScreen(
     val singleTripDetailsState by singleTripDetailsViewModel.singleTripDetailsState.collectAsState()
     val dropOffTripState by singleTripDetailsViewModel.dropOffTripState.collectAsState()
     val endTripState by singleTripDetailsViewModel.endTripState.collectAsState()
+    val markAsUnDeliveredState by singleTripDetailsViewModel.markAsUnDeliveredState.collectAsState()
+    val markAsDeliveredState by singleTripDetailsViewModel.markAsDeliveredState.collectAsState()
+
+
+    var dropOffTripId by remember { mutableStateOf("") }
+    var dropOffHeading by remember { mutableStateOf("") }
+
+
+    var showDeliverySuccesDoc by remember { mutableStateOf<Doc?>(null) }
+    var showDeliveryFailedDocId by remember { mutableStateOf("") }
+
+    val initialTopAppBarTitle = stringResource(R.string.single_trip_details_heading)
+    var topAppBarTitle by remember { mutableStateOf(initialTopAppBarTitle) }
 
     LaunchedEffect(dropOffTripState) {
         when (dropOffTripState) {
@@ -122,28 +161,88 @@ fun SingleTripDetailsScreen(
         }
     }
 
-    Scaffold(modifier = Modifier.fillMaxSize(),
-        topBar = {   App_CommonTopBar(title = "My Trip Details", onBackClick = {  navController.popBackStack() }) },
-        bottomBar = {
-            Column(Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.navigationBars)) {
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp), onClick = {
-                            singleTripDetailsViewModel.endTrip(selectedScheduledTripId)
-                    }
-                ) {
-                    Text("End Trip")
-                }
+    LaunchedEffect(markAsDeliveredState) {
+        when (markAsDeliveredState) {
+            is AppCommonApiState.Idle -> {
+                Log.d(TAG, "State: Idle")
             }
+            is AppCommonApiState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is AppCommonApiState.Success -> {
+                val message = (markAsDeliveredState as AppCommonApiState.Success).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                singleTripDetailsViewModel?.getSingleTripDetails()
+                Log.d(TAG, "State: Success - Message: $message")
+
+            }
+            is AppCommonApiState.Error -> {
+                val message = (markAsDeliveredState as AppCommonApiState.Error).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "State: Error - Message: $message")
+            }
+        }
+    }
+
+
+    LaunchedEffect(markAsUnDeliveredState) {
+        when (markAsUnDeliveredState) {
+            is AppCommonApiState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is AppCommonApiState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is AppCommonApiState.Success -> {
+                val message = (markAsUnDeliveredState as AppCommonApiState.Success).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                singleTripDetailsViewModel?.getSingleTripDetails()
+                Log.d(TAG, "State: Success - Message: $message")
+
+            }
+            is AppCommonApiState.Error -> {
+                val message = (markAsUnDeliveredState as AppCommonApiState.Error).message
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "State: Error - Message: $message")
+            }
+        }
+    }
+
+    Scaffold(modifier = Modifier.fillMaxSize(),
+        topBar = {   App_CommonTopBar(title = topAppBarTitle, onBackClick = {  if (navController.previousBackStackEntry != null) { navController.popBackStack() } }) },
+        bottomBar = {
+//            AnimatedVisibility(
+//                visible = !WindowInsets.isImeVisible,
+//                enter = slideInVertically(initialOffsetY = { it }), // Slide in from bottom
+//                exit = slideOutVertically(targetOffsetY = { it })   // Slide out to bottom
+//            ) {
+//                if (!WindowInsets.isImeVisible) {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                    ) {
+                        Button(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp), onClick = {
+                                singleTripDetailsViewModel.endTrip(selectedScheduledTripId)
+                            },
+                            colors = getButtonColors()
+                        ) {
+                            Text(stringResource(R.string.end_trip_btn_txt))
+                        }
+                    }
+//                }
+//            }
         }) { paddingValues ->
         val modifier = Modifier.padding(paddingValues)
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -153,7 +252,7 @@ fun SingleTripDetailsScreen(
                 modifier = Modifier
                     .fillMaxSize(), contentAlignment = Alignment.Center
             ) {
-                if (dropOffTripState is AppCommonApiState.Loading || endTripState is AppCommonApiState.Loading){
+                if (dropOffTripState is AppCommonApiState.Loading || endTripState is AppCommonApiState.Loading || markAsDeliveredState is AppCommonApiState.Loading || markAsUnDeliveredState is AppCommonApiState.Loading){
                     CircularProgressIndicator()
                 }else {
                     when (singleTripDetailsState) {
@@ -169,7 +268,15 @@ fun SingleTripDetailsScreen(
                             val singleTripDetailsResponse =
                                 (singleTripDetailsState as SingleTripDetailsState.Success).singleTripDetailsResponse
                             singleTripDetailsResponse?.let {
-                                SingleTripDetailsCompose(it, singleTripDetailsViewModel)
+                                topAppBarTitle = "Trip #"+(it?.tripId?:0).toString()+" details"
+                                SingleTripDetailsCompose(it, singleTripDetailsViewModel, dropOffOnClick = { tripId, heading ->
+                                    dropOffTripId = tripId
+                                    dropOffHeading = heading
+                                }, deliverySuccessOnClick = {doc ->
+                                    showDeliverySuccesDoc = doc
+                                }, deliveryFailedOnClick = { docId ->
+                                    showDeliveryFailedDocId = docId
+                                })
                             }
                         }
 
@@ -183,26 +290,139 @@ fun SingleTripDetailsScreen(
             }
         }
     }
+    AppConfirmationDialog(
+        showDialog = dropOffTripId.isNotNullOrEmpty() && dropOffHeading.isNotNullOrEmpty(),
+        onConfirm = {
+            singleTripDetailsViewModel.dropOffTrip(
+                selectedScheduledTripId = dropOffTripId,
+                heading = dropOffHeading
+            )
+            dropOffTripId = ""
+            dropOffHeading = ""
+        },
+        onDismiss = {
+            dropOffTripId = ""
+            dropOffHeading = ""
+        },
+        title = stringResource(R.string.drop_off_confirm_title),
+        message = stringResource(R.string.drop_off_confirm_message)
+    )
+
+    DeliverySuccessConfirmationDialogCustom(
+        showDialog = showDeliverySuccesDoc != null,
+        onConfirm = { comment,signature,isChecked,location ->
+            singleTripDetailsViewModel.markAsDelivered(
+                docId = showDeliverySuccesDoc?.id?:"",
+                signatureEncodedString = signature,
+                deliveryComment = comment,
+                isChecked = isChecked,
+                location = location
+            )
+            showDeliverySuccesDoc = null
+        },
+        onDismiss = {
+            showDeliverySuccesDoc = null
+        },
+        title = stringResource(R.string.delivery_success_confirm_title),
+        message = stringResource(R.string.delivery_success_confirm_message),
+        singleTripDetailsViewModel = singleTripDetailsViewModel,
+        doc = showDeliverySuccesDoc
+    )
+    DeliveryFailedConfirmationDialogCustom(
+        showDialog = showDeliveryFailedDocId.isNotNullOrEmpty(),
+        onConfirm = { comment ->
+            singleTripDetailsViewModel.markAsUnDelivered(
+                docId = showDeliveryFailedDocId,
+                comment = comment
+            )
+            showDeliveryFailedDocId = ""
+        },
+        onDismiss = {
+            showDeliveryFailedDocId = ""
+        },
+        title = stringResource(R.string.delivery_failed_confirm_title),
+        message = stringResource(R.string.delivery_failed_confirm_message)
+    )
 }
+
+
+
+
 
 @Composable
 fun SingleTripDetailsCompose(
     singleTripDetailsResponse: SingleTripDetailsResponse,
-    singleTripDetailsViewModel: SingleTripDetailsViewModel
+    singleTripDetailsViewModel: SingleTripDetailsViewModel,
+    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> },
+    deliverySuccessOnClick: (doc: Doc) -> Unit = { a -> },
+    deliveryFailedOnClick: (docId: String) -> Unit = { a -> }
 ) {
     Column(
         Modifier
             .fillMaxWidth(),
         verticalArrangement = Arrangement.Center
     ) {
-        TripBasicDetailsCompose(singleTripDetailsResponse)
+        TripBasicDetailsComposeNew(singleTripDetailsResponse)
         Spacer(Modifier.height(16.dp))
         for (docGroup in singleTripDetailsResponse.docGroups?:arrayListOf()) {
             DocGroupCompose(
                 singleTripDetailsViewModel,
-                docGroup
+                docGroup,
+                dropOffOnClick = dropOffOnClick,
+                deliverySuccessOnClick = deliverySuccessOnClick,
+                deliveryFailedOnClick = deliveryFailedOnClick
             )
         }
+    }
+}
+
+
+@Composable
+fun TripBasicDetailsComposeNew(singleTripDetailsResponse: SingleTripDetailsResponse) {
+    OutlinedCard(
+        modifier = Modifier
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.padding_of_entire_items_in_a_card)),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_between_items_in_a_card))
+        ) {
+//            TripIdWithRouteAnnotatedText(
+//                tripId = singleTripDetailsResponse.tripId.toString(),
+//                route = singleTripDetailsResponse.route ?: ""
+//            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_route,
+                value = singleTripDetailsResponse.route ?: "",
+                style = MaterialTheme.typography.titleLarge
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_local_shipping,
+                value = (singleTripDetailsResponse.vehicleNumber ?: "") + " - " + (singleTripDetailsResponse.driverName
+                    ?: ""),
+                style = MaterialTheme.typography.titleMedium
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_hand_package_24,
+                value = singleTripDetailsResponse?.deliveryCountStatusMsg?:"",
+                style = MaterialTheme.typography.titleMedium
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_package_2_24,
+                value = singleTripDetailsResponse?.dropOffCountStatusMsg?:"",
+                style = MaterialTheme.typography.titleMedium
+            )
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_outline_person,
+                value = "Created By " + (singleTripDetailsResponse.createdBy
+                    ?: "") + " at " + (singleTripDetailsResponse.createdAtFormatted ?: ""),
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+
     }
 }
 
@@ -210,37 +430,72 @@ fun SingleTripDetailsCompose(
 fun TripBasicDetailsCompose(singleTripDetailsResponse: SingleTripDetailsResponse) {
     OutlinedCard(
         modifier = Modifier
-            .padding(vertical = 8.dp)
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier
+            .fillMaxWidth()
+            .padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+//            SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_route),
+//                value = (singleTripDetailsResponse.route ?: "")+" : On Trip",
+//                style = MaterialTheme.typography.bodyLarge,
+//                fontWeight = FontWeight.Bold
+//            )
+//            SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_trip_id),
+//                value = singleTripDetailsResponse.tripId.toString(),
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//           SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_created_by),
+//                value = singleTripDetailsResponse.createdBy ?: "",
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//            SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_created_at),
+//                value = singleTripDetailsResponse.createdAtFormatted ?: "",
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//            SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_driver_name),
+//                value = singleTripDetailsResponse.driverName ?: "",
+//                style = MaterialTheme.typography.titleMedium
+//            )
+//            SingleMyTripRowItem(
+//                key = stringResource(R.string.row_item_title_vehicle_number),
+//                value = singleTripDetailsResponse.vehicleNumber ?: "",
+//                style = MaterialTheme.typography.titleMedium
+//            )
+
             SingleMyTripRowItem(
-                key = "Route",
-                value = singleTripDetailsResponse.route ?: ""+" : On Trip",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            SingleMyTripRowItem(
-                key = "Trip ID",
+                icon = R.drawable.ic_hash,
                 value = singleTripDetailsResponse.tripId.toString(),
                 style = MaterialTheme.typography.titleSmall
             )
+            SingleMyTripRowItem(
+                icon = R.drawable.ic_route,
+                value = (singleTripDetailsResponse.route ?: "")+" : On Trip",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
            SingleMyTripRowItem(
-                key = "Created By",
+                icon = R.drawable.ic_outline_person,
                 value = singleTripDetailsResponse.createdBy ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleMyTripRowItem(
-                key = "Created At",
+                icon = R.drawable.ic_calendar_clock,
                 value = singleTripDetailsResponse.createdAtFormatted ?: "",
                 style = MaterialTheme.typography.titleSmall
             )
             SingleMyTripRowItem(
-                key = "Driver Name",
+                icon = R.drawable.ic_steering_wheel,
                 value = singleTripDetailsResponse.driverName ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
             SingleMyTripRowItem(
-                key = "Vehicle Number",
+                icon = R.drawable.ic_local_shipping,
                 value = singleTripDetailsResponse.vehicleNumber ?: "",
                 style = MaterialTheme.typography.titleMedium
             )
@@ -276,11 +531,69 @@ private fun SingleMyTripRowItem(key: String, value: String, style: TextStyle, co
 }
 
 @Composable
-fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup) {
+private fun SingleMyTripRowItem(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal) {
+//    ListItem(
+//        modifier = Modifier.fillMaxWidth(),
+//        headlineContent = {
+//            Text(
+//                text = value,
+//                style = style,
+//                color = color,
+//                textAlign = TextAlign.Start
+//            )
+//        },
+//        leadingContent = {
+//            Icon(
+//                painter = painterResource(icon),
+//                contentDescription = "Icon",
+//                modifier = Modifier.size(24.dp)
+//            )
+//        },
+//        colors = getListItemColors(),
+//        supportingContent = null
+//    )
+    Row(Modifier
+        .fillMaxWidth()
+        .padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = "Icon",
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = value,
+            style = style,
+            color = color,
+            textAlign = TextAlign.Start
+        )
+    }
+}
+
+@Composable
+fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup,
+                    deliverySuccessOnClick: (doc: Doc) -> Unit = { a -> },
+                    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> },
+    deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
     var isExpanded by rememberSaveable { mutableStateOf(docGroup.expandGroupByDefault && !docGroup.dropOffCompleted) }
+    val allDocs = docGroup.docs?: arrayListOf()
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredItems = remember(searchQuery) {
+        if (searchQuery.isBlank()) {
+            allDocs
+        } else {
+            allDocs.filter {
+                it.id?.contains(searchQuery.trim(), ignoreCase = true) == true ||
+                it.customerFirmName?.contains(searchQuery.trim(), ignoreCase = true) == true
+            }
+        }
+    }
+    if (!isExpanded) searchQuery =""
+
     Card(
         modifier = Modifier
-            .padding(vertical = 8.dp)
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
     ) {
         Column(Modifier.fillMaxWidth()) {
             SingleDocGroup(
@@ -291,13 +604,34 @@ fun DocGroupCompose(singleTripDetailsViewModel: SingleTripDetailsViewModel, docG
                 },
                 isExpanded,
                 docGroup,
-                singleTripDetailsViewModel
+                singleTripDetailsViewModel,
+                dropOffOnClick = dropOffOnClick
             )
             AnimatedVisibility(visible = isExpanded) {
-                ExpandedDocGroup(
-                    singleTripDetailsViewModel,
-                    docGroup
-                )
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (!docGroup.droppable){
+                        // droppable measn direct delivery
+                        CustomSearchField(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it }
+                        )
+                    }
+                    if (filteredItems.isEmpty() && searchQuery.isNotEmpty()) {
+                        Text(
+                            "No results found for \"$searchQuery\"",
+                            Modifier.padding(16.dp)
+                        )
+                    } else {
+                        ExpandedDocGroup(
+                            singleTripDetailsViewModel,
+                            docGroup,
+                            deliverySuccessOnClick = deliverySuccessOnClick,
+                            deliveryFailedOnClick = deliveryFailedOnClick,
+                            allDocs = filteredItems,
+                            searchQuery = searchQuery
+                        )
+                    }
+                }
             }
 
         }
@@ -309,118 +643,367 @@ fun SingleDocGroup(
     onClick: () -> Unit,
     isExpanded: Boolean,
     docGroup: DocGroup,
-    singleTripDetailsViewModel: SingleTripDetailsViewModel
+    singleTripDetailsViewModel: SingleTripDetailsViewModel,
+    dropOffOnClick: (tripId: String, heading: String) -> Unit = { a, b -> }
 ) {
     var expandIcon =  if (isExpanded) {
         painterResource(id = R.drawable.ic_expand_circle_down)
     } else {
         painterResource(id = R.drawable.ic_expand_circle_right)
     }
-    ListItem(
-        modifier = Modifier.clickable { onClick.invoke() },
-        headlineContent = { Text(text = docGroup.heading?:"") },
-        leadingContent = null,
-        trailingContent = {
-            Row {
+    val isAnyItemNeedToDeliver = docGroup.docs?.any { it.status == DeliveryStatusConstants.ON_TRIP } == true
+
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        ListItem(
+            modifier = Modifier.clickable { onClick.invoke() },
+            headlineContent = { Text(text = docGroup.heading?:"") },
+            leadingContent = null,
+            trailingContent = {
+                Row {
+
+                    IconButton(onClick = {onClick.invoke() }, colors = getIconButtonColors()) {
+                        Icon(
+                            painter = expandIcon,
+                            contentDescription = "expandable button",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
+        if (isAnyItemNeedToDeliver && (docGroup.showDropOffButton || docGroup.droppable)) {
+            Column(Modifier.padding(end = 16.dp, bottom = 16.dp, start = 16.dp)) {
                 if (docGroup.showDropOffButton) {
                     Button(onClick = {
-                        singleTripDetailsViewModel.dropOffTrip(
-                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
-                            heading = docGroup.heading ?: ""
+//                        singleTripDetailsViewModel.dropOffTrip(
+//                            selectedScheduledTripId = singleTripDetailsViewModel.selectedScheduledTripId,
+//                            heading = docGroup.heading ?: ""
+//                        )
+                        dropOffOnClick.invoke(
+                            singleTripDetailsViewModel.selectedScheduledTripId ?: "",
+                            docGroup.heading ?: ""
                         )
-                    }) {
-                        Text(text = "Drop Off At Hub")
+                    },
+                        colors = getButtonColors(),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        ButtonContentCompose(icon = R.drawable.ic_storefront_24,
+                            text =  stringResource(R.string.drop_off_at_hub_btn_txt))
+//                            Text(text = stringResource(R.string.drop_off_at_hub_btn_txt))
                     }
-                }else if (docGroup.droppable) {
+                } else if (docGroup.droppable) {
                     TextButton(onClick = {
                         onClick.invoke()
-                    }) {
-                        Text(text = "Dropped Off At Hub")
+                    },
+                        colors = getTextButtonColors()
+                    ) {
+                        Text(text = stringResource(R.string.dropped_off_at_hub_txt))
                     }
-                }else{
+                } else {
                     null
                 }
-                IconButton(onClick = {onClick.invoke() }) {
-                    Icon(
-                        painter = expandIcon,
-                        contentDescription = "expandable button",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
             }
-        },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-    )
+
+        }
+    }
+
 }
 @Composable
-fun ExpandedDocGroup(singleTripDetailsViewModel: SingleTripDetailsViewModel, docGroup: DocGroup) {
+fun ExpandedDocGroup(
+    singleTripDetailsViewModel: SingleTripDetailsViewModel,
+    docGroup: DocGroup,
+    deliverySuccessOnClick: (doc: Doc) -> Unit = { a -> },
+    deliveryFailedOnClick: (docId: String) -> Unit = { a -> },
+    allDocs: List<Doc>,
+    searchQuery: String
+) {
 
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(start = 8.dp)
+            .padding(start = 0.dp)
     ) {
-        for (doc in docGroup.docs?: arrayListOf()) {
+        for (doc in allDocs?: arrayListOf()) {
             Column(Modifier.fillMaxWidth()) {
-                SingleDoc(
-                    singleTripDetailsViewModel,
-                    doc
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        horizontal = 0.dp,
+                        vertical = 0.dp
+                    ), // Adjust padding as needed
+                    thickness = 1.dp,
+                    color = Color.Gray
                 )
+                SingleDocNew(
+                    singleTripDetailsViewModel,
+                    doc,
+                    deliverySuccessOnClick = deliverySuccessOnClick,
+                    deliveryFailedOnClick = deliveryFailedOnClick,
+                    searchQuery = searchQuery
+                )
+//                if (docGroup.docs?.last() != doc) {
+//                    HorizontalDivider(
+//                        modifier = Modifier.padding(
+//                            horizontal = 0.dp,
+//                            vertical = 0.dp
+//                        ), // Adjust padding as needed
+//                        thickness = 1.dp,
+//                        color = Color.Gray
+//                    )
+//                }
             }
         }
     }
 }
 
 @Composable
-fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc) {
+fun SingleDocNew(
+    singleTripDetailsViewModel: SingleTripDetailsViewModel,
+    doc: Doc,
+    deliverySuccessOnClick: (doc: Doc) -> Unit = { a -> },
+    deliveryFailedOnClick: (docId: String) -> Unit = { a -> },
+    searchQuery: String
+) {
     val context = LocalContext.current
     Card(
         modifier = Modifier
             .padding(vertical = 8.dp)
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            SingleDocRowItem(
-                key = "Firm Name",
+        val address = (if (doc.customerAddress.isNotNullOrEmpty()) doc.customerAddress else "") +
+                (if (doc.customerCity.isNotNullOrEmpty()) " " + doc.customerCity else "") +
+                (if (doc.customerPincode.isNotNullOrEmpty()) " " + doc.customerPincode else "")
+
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.padding_of_entire_items_in_a_card)),
+            verticalArrangement = Arrangement.spacedBy(
+                dimensionResource(R.dimen.space_between_items_in_a_card))
+        ) {
+//            SingleIconWithTextAnnotatedItem(
+//                icon = R.drawable.ic_hash,
+//                value = doc.id ?: "",
+//                style = MaterialTheme.typography.bodyLarge,
+//                fontWeight = FontWeight.Bold,
+//                searchQuery = searchQuery
+//            )
+            DocIdWithAmountAnnotatedText(docId = doc.id ?: "", amount = doc.docAmount.toString())
+            SingleIconWithTextAnnotatedItem(
+                icon = R.drawable.ic_store,
                 value = doc.customerFirmName ?: "",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                searchQuery = searchQuery
             )
-            SingleDocRowItem(
-                key = "Amount",
-                value = doc.docAmount.toString(),
-                style = MaterialTheme.typography.titleSmall
-            )
-            SingleDocRowItem(
-                key = "Address",
-                value = doc.customerAddress ?: "",
-                style = MaterialTheme.typography.titleSmall
-            )
-            SingleDocRowItem(
-                key = "City",
-                value = doc.customerCity ?: "",
-                style = MaterialTheme.typography.titleSmall
-            )
-            SingleDocRowItem(
-                key = "Pin Code",
-                value = doc.customerPincode ?: "",
+//            SingleIconWithTextAnnotatedItem(
+//                icon = R.drawable.ic_receipt,
+//                value = "₹" + doc.docAmount.toString(),
+//                style = MaterialTheme.typography.titleSmall
+//            )
+            if (address.isNotNullOrEmpty()) {
+                SingleIconWithTextAnnotatedItem(
+                    icon = R.drawable.ic_business,
+                    value = address,
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
+            Row(Modifier.fillMaxWidth()) {
+                if (doc.customerPhone.isNotNullOrEmpty()) {
+                    Box(Modifier
+                        .fillMaxWidth()
+                        .weight(1f)) {
+                        SingleIconWithTextAnnotatedItemWithOnCLick(
+                            icon = R.drawable.ic_phone,
+                            value = doc.customerPhone ?: "",
+                            style = MaterialTheme.typography.titleMedium,
+                            onClick = {
+                                AppUtils.dialPhoneNumber(
+                                    context = context,
+                                    phoneNumber = doc.customerPhone ?: ""
+                                )
+                            }
+                        )
+                    }
+                    Spacer(Modifier.width(16.dp))
+                }
+                Box(Modifier
+                    .fillMaxWidth()
+                    .weight(1f)) {
+                    SingleIconWithTextAnnotatedItemWithOnCLick(
+                        icon = R.drawable.ic_location,
+                        value = "Navigate",
+                        style = MaterialTheme.typography.titleMedium,
+                        onClick = {
+                            AppUtils.startGoogleMapsDirections(
+                                context = context,
+                                latitude = doc.customerGeoLatitude ?: "",
+                                longitude = doc.customerGeoLongitude ?: "",
+                                destinationName = doc.customerFirmName ?: ""
+                            )
+                        }
+                    )
+                }
+            }
+            val deliveryIcon = if (doc.status?.equals(
+                    DeliveryStatusConstants.DELIVERED,
+                    ignoreCase = true
+                ) == true
+            ) R.drawable.ic__check_circle
+            else if (doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) R.drawable.ic_error_24 else R.drawable.ic_delivery_truck_speed
+            SingleIconWithTextAnnotatedItem(
+                icon = deliveryIcon,
+                value = if (doc.status?.equals(
+                        DeliveryStatusConstants.DELIVERED,
+                        ignoreCase = true
+                    ) == true
+                ) "Delivered"
+                else if (doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
                 style = MaterialTheme.typography.titleMedium
             )
-            SingleDocRowItem(
-                key = "Phone",
-                value = doc.customerPhone ?: "",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+
+            Row (Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                if (doc.status == DeliveryStatusConstants.ON_TRIP) {
+//                    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.CenterStart) {
+                        Button(onClick = {
+                            deliveryFailedOnClick.invoke(doc.id ?: "")
+                        }, colors = getButtonColors()) {
+                            ButtonContentCompose(icon = R.drawable.icon_warning_24,
+                                text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+//                            Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+                        }
+//                    }
+                    Spacer(Modifier.width(8.dp))
+//                    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.CenterEnd) {
+                        Button(onClick = {
+                            deliverySuccessOnClick.invoke(doc)
+                        },
+                            colors = getButtonColors()
+                        ) {
+                            ButtonContentCompose(icon = R.drawable.ic_check,
+                                text = stringResource(R.string.mark_as_delivered_btn_txt))
+//                            Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
+                        }
+//                    }
+                }
+
+            }
+        }
+
+    }
+}
+
+@Composable
+fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc,deliverySuccessOnClick: (docId: String) -> Unit = { a -> },deliveryFailedOnClick: (docId: String) -> Unit = { a -> }) {
+    val context = LocalContext.current
+    Card(
+        modifier = Modifier
+            .padding(vertical = 8.dp)
+    ) {
+        Column(Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_firm_name),
+//                value = doc.customerFirmName ?: "",
+//                style = MaterialTheme.typography.bodyLarge,
+//                fontWeight = FontWeight.Bold
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_amount),
+//                value = doc.docAmount.toString(),
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_address),
+//                value = doc.customerAddress ?: "",
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_city),
+//                value = doc.customerCity ?: "",
+//                style = MaterialTheme.typography.titleSmall
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_pin_code),
+//                value = doc.customerPincode ?: "",
+//                style = MaterialTheme.typography.titleMedium
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_phone),
+//                value = doc.customerPhone ?: "",
+//                style = MaterialTheme.typography.titleMedium
+//            )
+//            SingleDocRowItem(
+//                key = stringResource(R.string.row_item_title_status),
+//                value = if (doc.status?.equals(DeliveryStatusConstants.DELIVERED,ignoreCase = true) == true) "Delivered"
+//                else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
+//                style = MaterialTheme.typography.titleMedium
+//            )
+
+            Row(Modifier.fillMaxWidth()) {
+                Column(Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SingleDocRowItem(
+                        icon = R.drawable.ic_store,
+                        value = doc.customerFirmName ?: "",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    SingleDocRowItem(
+                        icon = R.drawable.ic_receipt,
+                        value = "₹"+ doc.docAmount.toString(),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    if (doc.customerAddress.isNotNullOrEmpty()) {
+                        SingleDocRowItem(
+                            icon = R.drawable.ic_business,
+                            value = doc.customerAddress ?: "",
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                    }
+                    if (doc.customerCity.isNotNullOrEmpty()) {
+                        SingleDocRowItem(
+                            icon = R.drawable.ic_location_city,
+                            value = doc.customerCity ?: "",
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                    }
+                    if (doc.customerPincode.isNotNullOrEmpty()) {
+                        SingleDocRowItem(
+                            icon = R.drawable.ic_markunread_mailbox,
+                            value = doc.customerPincode ?: "",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    if (doc.customerPhone.isNotNullOrEmpty()) {
+                        SingleDocRowItem(
+                            icon = R.drawable.ic_mobile,
+                            value = doc.customerPhone ?: "",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    val deliveryIcon =  if (doc.status?.equals(DeliveryStatusConstants.DELIVERED,ignoreCase = true) == true) R.drawable.ic__check_circle
+                    else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) R.drawable.ic_error_24 else R.drawable.ic_delivery_truck_speed
+                    SingleDocRowItem(
+                        icon = deliveryIcon,
+                        value = if (doc.status?.equals(DeliveryStatusConstants.DELIVERED,ignoreCase = true) == true) "Delivered"
+                        else if(doc?.status?.equals(DeliveryStatusConstants.UNDELIVERED) == true) "Not Delivered" else "On Trip",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
                 IconButton(
                     onClick = {
-                        AppUtils.startGoogleMapsNavigation(
+                        AppUtils.startGoogleMapsDirections(
                             context = context,
                             latitude = doc.customerGeoLatitude?:"",
                             longitude = doc.customerGeoLongitude?:"",
                             destinationName = doc.customerFirmName?:""
                         )
                     },
-                    modifier = Modifier
+                    modifier = Modifier,
+                    colors = getIconButtonColors()
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_location),
@@ -428,6 +1011,25 @@ fun SingleDoc(singleTripDetailsViewModel: SingleTripDetailsViewModel, doc: Doc) 
                         modifier = Modifier.size(24.dp),
                     )
                 }
+
+            }
+
+            Column (Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(0.dp), horizontalAlignment = Alignment.End) {
+                if (doc.status == DeliveryStatusConstants.ON_TRIP) {
+                    Button(onClick = {
+                        deliverySuccessOnClick.invoke(doc.id ?: "")
+                    },
+                        colors = getButtonColors()
+                    ) {
+                        Text(text = stringResource(R.string.mark_as_delivered_btn_txt))
+                    }
+                    Button(onClick = {
+                        deliveryFailedOnClick.invoke(doc.id ?: "")
+                    }, colors = getButtonColors()) {
+                        Text(text = stringResource(R.string.mark_as_un_delivered_btn_txt))
+                    }
+                }
+
             }
         }
 
@@ -456,6 +1058,48 @@ private fun SingleDocRowItem(key: String, value: String, style: TextStyle, color
             style = style,
             color = color,
             modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Start
+        )
+    }
+}
+
+
+
+@Composable
+private fun SingleDocRowItem(icon: Int, value: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight: FontWeight = FontWeight.Normal) {
+//    ListItem(
+//        modifier = Modifier.fillMaxWidth(),
+//        headlineContent = {
+//            Text(
+//                text = value,
+//                style = style,
+//                color = color,
+//                textAlign = TextAlign.Start
+//            )
+//        },
+//        leadingContent = {
+//            Icon(
+//                painter = painterResource(icon),
+//                contentDescription = "Icon",
+//                modifier = Modifier.size(24.dp)
+//            )
+//        },
+//        colors = getListItemColors(),
+//        supportingContent = null
+//    )
+    Row(Modifier
+        .fillMaxWidth()
+        .padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = "Icon",
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = value,
+            style = style,
+            color = color,
             textAlign = TextAlign.Start
         )
     }

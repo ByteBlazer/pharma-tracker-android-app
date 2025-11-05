@@ -2,20 +2,21 @@ package com.deltasoft.pharmatracker.screens.home
 
 
 import android.content.Context
+import androidx.activity.result.launch
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -25,10 +26,12 @@ import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.NavConstants
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.home.MyTrips.MyTripsScreen
-import com.deltasoft.pharmatracker.screens.home.location.LocationScreen
-import com.deltasoft.pharmatracker.screens.home.route.DispatchQueueScreen
+import com.deltasoft.pharmatracker.screens.home.queue.DispatchQueueScreen
 import com.deltasoft.pharmatracker.screens.home.scan.BarCodeScanner
-import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsScreen
+import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsScreen
+import com.deltasoft.pharmatracker.ui.theme.getCenterAlignedTopAppBarColors
+import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getNavigationBarItemColors
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.launch
@@ -68,6 +71,35 @@ fun HomeScreen(
         }
         val coroutineScope = rememberCoroutineScope()
 
+
+        // In your HomeScreen composable (or wherever your bottom navigation is managed)
+
+// Get the current back stack entry
+        val navBackStackEntry = navController.currentBackStackEntry
+
+// Observe the savedStateHandle for the result
+        LaunchedEffect(navBackStackEntry) {
+            // Check if we received the "navigateToSection" signal
+            val navigateToSection = navBackStackEntry?.savedStateHandle?.get<String>("navigateToSection")
+            if (navigateToSection == "trips") {
+
+                // --- YOUR CODE HERE ---
+                // Find the index of the "My Trips" item.
+                val tripsIndex = bottomNavItems.indexOfFirst { it.route == NavConstants.ROUTE_SCHEDULED_TRIPS_SCREEN }
+
+                // If the item exists in the list, switch to that page.
+                if (tripsIndex != -1) {
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(tripsIndex)
+                    }
+                }
+
+                // Important: Remove the value from the state handle so this code
+                // doesn't run again on recomposition or configuration change.
+                navBackStackEntry.savedStateHandle.remove<String>("navigateToSection")
+            }
+        }
+
         Scaffold(
             bottomBar = {
                 NavigationBar {
@@ -83,7 +115,8 @@ fun HomeScreen(
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(index)
                                 }
-                            }
+                            },
+                            colors = getNavigationBarItemColors()
                         )
                     }
                 }
@@ -102,7 +135,9 @@ fun HomeScreen(
                         if (false) {
                             IconButton(onClick = {
                                 navController.navigate(Screen.Profile.route)
-                            }) {
+                            },
+                                colors = getIconButtonColors()
+                            ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_outline_person),
                                     contentDescription = "profile"
@@ -126,7 +161,9 @@ fun HomeScreen(
                                             homeViewModel?.onMyTripsReloadButtonClick()
                                         }
                                     }
-                                }) {
+                                },
+                                    colors = getIconButtonColors(contentColor = Color.White)
+                                ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_refresh),
                                         contentDescription = "dispatch queue reload"
@@ -135,14 +172,17 @@ fun HomeScreen(
                             }
                             IconButton(onClick = {
                                 navController.navigate(Screen.Profile.route)
-                            }) {
+                            },
+                                colors = getIconButtonColors(contentColor = Color.White)
+                            ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_outline_person),
                                     contentDescription = "profile"
                                 )
                             }
                         }
-                    }
+                    },
+                    colors = getCenterAlignedTopAppBarColors()
                 )
             }
         ) { paddingValues ->

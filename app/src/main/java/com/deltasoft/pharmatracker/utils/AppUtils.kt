@@ -1,5 +1,6 @@
 package com.deltasoft.pharmatracker.utils
 
+import DrawingPath
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
@@ -12,7 +13,8 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
-import com.deltasoft.pharmatracker.screens.home.UserType
+import androidx.core.content.ContextCompat
+import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
@@ -20,8 +22,29 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.location.Location
+import android.util.Base64
+import androidx.compose.ui.graphics.toArgb
+import com.deltasoft.pharmatracker.utils.createappsignature.AppSignatureHashHelper
+import com.google.android.gms.location.CurrentLocationRequest
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import toAndroidPath
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+
 import java.util.Date
 import java.util.Locale
+import kotlin.math.*
 
 private const val TAG = "AppUtils"
 object AppUtils {
@@ -250,6 +273,317 @@ object AppUtils {
                 "Google Maps app not found. Please install it to use navigation.",
                 Toast.LENGTH_LONG
             ).show()
+        }
+    }
+
+    fun startGoogleMapsDirections(
+        context: Context,
+        latitude: String,
+        longitude: String,
+        destinationName: String = "Destination"
+    ) {
+        Log.d("MapsNavigation", "startGoogleMapsDirections: latitude $latitude")
+        Log.d("MapsNavigation", "startGoogleMapsDirections: longitude $longitude")
+
+        // 1. Define the URI to request directions.
+        // We use the 'geo' scheme with the 'daddr' parameter (destination address).
+        // The format is daddr=latitude,longitude(Label).
+        val gmmIntentUri = Uri.parse("geo:0,0?q=$latitude,$longitude($destinationName)")
+
+        // **Alternative URI for Directions** (sometimes preferred):
+        // val gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&destination_place_id=&travelmode=driving")
+
+
+        // 2. Create an Intent, specifying the ACTION_VIEW and setting the data URI
+        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+
+        // 3. Explicitly set the package to ensure only the Google Maps app handles the Intent
+        mapIntent.setPackage("com.google.android.apps.maps")
+
+        // 4. Check if there is an app available to handle this Intent
+        if (mapIntent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(mapIntent)
+        } else {
+            // Fallback: Google Maps app is not installed
+            Toast.makeText(
+                context,
+                "Google Maps app not found. Please install it to use directions.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    fun startMyService(context: Context) {
+        val serviceIntent = Intent(context, LocationPingService::class.java)
+        ContextCompat.startForegroundService(context, serviceIntent)
+    }
+
+    fun stopService(context: Context) {
+        val serviceIntent = Intent(context, LocationPingService::class.java)
+        context.stopService(serviceIntent)
+    }
+
+
+    fun restartForegroundService(context: Context) {
+        val serviceIntent = Intent(context, LocationPingService::class.java)
+
+        // A. Stop the service first (This will call onDestroy() in your Service)
+        context.stopService(serviceIntent)
+
+        // B. Start the service again immediately (This will call onCreate() and then onStartCommand())
+        // Use startForegroundService for a foreground service, especially on newer Android versions (API 26+)
+        ContextCompat.startForegroundService(context, serviceIntent)
+    }
+
+    @SuppressLint("MissingPermission")
+    fun fetchCurrentLocation(
+        context: Context,
+        onSuccess: (Location) -> Unit, // Callback for successful result
+        onFailure: (Exception) -> Unit  // Callback for failure
+    ) {
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        val cancellationTokenSource = CancellationTokenSource()
+
+        // Request settings for high accuracy
+        val request = CurrentLocationRequest.Builder()
+            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+            .build()
+
+        fusedLocationClient.getCurrentLocation(request, cancellationTokenSource.token)
+            .addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    onSuccess(location)
+                } else {
+                    onFailure(Exception("Location data is null (GPS may be disabled)."))
+                }
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
+    fun getFusedLocationClient(context: Context): FusedLocationProviderClient {
+        return LocationServices.getFusedLocationProviderClient(context)
+    }
+
+
+    /**
+     * Converts the list of Compose Paths into an Android Bitmap and saves it as a PNG file.
+     *
+     * @param context The Android context for file operations.
+     * @param finalPaths The list of all completed signature strokes.
+     * @param targetWidth The desired pixel width of the output image.
+     * @param targetHeight The desired pixel height of the output image.
+     * @param sourceWidthPx The actual pixel width of the composable where the path was drawn (Source).
+     * @param sourceHeightPx The actual pixel height of the composable where the path was drawn (Source).
+     */
+    fun saveSignatureImage(
+        context: Context,
+        finalPaths: List<DrawingPath>,
+        targetWidth: Int,
+        targetHeight: Int,
+        sourceWidthPx: Int,
+        sourceHeightPx: Int
+    ): String? {
+        if (finalPaths.isEmpty() || sourceWidthPx <= 0 || sourceHeightPx <= 0) return null
+
+        // 1. Create an empty Bitmap
+        val bitmap = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        // 2. Draw a solid white background onto the Bitmap
+        canvas.drawColor(android.graphics.Color.WHITE)
+
+        // 3. Define the Paint object for drawing the strokes
+        val paint = Paint().apply {
+            isAntiAlias = true
+            style = Paint.Style.STROKE
+            strokeJoin = Paint.Join.ROUND
+            strokeCap = Paint.Cap.ROUND
+        }
+
+        // Calculate scaling factors
+        val scaleX = targetWidth.toFloat() / sourceWidthPx.toFloat()
+        val scaleY = targetHeight.toFloat() / sourceHeightPx.toFloat()
+
+        // 4. Draw each Compose Path onto the Android Canvas
+        finalPaths.forEach { drawingPath ->
+
+            paint.color = drawingPath.color.toArgb() // Convert Compose Color to Android Color
+
+            // Scale stroke width relative to the scaling factor (using X for both)
+            paint.strokeWidth = drawingPath.strokeWidth.value * scaleX
+
+            // Convert the Compose Path to the native Android Path
+            val androidPath = drawingPath.path.toAndroidPath()
+
+            // Apply scaling matrix to the Path coordinates
+            val matrix = Matrix()
+            matrix.setScale(scaleX, scaleY)
+            androidPath.transform(matrix) // Apply the transformation
+
+            canvas.drawPath(androidPath, paint)
+        }
+
+
+        // 5. Compression and Iterative Loop for File Size Control
+        val filename = "signature_${System.currentTimeMillis()}.jpeg"
+        val file = File(context.filesDir, filename)
+
+        // Target file size limits
+        val maxAcceptableBytes = 10 * 1024L // 10 KB
+        val minForcedBytes = 7 * 1024L     // 7 KB
+
+        var currentQuality = 100 // Start at 100 as requested
+        var fileSizeInBytes: Long
+        var attempts = 0
+        val maxAttempts = 100 // Safety break
+
+        // Initial Compression at Quality 100
+        try {
+            FileOutputStream(file).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, currentQuality, out)
+            }
+            fileSizeInBytes = file.length()
+        } catch (e: IOException) {
+            Log.e("SignaturePad", "Error during initial saving: ${e.message}")
+            return null
+        }
+
+        // Iterative Reduction Loop (only if the initial file size is too large)
+        if (fileSizeInBytes > maxAcceptableBytes) {
+
+            Log.d("SignaturePad", "Initial size (${fileSizeInBytes / 1024.0} KB) > 10KB. Starting reduction...")
+
+            // Reset quality just below 100 and start iterating down, now targeting 7KB-10KB
+            currentQuality = 99
+
+            while ((fileSizeInBytes > maxAcceptableBytes || fileSizeInBytes < minForcedBytes) &&
+                currentQuality in 1..99 &&
+                attempts < maxAttempts) {
+
+                attempts++
+
+                // Re-compress the bitmap
+                try {
+                    FileOutputStream(file).use { out ->
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, currentQuality, out)
+                    }
+                    fileSizeInBytes = file.length()
+                } catch (e: IOException) {
+                    Log.e("SignaturePad", "Error during iterative compression: ${e.message}")
+                    break // Exit loop on IO error
+                }
+
+
+                Log.d("SignaturePad", " attempt  "+attempts)
+                Log.d("SignaturePad", " currentQuality  "+currentQuality)
+                if (fileSizeInBytes > maxAcceptableBytes) {
+                    // File is too large (> 10KB), reduce quality.
+                    currentQuality -= if (currentQuality > 80) 5 else 1 // Larger steps for faster convergence
+                    if (currentQuality < 1) currentQuality = 1
+                } else if (fileSizeInBytes < minForcedBytes) {
+                    // File is too small (< 7KB), increase quality slightly to increase size
+                    currentQuality += 1
+                    if (currentQuality > 100) currentQuality = 100
+                } else {
+                    // Success: within 7KB-10KB range
+                    break
+                }
+            }
+        }
+
+
+        // Final log message
+        val finalFileSizeInKB = fileSizeInBytes / 1024.0
+        val status = if (fileSizeInBytes <= maxAcceptableBytes) "SUCCESS" else "FAILURE (forced < 7KB)"
+
+        Log.d("SignaturePad", "Save Status: Iteration Complete")
+        Log.d("SignaturePad", "Final File Path: ${file.absolutePath}")
+        Log.d("SignaturePad", "Final File Size: ${String.format("%.2f", finalFileSizeInKB)} KB (Quality: $currentQuality, status: $status)")
+
+        // 6. ENCODE THE FILE TO BASE64 AND PRINT
+        try {
+            val bytes = file.readBytes()
+            // Use Base64.DEFAULT for standard encoding
+            val base64EncodedString = Base64.encodeToString(bytes, Base64.DEFAULT)
+
+            Log.d("SignaturePad", "--- Base64 Encoded Image Data ---")
+            Log.d("SignaturePad", base64EncodedString)
+            Log.d("SignaturePad", "-----------------------------------")
+            return base64EncodedString
+
+        } catch (e: IOException) {
+            Log.e("SignaturePad", "Error reading file for Base64 encoding: ${e.message}")
+            return null
+        }
+    }
+
+    fun String?.showToastMessage(context: Context) {
+        this?.let {
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    fun isColorDark(colorValue: androidx.compose.ui.graphics.Color): Boolean {
+        var color = colorValue.toArgb()
+        var darkness : Double = 0.0
+        darkness = try {
+            1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
+        } catch (e: Exception) {
+            e.printStackTrace()
+            0.0
+        }
+        return darkness >= 0.5
+    }
+
+    fun getTextColorBasedOnColortype(colorValue: androidx.compose.ui.graphics.Color): androidx.compose.ui.graphics.Color {
+        return if (isColorDark(colorValue)) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
+    }
+
+    fun dialPhoneNumber(context: Context, phoneNumber: String) {
+        val intent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:$phoneNumber")
+        }
+        context.startActivity(intent)
+    }
+
+    fun getAppCode(context: Context): String {
+        return if (AppSignatureHashHelper(context).appSignatures.first().isNotNullOrEmpty()) AppSignatureHashHelper(context).appSignatures.first() else ""
+    }
+
+    /* Calculates the distance between two GPS coordinates using the Haversine formula.
+    *
+    * @param lat1 Latitude of first point (in degrees)
+    * @param lon1 Longitude of first point (in degrees)
+    * @param lat2 Latitude of second point (in degrees)
+    * @param lon2 Longitude of second point (in degrees)
+    * @return Distance in meters
+    */
+    fun haversineDistanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        Log.d(TAG, "haversineDistanceMeters: lat1 "+lat1)
+        Log.d(TAG, "haversineDistanceMeters: lon1 "+lon1)
+        Log.d(TAG, "haversineDistanceMeters: lat2 "+lat2)
+        Log.d(TAG, "haversineDistanceMeters: lon2 "+lon2)
+        val R = 6371000.0 // Earth radius in meters
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+
+        val a = sin(dLat / 2).pow(2.0) +
+                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+                sin(dLon / 2).pow(2.0)
+
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return R * c // returns distance in meters
+    }
+
+    fun convertLocationStringToDouble(value :String?):Double{
+        return if (value.isNullOrEmpty()){
+            0.0
+        }else{
+            value.toDoubleOrNull() ?: 0.0
         }
     }
 }

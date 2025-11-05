@@ -6,15 +6,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
-import com.deltasoft.pharmatracker.screens.home.schedule.ScheduledTripsState
-import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTrip
-import com.deltasoft.pharmatracker.screens.home.schedule.entity.ScheduledTripsResponse
+import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
+import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTrip
+import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTripsResponse
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
@@ -113,7 +112,11 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
 
     var currentTrip :ScheduledTrip? = null
 
-
+    private val _loading = MutableStateFlow<Boolean>(false)
+    val loading = _loading.asStateFlow()
+    fun setLoading(value: Boolean) {
+        _loading.value = value
+    }
 
 //    private val preferenceListener =
 //        SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
@@ -191,6 +194,16 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
         // B. Start the service again immediately (This will call onCreate() and then onStartCommand())
         // Use startForegroundService for a foreground service, especially on newer Android versions (API 26+)
         ContextCompat.startForegroundService(context, serviceIntent)
+    }
+
+    fun clearAllValues() {
+        currentTrip = null
+        _scheduledTripsState.value = ScheduledTripsState.Idle
+        _scheduledList.value = arrayListOf()
+        _startTripState.value = AppCommonApiState.Idle
+        _latitude.value = null
+        _longitude.value = null
+        _loading.value = false
     }
 
 }

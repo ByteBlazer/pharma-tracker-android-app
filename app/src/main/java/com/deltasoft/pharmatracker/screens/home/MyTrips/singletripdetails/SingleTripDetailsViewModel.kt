@@ -4,8 +4,11 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.location.Location
 import androidx.lifecycle.AndroidViewModel
 import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsDeliveredRequest
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsUnDeliveredRequest
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
 import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.utils.AppUtils
@@ -13,6 +16,12 @@ import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+
+import android.util.Log
+
+import androidx.lifecycle.application
+import kotlinx.coroutines.flow.StateFlow
+import java.util.UUID
 
 
 class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(application) {
@@ -112,8 +121,120 @@ class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(ap
         _endTripState.value = AppCommonApiState.Idle
     }
 
+
+
+    private val _markAsDeliveredState = MutableStateFlow<AppCommonApiState>(AppCommonApiState.Idle)
+    val markAsDeliveredState = _markAsDeliveredState.asStateFlow()
+
+    fun markAsDelivered(
+        docId: String,
+        signatureEncodedString: String,
+        deliveryComment: String? = null,
+        isChecked: Boolean,
+        location : Location? = null
+    ) {
+        _markAsDeliveredState.value = AppCommonApiState.Loading
+        try {
+            if (isChecked){
+//                if (location != null){
+//                    val markAsDeliveredRequest = MarkAsDeliveredRequest(signature = signatureEncodedString,deliveryComment = deliveryComment,deliveryLatitude = (location?.latitude?:0).toDouble(),deliveryLongitude = (location?.longitude?:0).toDouble())
+//                    repository.markAsDelivered(token = token, docId = docId,markAsDeliveredRequest = markAsDeliveredRequest, updateCustomerLocation = isChecked )
+//                }else {
+                    requestLocation(docId, signatureEncodedString, deliveryComment, updateCustomerLocation = isChecked)
+//                }
+            }else{
+                val markAsDeliveredRequest = MarkAsDeliveredRequest(signature = signatureEncodedString,deliveryComment = deliveryComment,deliveryLatitude = null,deliveryLongitude = null)
+                repository.markAsDelivered(token = token, docId = docId,markAsDeliveredRequest = markAsDeliveredRequest, updateCustomerLocation = isChecked )
+            }
+
+        } catch (e: Exception) {
+            _markAsDeliveredState.value = AppCommonApiState.Error("Mark as delivered failed: ${e.message}")
+        }
+    }
+    /**
+     * Triggers the location fetch and handles the result via callbacks.
+     */
+    fun requestLocation(docId: String,signatureEncodedString: String,deliveryComment:String? = null,updateCustomerLocation:Boolean) {
+        val context = application.applicationContext
+        AppUtils.fetchCurrentLocation(
+            context = context,
+            onSuccess = { location ->
+                Log.d("LocationVM", "Location error: latitude ${location.latitude} longitude ${location.longitude}")
+                val markAsDeliveredRequest = MarkAsDeliveredRequest(signature = signatureEncodedString,deliveryComment = deliveryComment,deliveryLatitude = (location?.latitude?:0).toDouble(),deliveryLongitude = (location?.longitude?:0).toDouble())
+                repository.markAsDelivered(token = token, docId = docId,markAsDeliveredRequest = markAsDeliveredRequest,updateCustomerLocation = updateCustomerLocation )
+            },
+            onFailure = { exception ->
+                // Handle failure
+                Log.e("LocationVM", "Location error: ${exception.message}")
+                _markAsDeliveredState.value = AppCommonApiState.Error("Mark as delivered failed: Location error ${exception.message}")
+            }
+        )
+    }
+
+    fun updateMarkAsDeliveredStateState(message: String, success: Boolean = false) {
+        if (success){
+            _markAsDeliveredState.value = AppCommonApiState.Success(message)
+        }else{
+            _markAsDeliveredState.value = AppCommonApiState.Error(message)
+        }
+    }
+
+    fun clearMarkAsDeliveredStateState() {
+        _markAsDeliveredState.value = AppCommonApiState.Idle
+    }
+
+    private val _markAsUnDeliveredState = MutableStateFlow<AppCommonApiState>(AppCommonApiState.Idle)
+    val markAsUnDeliveredState = _markAsUnDeliveredState.asStateFlow()
+
+
+    fun markAsUnDelivered(docId: String,comment:String) {
+        _markAsUnDeliveredState.value = AppCommonApiState.Loading
+        try {
+            val markAsUnDeliveredRequest = MarkAsUnDeliveredRequest(comment)
+            repository.markAsUnDelivered(token = token, docId = docId, markAsUnDeliveredRequest = markAsUnDeliveredRequest)
+        } catch (e: Exception) {
+            _markAsUnDeliveredState.value = AppCommonApiState.Error("Mark as un delivered failed: ${e.message}")
+        }
+
+    }
+    fun updateMarkAsUnDeliveredStateState(message: String, success: Boolean = false) {
+        if (success){
+            _markAsUnDeliveredState.value = AppCommonApiState.Success(message)
+        }else{
+            _markAsUnDeliveredState.value = AppCommonApiState.Error(message)
+        }
+    }
+
+    fun clearMarkAsUnDeliveredStateState() {
+        _markAsUnDeliveredState.value = AppCommonApiState.Idle
+    }
+
     fun stopService(context: Context) {
         val serviceIntent = Intent(context, LocationPingService::class.java)
         context.stopService(serviceIntent)
+    }
+
+    private val _latestLocationState = MutableStateFlow<LocationState>(LocationState.Idle)
+    val latestLocationState = _latestLocationState.asStateFlow()
+
+
+    /**
+     * Triggers the location fetch and handles the result via callbacks.
+     */
+    fun fetchLatestLocation() {
+        val context = application.applicationContext
+        _latestLocationState.value = LocationState.Loading
+        AppUtils.fetchCurrentLocation(
+            context = context,
+            onSuccess = { location ->
+                Log.d("LocationVM", "Location success: latitude ${location.latitude} longitude ${location.longitude}")
+               _latestLocationState.value = LocationState.Success(location)
+            },
+            onFailure = { exception ->
+                // Handle failure
+                Log.e("LocationVM", "Location error: ${exception.message}")
+                _latestLocationState.value = LocationState.Error("Location error ${exception.message}")
+            }
+        )
     }
 }
