@@ -524,12 +524,13 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
                     cameraProvider.unbindAll()
 
                     // Bind the preview and image analysis use cases to the camera.
-                    cameraProvider.bindToLifecycle(
+                    val camera = cameraProvider.bindToLifecycle(
                         lifecycleOwner,
                         cameraSelector,
                         preview,
                         imageAnalysis
                     )
+                    camera.cameraControl.setZoomRatio(2.0f)
                 } catch (e: Exception) {
                     Log.e("BarcodeScanner", "Camera binding failed", e)
                 }
