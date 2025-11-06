@@ -7,9 +7,12 @@ import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import android.util.Size
+import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.BorderStroke
@@ -483,9 +486,21 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
                 val barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(options)
                 val analysisExecutor = Executors.newSingleThreadExecutor()
 
+                val resolutionSelector = ResolutionSelector.Builder()
+                    .setAspectRatioStrategy(
+                        AspectRatioStrategy(
+                            AspectRatio.RATIO_16_9,
+                            AspectRatioStrategy.FALLBACK_RULE_AUTO // Allows CameraX to select the best fit
+                        )
+                    )
+                    .build()
+
                 // Image analysis use case.
                 val imageAnalysis = ImageAnalysis.Builder()
-                    .setTargetResolution(Size(640, 480))
+//                    .setTargetResolution(Size(640, 480))
+//                    .setTargetResolution(Size(1280, 720))
+//                    .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+                    .setResolutionSelector(resolutionSelector)
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                     .also {
@@ -530,7 +545,7 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
                         preview,
                         imageAnalysis
                     )
-                    camera.cameraControl.setZoomRatio(2.0f)
+                    camera.cameraControl.setZoomRatio(1.5f)
                 } catch (e: Exception) {
                     Log.e("BarcodeScanner", "Camera binding failed", e)
                 }
