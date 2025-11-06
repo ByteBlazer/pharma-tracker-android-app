@@ -8,6 +8,7 @@ import android.provider.Settings
 import android.util.Log
 import android.util.Size
 import androidx.camera.core.AspectRatio
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -65,6 +66,7 @@ import com.deltasoft.pharmatracker.screens.drawOneSideBorder
 import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
+import com.deltasoft.pharmatracker.utils.AppConstants
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.AppVibratorManager
@@ -313,6 +315,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                     if (isScanning && scannedValue.isNullOrEmpty()) {
                         CameraPreview(
                             onBarcodeScanned = { value ->
+                                Log.d("SREENATH", "BarCodeScanner: $value")
                                 scannedValue = value
                             }
                         )
@@ -389,7 +392,10 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
             }
         }
 
-        Box(modifier = Modifier.padding(top = 16.dp).padding(horizontal = 16.dp).align(Alignment.TopStart)) {
+        Box(modifier = Modifier
+            .padding(top = 16.dp)
+            .padding(horizontal = 16.dp)
+            .align(Alignment.TopStart)) {
             Column {
                 if (showDialog.value) {
                     Card(
@@ -456,12 +462,20 @@ fun getColorFromCode(code: Int): Color {
 
 }
 
+// State to manage the consecutive scanning for accuracy
+data class ScanState(
+    val lastValue: String = "",
+    val count: Int = 0
+)
 
 // Composable function for the camera preview and analysis.
 @Composable
-fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
+fun CameraPreview(onBarcodeScanned: (String) -> Unit,requiredConsecutiveScans: Int = AppConstants.REQUIRED_CONSECUTIVE_SCANS,zoomRatio: Float = AppConstants.ZOOM_RATIO) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+
+    // State to track consecutive successful scans
+    val scanState = remember { mutableStateOf(ScanState()) }
 
     // Embed the Android PreviewView into the Composable layout.
     AndroidView(
@@ -516,11 +530,37 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
                                 barcodeScanner.process(image)
                                     .addOnSuccessListener { barcodes ->
                                         if (barcodes.isNotEmpty()) {
-                                            val value = barcodes[0].rawValue ?: "No value found"
-                                            onBarcodeScanned(value)
-//                                            Log.d("BarcodeScanner", "Scanned value: $value")
+                                            val currentValue = barcodes[0].rawValue ?: ""
+
+                                            Log.d("SREENATH", "currentValue: $currentValue")
+                                            // 3. IMPLEMENT ACCURACY CHECK (Consecutive Scans)
+                                            if (currentValue.isNotBlank() && currentValue == scanState.value.lastValue) {
+                                                val newCount = scanState.value.count + 1
+                                                scanState.value = scanState.value.copy(count = newCount)
+
+                                                if (newCount >= requiredConsecutiveScans) {
+                                                    // Barcode verified, emit the result
+                                                    onBarcodeScanned(currentValue)
+
+                                                    // Optional: Reset state to prevent immediate re-triggering
+                                                    scanState.value = ScanState()
+                                                }
+                                            } else {
+                                                // New or different barcode detected, reset counter
+                                                scanState.value = ScanState(lastValue = currentValue, count = 1)
+                                            }
+                                        } else {
+                                            // No barcode found, reset state
+                                            scanState.value = ScanState()
                                         }
                                     }
+//                                    .addOnSuccessListener { barcodes ->
+//                                        if (barcodes.isNotEmpty()) {
+//                                            val value = barcodes[0].rawValue ?: "No value found"
+//                                            onBarcodeScanned(value)
+////                                            Log.d("BarcodeScanner", "Scanned value: $value")
+//                                        }
+//                                    }
                                     .addOnFailureListener { e ->
                                         Log.e("BarcodeScanner", "Barcode scanning failed", e)
                                     }
@@ -545,7 +585,8 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
                         preview,
                         imageAnalysis
                     )
-                    camera.cameraControl.setZoomRatio(1.5f)
+                    // 4. SAFELY SET ZOOM RATIO
+                    setCameraZoom(camera, zoomRatio, context)
                 } catch (e: Exception) {
                     Log.e("BarcodeScanner", "Camera binding failed", e)
                 }
@@ -554,6 +595,18 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
             previewView
         }
     )
+}
+
+// Helper function to safely set the zoom ratio
+fun setCameraZoom(camera: Camera, desiredRatio: Float, context: Context) {
+    val zoomState = camera.cameraInfo.zoomState.value
+    if (zoomState != null) {
+        val minRatio = zoomState.minZoomRatio
+        val maxRatio = zoomState.maxZoomRatio
+        // Clamp the desired ratio to be within the valid range
+        val clampedRatio = desiredRatio.coerceIn(minRatio, maxRatio)
+        camera.cameraControl.setZoomRatio(clampedRatio)
+    }
 }
 
 
