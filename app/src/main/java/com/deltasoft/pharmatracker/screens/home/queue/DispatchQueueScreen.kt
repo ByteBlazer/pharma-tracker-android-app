@@ -341,7 +341,7 @@ fun DispatchQueueScreen(
                 showAlertDialog = null
             },
             title = "Confirm Deletion",
-            message = "Are you sure you want to delete \"${showAlertDialog}\"? This action cannot be undone.",
+            message = "Are you sure you want to remove this Doc ID ${showAlertDialog} from the queue? This action cannot be undone.",
             confirmButtonText = "Delete",
             dismissButtonText = "Cancel"
         )
