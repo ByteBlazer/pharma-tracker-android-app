@@ -428,7 +428,8 @@ object AppUtils {
 
 
         // 5. Compression and Iterative Loop for File Size Control
-        val filename = "signature_${System.currentTimeMillis()}.jpeg"
+//        val filename = "signature_${System.currentTimeMillis()}.jpeg"
+        val filename = "signature.jpeg"
         val file = File(context.filesDir, filename)
 
         // Target file size limits
