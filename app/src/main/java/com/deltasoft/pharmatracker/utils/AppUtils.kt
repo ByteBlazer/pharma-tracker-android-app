@@ -29,6 +29,7 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.location.Location
+import android.location.LocationManager
 import android.util.Base64
 import androidx.compose.ui.graphics.toArgb
 import com.deltasoft.pharmatracker.utils.createappsignature.AppSignatureHashHelper
@@ -585,5 +586,24 @@ object AppUtils {
         }else{
             value.toDoubleOrNull() ?: 0.0
         }
+    }
+
+    /**
+     * Checks if the device's main location setting (GPS or Network) is currently enabled.
+     * * @param context The application or activity context required to access system services.
+     * @return True if either GPS or Network location is enabled, False otherwise.
+     */
+    fun isDeviceLocationOn(context: Context): Boolean {
+        // Get the system's LocationManager service
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        // Check if the GPS provider is enabled
+        val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+
+        // Check if the Network provider (Wi-Fi/Cell towers) is enabled
+        val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+
+        // Return true if at least one provider is enabled
+        return isGpsEnabled || isNetworkEnabled
     }
 }

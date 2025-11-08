@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.MainActivityViewModel
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
@@ -64,7 +65,7 @@ import kotlinx.coroutines.launch
 private const val TAG = "ProfileScreen"
 @Composable
 fun ProfileScreen(
-    navController: NavHostController, context: Context) {
+    navController: NavHostController, context: Context,mainActivityViewModel: MainActivityViewModel) {
 
     val sharedPrefsUtil = SharedPreferencesUtil(context)
     val userName = sharedPrefsUtil.getString(PrefsKey.USER_NAME)
@@ -83,6 +84,7 @@ fun ProfileScreen(
         onConfirm = {
             AppUtils.stopService(context)
             sharedPrefsUtil.saveString(PrefsKey.USER_ACCESS_TOKEN,"")
+            mainActivityViewModel.setLastLogInTimeInMills(null)
             navController.navigate(Screen.Login.createRoute(phone)) {
                 popUpTo(navController.graph.id) {
                     inclusive = true
