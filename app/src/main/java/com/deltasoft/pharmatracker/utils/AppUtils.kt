@@ -1,8 +1,16 @@
 package com.deltasoft.pharmatracker.utils
 
 import DrawingPath
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.location.Location
+import android.location.LocationManager
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -11,38 +19,30 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.util.Base64
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
+import com.deltasoft.pharmatracker.utils.createappsignature.AppSignatureHashHelper
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-
-import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Matrix
-import android.graphics.Paint
-import android.location.Location
-import android.location.LocationManager
-import android.util.Base64
-import androidx.compose.ui.graphics.toArgb
-import com.deltasoft.pharmatracker.utils.createappsignature.AppSignatureHashHelper
 import com.google.android.gms.location.CurrentLocationRequest
-import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.mlkit.vision.common.InputImage
 import toAndroidPath
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-
+import java.nio.ByteBuffer
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import kotlin.math.*
@@ -605,5 +605,67 @@ object AppUtils {
 
         // Return true if at least one provider is enabled
         return isGpsEnabled || isNetworkEnabled
+    }
+
+    fun saveImageToInternalStorage(context: Context, image: InputImage) {
+        if (image != null){
+            val bit = imageToBitmap(image)
+            if (bit!= null){
+                saveBitmapToInternalStorage(context,bit,"saved_image_${System.currentTimeMillis()}.png")
+            }
+        }
+    }
+
+
+     fun imageToBitmap(image: InputImage): Bitmap? {
+        val frameMetadata: FrameMetadata =
+            FrameMetadata.Builder()
+                .setWidth(image.width)
+                .setHeight(image.height)
+                .setRotation(image.rotationDegrees)
+                .build()
+        val bitmapUtils = BitmapUtils()
+        val nv21Buffer: ByteBuffer =
+            bitmapUtils.yuv420ThreePlanesToNV21(image.planes, image.width, image.height)
+        return bitmapUtils.getBitmap(nv21Buffer, frameMetadata)
+    }
+    fun saveBitmapToInternalStorage(context: Context, bitmapImage: Bitmap, filename: String): String? {
+        // 1. Get a FileOutputStream for the private file
+        var fileOutputStream: FileOutputStream? = null
+        try {
+            Log.d(TAG, "Attempting to save bitmap with filename: $filename")
+            fileOutputStream = context.openFileOutput(filename, Context.MODE_PRIVATE)
+
+            // 2. Compress the Bitmap and write it to the OutputStream
+            // Using PNG format (lossless) with 100 quality (ignored for PNG, but standard)
+            val success = bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
+
+            if (!success) {
+                // Compress returned false (rare, but good to check)
+                Log.e(TAG, "❌ Bitmap compression failed for unknown reason.")
+                return null
+            }
+
+            // 3. Get the path for the saved file
+            val savedPath = context.getFileStreamPath(filename).absolutePath
+
+            // Log the success and the absolute path
+            Log.i(TAG, "✅ Bitmap saved successfully to: $savedPath")
+            return savedPath
+
+        } catch (e: Exception) {
+            // Log the failure details
+            Log.e(TAG, "❌ Failed to save bitmap: ${e.message}", e)
+            return null // Return null on failure
+        } finally {
+            // 4. Always close the stream in a 'finally' block
+            try {
+                fileOutputStream?.close()
+                Log.d(TAG, "FileOutputStream closed.")
+            } catch (e: IOException) {
+                // Log if closing the stream fails
+                Log.e(TAG, "Error closing FileOutputStream: ${e.message}", e)
+            }
+        }
     }
 }

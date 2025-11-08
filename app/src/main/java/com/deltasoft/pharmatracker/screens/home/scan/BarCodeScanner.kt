@@ -313,7 +313,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 ) {
                     // Only show the camera preview if scanning is active.
                     if (isScanning && scannedValue.isNullOrEmpty()) {
-                        CameraPreview(
+                        CameraPreviewNew(
                             onBarcodeScanned = { value ->
                                 Log.d("SREENATH", "BarCodeScanner: $value")
                                 scannedValue = value
