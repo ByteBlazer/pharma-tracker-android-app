@@ -1,7 +1,6 @@
 package com.deltasoft.pharmatracker.screens.home.scan
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
@@ -26,11 +25,11 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     private val _scanDocState = MutableStateFlow<ScanDocState>(ScanDocState.Idle)
     val scanDocState = _scanDocState.asStateFlow()
 
-    fun scanDoc(barcode: String) {
+    fun scanDoc(barcode: String, unscan: Boolean) {
         if (barcode.isNotNullOrEmpty()) {
             _scanDocState.value = ScanDocState.Loading
             try {
-                repository.scanDoc(token = token, barcode = barcode)
+                repository.scanDoc(token = token, barcode = barcode,unscan = unscan)
             } catch (e: Exception) {
                 _scanDocState.value = ScanDocState.Error("Login failed: ${e.message}",0)
             }

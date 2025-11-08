@@ -47,6 +47,7 @@ interface ApiService {
     suspend fun scanDoc(
         @Header("Authorization") token: String,
         @Path("barcode") barcode: String,
+        @Query("unscan") unscan : Boolean
     ): Response<ScanDocSuccessResponse>
 
     @GET("trip/available-drivers")
