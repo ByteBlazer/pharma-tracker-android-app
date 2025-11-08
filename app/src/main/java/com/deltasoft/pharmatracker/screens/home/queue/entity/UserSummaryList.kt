@@ -8,5 +8,6 @@ data class UserSummaryList(
     var scannedByName: String? = null,
     var scannedFromLocation: String? = null,
     var count: Int? = null,
+    var docIdList: ArrayList<String> = arrayListOf(),
     val isChecked: MutableState<Boolean> = mutableStateOf(false)
 )
