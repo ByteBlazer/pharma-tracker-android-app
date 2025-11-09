@@ -11,11 +11,11 @@ import kotlinx.coroutines.launch
 class ScanRepository(var viewModel: ScanViewModel) {
     var viewModelScope = CoroutineScope(Dispatchers.IO)
 
-    fun scanDoc(token : String, barcode: String){
+    fun scanDoc(token: String, barcode: String, unscan: Boolean){
 
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.scanDoc(token = token, barcode = barcode)
+                val response = RetrofitClient.apiService.scanDoc(token = token, barcode = barcode, unscan = unscan)
                 if (response.isSuccessful) {
                     viewModel.updateScanDocState(response.code(),response.body()?.message?:"")
                 } else {
