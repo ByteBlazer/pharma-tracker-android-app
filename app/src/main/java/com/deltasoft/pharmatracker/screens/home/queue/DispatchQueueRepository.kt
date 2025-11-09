@@ -40,4 +40,33 @@ class DispatchQueueRepository(var viewModel: DispatchQueueViewModel) {
             }
         }
     }
+
+    fun scanDoc(token: String, barcode: String, unscan: Boolean){
+
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.scanDoc(token = token, barcode = barcode, unscan = unscan)
+                if (response.isSuccessful) {
+                    viewModel.updateScanDocState(response.code(),response.body()?.message?:"")
+                } else {
+                    val errorBodyString = response.errorBody()?.string()
+                    if (errorBodyString != null) {
+                        try {
+                            val errorResponse = Gson().fromJson(errorBodyString, ApiResponse::class.java)
+                            val errorMessage = errorResponse.message
+                            viewModel.updateScanDocState(response.code(), errorMessage?:"")
+                        } catch (e: Exception) {
+                            // Catch JSON parsing errors if the error body format is unexpected
+                            println("Failed to parse error body: ${e.message}")
+                            viewModel.updateScanDocState(0, "${e.message}")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle network errors
+                println("Network error: ${e.message}")
+                viewModel.updateScanDocState(0, AppConstants.NETWORK_LOSS_MESSAGE)
+            }
+        }
+    }
 }

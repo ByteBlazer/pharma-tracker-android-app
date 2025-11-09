@@ -2,11 +2,7 @@ package com.deltasoft.pharmatracker.screens.home.scan
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import android.util.Log
-import android.util.Size
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -48,22 +44,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.R
-import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.BorderSide
+import com.deltasoft.pharmatracker.screens.ScanUnscanSegmentedControl
 import com.deltasoft.pharmatracker.screens.drawOneSideBorder
-import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
 import com.deltasoft.pharmatracker.utils.AppConstants
@@ -106,6 +101,8 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     val dialogMessage = remember { mutableStateOf("") }
     val dialogMessageColor = remember { mutableStateOf(Color.Green) }
 
+    var scanMode by remember { mutableStateOf(true) }
+
     LaunchedEffect(Unit) {
         scannedValue =""
         lastApiCalledValue = ""
@@ -129,6 +126,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 
             is ScanDocState.Success -> {
                 Log.d(TAG, "BarCodeScanner: ScanDocState.Success")
+                scanMode = true
                 val message = (scanState as ScanDocState.Success).message
                 val code = (scanState as ScanDocState.Success).code
                 dialogMessage.value = message
@@ -262,7 +260,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
             if (scannedValue != lastApiCalledValue) {
                 Log.d(TAG, "BarCodeScanner: new value available, calling API")
                 lastApiCalledValue = scannedValue
-                scanViewModel.scanDoc(scannedValue)
+                scanViewModel.scanDoc(scannedValue,!scanMode)
             } else {
                 Log.d(TAG, "BarCodeScanner: same value detected, skipping API call")
             }
@@ -295,25 +293,39 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
         }
     }
 
+    val redGradient = Brush.verticalGradient(
+        colors = listOf(Color.Red, Color(0xFFFF4081)), // From a bright red to a pinkish red
+        startY = 0f,
+        endY = Float.POSITIVE_INFINITY
+    )
+
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-
+            ScanUnscanSegmentedControl(
+                isScanning = scanMode,
+                // 3. Pass the function to update the state
+                onToggle = { newState ->
+                    scanMode = !scanMode
+                }
+            )
             Column(Modifier.padding(bottom = 48.dp)) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1f),
+                        .aspectRatio(1f)
+                        .then(if (scanMode) Modifier else Modifier
+                            .background(brush = redGradient,RoundedCornerShape(12.dp)).padding(8.dp)),
                     elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
                 ) {
                     // Only show the camera preview if scanning is active.
                     if (isScanning && scannedValue.isNullOrEmpty()) {
-                        CameraPreview(
+                        CameraPreviewNew(
                             onBarcodeScanned = { value ->
                                 Log.d("SREENATH", "BarCodeScanner: $value")
                                 scannedValue = value

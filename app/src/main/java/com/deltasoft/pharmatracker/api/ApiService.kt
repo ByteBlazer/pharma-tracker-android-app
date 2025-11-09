@@ -2,6 +2,7 @@ package com.deltasoft.pharmatracker.api
 
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsDeliveredRequest
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsUnDeliveredRequest
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.RecentSignatureResponse
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
 import com.deltasoft.pharmatracker.screens.home.location.LocationData
 import com.deltasoft.pharmatracker.screens.home.queue.entity.DispatchQueueResponse
@@ -47,6 +48,7 @@ interface ApiService {
     suspend fun scanDoc(
         @Header("Authorization") token: String,
         @Path("barcode") barcode: String,
+        @Query("unscan") unscan : Boolean
     ): Response<ScanDocSuccessResponse>
 
     @GET("trip/available-drivers")
@@ -116,4 +118,10 @@ interface ApiService {
         @Body body : MarkAsUnDeliveredRequest
     ): Response<ApiResponse>
 
+    @GET("doc/recent-signature/{tripId}/{docId}")
+    suspend fun getRecentSignature(
+        @Header("Authorization") token: String,
+        @Path("tripId") tripId: String,
+        @Path("docId") docId: String,
+    ): Response<RecentSignatureResponse>
 }

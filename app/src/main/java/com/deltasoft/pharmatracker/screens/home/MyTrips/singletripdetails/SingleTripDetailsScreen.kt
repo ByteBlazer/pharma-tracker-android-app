@@ -273,6 +273,8 @@ fun SingleTripDetailsScreen(
                                     dropOffTripId = tripId
                                     dropOffHeading = heading
                                 }, deliverySuccessOnClick = {doc ->
+                                    singleTripDetailsViewModel.clearRecentSignatureState()
+                                    singleTripDetailsViewModel.getRecentSignature(tripId = doc.tripId?:"", docId = doc.id?:"")
                                     showDeliverySuccesDoc = doc
                                 }, deliveryFailedOnClick = { docId ->
                                     showDeliveryFailedDocId = docId
