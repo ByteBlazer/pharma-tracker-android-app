@@ -145,12 +145,14 @@ fun DispatchQueueScreen(
                 val message = (scanState as ScanDocState.Success).message
                 val code = (scanState as ScanDocState.Success).code
                 message.showToastMessage(context)
+                dispatchQueueViewModel.clearScanDocState()
             }
 
             is ScanDocState.Error -> {
                 val message = (scanState as ScanDocState.Error).message
                 val code = (scanState as ScanDocState.Error).code
                 message.showToastMessage(context)
+                dispatchQueueViewModel.clearScanDocState()
             }
         }
     }
