@@ -1,8 +1,10 @@
 package com.deltasoft.pharmatracker.screens.home.scan
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.util.Log
+import android.view.WindowManager
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -36,6 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -102,6 +105,23 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     val dialogMessageColor = remember { mutableStateOf(Color.Green) }
 
     var scanMode by remember { mutableStateOf(true) }
+
+    val window = (context as? Activity)?.window
+    LaunchedEffect(isScanning) {
+        if (isScanning){
+            // Add the flag to keep the screen on
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }else{
+            // Clear the flag to allow the screen to turn off normally
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+    DisposableEffect(scanViewModel) {
+        onDispose {
+            // Clear the flag to allow the screen to turn off normally
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 
     LaunchedEffect(Unit) {
         scannedValue =""
@@ -319,8 +339,11 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .then(if (scanMode) Modifier else Modifier
-                            .background(brush = redGradient,RoundedCornerShape(12.dp)).padding(8.dp)),
+                        .then(
+                            if (scanMode) Modifier else Modifier
+                                .background(brush = redGradient, RoundedCornerShape(12.dp))
+                                .padding(8.dp)
+                        ),
                     elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
                 ) {
                     // Only show the camera preview if scanning is active.
@@ -340,7 +363,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                         ) {
                             if (!isScanning) {
                                 Text(
-                                    text = "Press start to scan",
+                                    text = if (scanMode) "Press start to scan" else "Press start to unscan",
                                     style = MaterialTheme.typography.headlineMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
