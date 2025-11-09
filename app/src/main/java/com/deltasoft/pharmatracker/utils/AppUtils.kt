@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
@@ -22,6 +23,8 @@ import android.provider.Settings
 import android.util.Base64
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
@@ -519,6 +522,34 @@ object AppUtils {
             Log.e("SignaturePad", "Error reading file for Base64 encoding: ${e.message}")
             return null
         }
+    }
+
+    /**
+     * Decodes a Base64 encoded string (of an image) back into an Android Bitmap.
+     *
+     * @param base64String The Base64 encoded string returned by saveSignatureImage.
+     * @return The decoded Bitmap, or null if decoding fails.
+     */
+    fun decodeBase64ToBitmap(base64String: String?): Bitmap? {
+        if (base64String.isNullOrEmpty()) return null
+
+        return try {
+            // 1. Decode the Base64 string into a byte array.
+            // Use Base64.DEFAULT as you did during encoding.
+            val decodedBytes: ByteArray = Base64.decode(base64String, Base64.DEFAULT)
+
+            // 2. Convert the byte array into a Bitmap.
+            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+
+        } catch (e: IllegalArgumentException) {
+            // This exception is typically thrown if the input string is not valid Base64
+            Log.e("SignaturePad", "Error decoding Base64 string: ${e.message}")
+            null
+        }
+    }
+
+    fun Bitmap.toImageBitmap(): ImageBitmap {
+        return this.asImageBitmap() // Uses the extension function from androidx.compose.ui.graphics
     }
 
     fun String?.showToastMessage(context: Context) {

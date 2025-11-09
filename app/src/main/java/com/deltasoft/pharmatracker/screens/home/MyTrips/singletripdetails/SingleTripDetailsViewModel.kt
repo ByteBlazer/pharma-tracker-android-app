@@ -20,8 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import android.util.Log
 
 import androidx.lifecycle.application
-import kotlinx.coroutines.flow.StateFlow
-import java.util.UUID
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.RecentSignatureResponse
 
 
 class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(application) {
@@ -236,5 +235,39 @@ class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(ap
                 _latestLocationState.value = LocationState.Error("Location error ${exception.message}")
             }
         )
+    }
+
+
+    private val _recentSignatureState =
+        MutableStateFlow<RecentSignatureState>(RecentSignatureState.Idle)
+    val recentSignatureState = _recentSignatureState.asStateFlow()
+
+    fun getRecentSignature(tripId:String,docId: String) {
+        _recentSignatureState.value = RecentSignatureState.Loading
+        try {
+            repository.getRecentSignature(token = token, tripId = tripId, docId = docId)
+        } catch (e: Exception) {
+            _recentSignatureState.value = RecentSignatureState.Error("Fetch My scheduled trips failed: ${e.message}")
+        }
+    }
+
+    fun updateRecentSignatureState(code: Int, message: String, signatureResponse: RecentSignatureResponse?= null) {
+        when(code){
+            200->{
+                _recentSignatureState.value = RecentSignatureState.Success(signatureResponse?:RecentSignatureResponse())
+            }
+            400->{
+                _recentSignatureState.value = RecentSignatureState.Error(message)
+            }
+            500->{
+                _recentSignatureState.value = RecentSignatureState.Error(message)
+            }
+            else->{
+                _recentSignatureState.value = RecentSignatureState.Error(message)
+            }
+        }
+    }
+    fun clearRecentSignatureState() {
+        _recentSignatureState.value = RecentSignatureState.Idle
     }
 }
