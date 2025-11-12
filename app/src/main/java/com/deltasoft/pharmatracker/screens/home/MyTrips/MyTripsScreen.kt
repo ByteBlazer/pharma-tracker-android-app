@@ -97,28 +97,28 @@ fun MyTripsScreen(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
 
-    val latitude by myTripsViewModel.latitude.collectAsState()
-    val longitude by myTripsViewModel.longitude.collectAsState()
+//    val latitude by myTripsViewModel.latitude.collectAsState()
+//    val longitude by myTripsViewModel.longitude.collectAsState()
 
     val loading by myTripsViewModel.loading.collectAsState()
 
-    DisposableEffect(myTripsViewModel) {
-        myTripsViewModel.registerReceiver(context)
-        onDispose {
-            myTripsViewModel.unregisterReceiver(context)
-        }
-    }
+//    DisposableEffect(myTripsViewModel) {
+//        myTripsViewModel.registerReceiver(context)
+//        onDispose {
+//            myTripsViewModel.unregisterReceiver(context)
+//        }
+//    }
 
-    LaunchedEffect(latitude,longitude) {
-        if (myTripsViewModel?.currentTrip != null && latitude != null && longitude != null){
-            myTripsViewModel?.clearAllValues()
-            navController.navigate(
-                Screen.SingleTripDetails.createRoute(
-                    selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
-                )
-            )
-        }
-    }
+//    LaunchedEffect(latitude,longitude) {
+//        if (myTripsViewModel?.currentTrip != null && latitude != null && longitude != null){
+//            myTripsViewModel?.clearAllValues()
+//            navController.navigate(
+//                Screen.SingleTripDetails.createRoute(
+//                    selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
+//                )
+//            )
+//        }
+//    }
 
 
     var isPermissionCheckedOnce by remember { mutableStateOf(false) }
@@ -126,6 +126,7 @@ fun MyTripsScreen(
 
     val apiState by myTripsViewModel.scheduledTripsState.collectAsState()
     val startTripState by myTripsViewModel.startTripState.collectAsState()
+    val sendLocationState by myTripsViewModel.sendLocationState.collectAsState()
     val refreshClickEvent by homeViewModel.myTripsListRefreshClickEvent.collectAsState()
 
     LaunchedEffect(startTripState) {
@@ -141,14 +142,42 @@ fun MyTripsScreen(
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.d(TAG, "State: Success - Message: $message")
                 myTripsViewModel.storeCurrentTripId()
-                myTripsViewModel.clearLocationValues()
-                myTripsViewModel.restartForegroundService(context)
+                myTripsViewModel.sendLocation()
+//                myTripsViewModel.clearLocationValues()
+//                myTripsViewModel.restartForegroundService(context)
             }
             is AppCommonApiState.Error -> {
                 val message = (startTripState as AppCommonApiState.Error).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "State: Error - Message: $message")
                 myTripsViewModel.clearStartTripState()
+                myTripsViewModel?.setLoading(false)
+            }
+        }
+    }
+
+    LaunchedEffect(sendLocationState) {
+        when (sendLocationState) {
+            is AppCommonApiState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is AppCommonApiState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is AppCommonApiState.Success -> {
+                val message = (sendLocationState as AppCommonApiState.Success).message
+                if (myTripsViewModel?.currentTrip != null){
+                    myTripsViewModel?.clearAllValues()
+                    navController.navigate(
+                        Screen.SingleTripDetails.createRoute(
+                            selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
+                        )
+                    )
+                }
+
+            }
+            is AppCommonApiState.Error -> {
+                val message = (sendLocationState as AppCommonApiState.Error).message
                 myTripsViewModel?.setLoading(false)
             }
         }
@@ -168,8 +197,9 @@ fun MyTripsScreen(
             }else if (myTripsViewModel?.currentTrip?.status?.equals("STARTED") == true) {
                 // Resume trip
                 myTripsViewModel.setLoading(true)
-                myTripsViewModel.clearLocationValues()
-                myTripsViewModel.restartForegroundService(context)
+//                myTripsViewModel.clearLocationValues()
+                myTripsViewModel.sendLocation()
+//                myTripsViewModel.restartForegroundService(context)
             }else{
                 myTripsViewModel?.setLoading(false)
             }
@@ -191,8 +221,9 @@ fun MyTripsScreen(
                 }else if (myTripsViewModel?.currentTrip?.status?.equals("STARTED") == true) {
                     // Resume trip
                     myTripsViewModel.setLoading(true)
-                    myTripsViewModel.clearLocationValues()
-                    myTripsViewModel.restartForegroundService(context)
+//                    myTripsViewModel.clearLocationValues()
+                    myTripsViewModel.sendLocation()
+//                    myTripsViewModel.restartForegroundService(context)
                 }else{
                     myTripsViewModel?.setLoading(false)
                 }
@@ -248,7 +279,7 @@ fun MyTripsScreen(
                                 onItemClick = { schduledTrip ->
                                     myTripsViewModel.currentTrip = schduledTrip
                                     myTripsViewModel.stopService(context)
-                                    myTripsViewModel.clearLocationValues()
+//                                    myTripsViewModel.clearLocationValues()
                                     if (schduledTrip?.status.equals("SCHEDULED")) {
                                         // Start Trip
                                         when {
@@ -292,7 +323,8 @@ fun MyTripsScreen(
                                             locationPermissionState.status.isGranted -> {
                                                 if (AppUtils.isDeviceLocationOn(context)) {
                                                     myTripsViewModel.setLoading(true)
-                                                    myTripsViewModel.restartForegroundService(context)
+//                                                    myTripsViewModel.restartForegroundService(context)
+                                                    myTripsViewModel.sendLocation()
                                                     isLocationPermissionClicked = false
                                                 } else {
                                                     checkLocationSettings(
