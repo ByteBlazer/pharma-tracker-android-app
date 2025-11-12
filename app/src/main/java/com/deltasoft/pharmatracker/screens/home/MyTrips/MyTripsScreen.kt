@@ -167,6 +167,7 @@ fun MyTripsScreen(
             is AppCommonApiState.Success -> {
                 val message = (sendLocationState as AppCommonApiState.Success).message
                 if (myTripsViewModel?.currentTrip != null){
+                    myTripsViewModel.restartForegroundService(context)
                     myTripsViewModel?.clearAllValues()
                     navController.navigate(
                         Screen.SingleTripDetails.createRoute(
