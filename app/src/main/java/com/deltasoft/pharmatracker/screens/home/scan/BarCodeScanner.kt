@@ -36,7 +36,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -101,6 +103,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     var lastApiCalledValue by remember { mutableStateOf<String?>(null) }
 
     val showDialog = remember { mutableStateOf(false) }
+    val showUnScanDialog = remember { mutableStateOf(false) }
     val dialogMessage = remember { mutableStateOf("") }
     val dialogMessageColor = remember { mutableStateOf(Color.Green) }
 
@@ -146,18 +149,22 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 
             is ScanDocState.Success -> {
                 Log.d(TAG, "BarCodeScanner: ScanDocState.Success")
-                scanMode = true
                 val message = (scanState as ScanDocState.Success).message
                 val code = (scanState as ScanDocState.Success).code
                 dialogMessage.value = message
                 dialogMessageColor.value = getColorFromCode(code)
-                showDialog.value = true
                 AppVibratorManager.vibrate(context)
-                AppUtils.playMediaSound(context,R.raw.positive_beep_1)
+                AppUtils.playMediaSound(context, R.raw.positive_beep_1)
+                if (scanMode) {
+                    scanMode = true
+                    showDialog.value = true
 
-                delay(2000L)
-                scannedValue = ""
-                lastApiCalledValue = ""
+                    delay(2000L)
+                    scannedValue = ""
+                    lastApiCalledValue = ""
+                }else{
+                    showUnScanDialog.value = true
+                }
             }
 
             is ScanDocState.Error -> {
@@ -289,29 +296,29 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
         }
     }
 
-    LaunchedEffect(scanState) {
-
-        when (scanState) {
-            is ScanDocState.Idle -> {
-//                CircularProgressIndicator()
-            }
-
-            is ScanDocState.Loading -> {
-//                CircularProgressIndicator()
-            }
-
-            is ScanDocState.Success -> {
-                delay(2000)
-                scannedValue = ""
-            }
-
-            is ScanDocState.Error -> {
-                delay(2000)
-                scannedValue = ""
-                val message = (scanState as ScanDocState.Error).message
-            }
-        }
-    }
+//    LaunchedEffect(scanState) {
+//
+//        when (scanState) {
+//            is ScanDocState.Idle -> {
+////                CircularProgressIndicator()
+//            }
+//
+//            is ScanDocState.Loading -> {
+////                CircularProgressIndicator()
+//            }
+//
+//            is ScanDocState.Success -> {
+//                delay(2000)
+//                scannedValue = ""
+//            }
+//
+//            is ScanDocState.Error -> {
+//                delay(2000)
+//                scannedValue = ""
+//                val message = (scanState as ScanDocState.Error).message
+//            }
+//        }
+//    }
 
     val redGradient = Brush.verticalGradient(
         colors = listOf(Color.Red, Color(0xFFFF4081)), // From a bright red to a pinkish red
@@ -468,6 +475,66 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+        Box(modifier = Modifier
+            .padding(top = 16.dp)
+            .padding(horizontal = 16.dp)
+            .align(Alignment.Center)) {
+            Column {
+                if (showUnScanDialog.value) {
+                    Card(
+                        modifier = Modifier.padding(0.dp),
+                        border = BorderStroke(1.dp, dialogMessageColor.value),
+                        shape = CardDefaults.outlinedShape,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 50.dp)
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .drawOneSideBorder(
+                                    16.dp,
+                                    side = BorderSide.LEFT,
+                                    color = dialogMessageColor.value
+                                )
+                                .padding(16.dp),
+                            shape = CardDefaults.outlinedShape,
+                        ) {
+                            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(dialogMessage.value, modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelMedium)
+                                    IconButton(onClick = {
+                                        scanMode = true
+                                        scannedValue = ""
+                                        lastApiCalledValue = ""
+                                        showUnScanDialog.value = false
+                                    }, modifier = Modifier,
+                                        colors = getIconButtonColors()
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_close),
+                                            contentDescription = "close"
+                                        )
+                                    }
+                                }
+                                OutlinedButton(onClick = {
+                                    scanMode = true
+                                    scannedValue = ""
+                                    lastApiCalledValue = ""
+                                    showUnScanDialog.value = false
+                                }) {
+                                    Text(text = "OK")
+                                }
+                            }
+
                         }
                     }
                 }
