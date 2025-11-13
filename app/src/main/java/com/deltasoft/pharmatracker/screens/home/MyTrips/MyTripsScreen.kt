@@ -81,6 +81,7 @@ import android.app.Activity
 import android.content.IntentSender
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
+import com.deltasoft.pharmatracker.MainActivityViewModel
 
 private const val REQUEST_CHECK_SETTINGS = 1001
 
@@ -89,7 +90,9 @@ private const val TAG = "MyTripsScreen"
 @Composable
 fun MyTripsScreen(
     navController: NavHostController,
-    homeViewModel: HomeViewModel, myTripsViewModel: MyTripsViewModel = viewModel()
+    homeViewModel: HomeViewModel,
+    mainActivityViewModel: MainActivityViewModel,
+    myTripsViewModel: MyTripsViewModel = viewModel()
 ) {
     val context = LocalContext.current
 
@@ -286,6 +289,7 @@ fun MyTripsScreen(
                                         when {
                                             locationPermissionState.status.isGranted -> {
                                                 if (AppUtils.isDeviceLocationOn(context)) {
+                                                    mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
                                                     myTripsViewModel.setLoading(true)
                                                     myTripsViewModel.startTrip()
                                                     isLocationPermissionClicked = false
@@ -323,6 +327,7 @@ fun MyTripsScreen(
                                         when {
                                             locationPermissionState.status.isGranted -> {
                                                 if (AppUtils.isDeviceLocationOn(context)) {
+                                                    mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
                                                     myTripsViewModel.setLoading(true)
 //                                                    myTripsViewModel.restartForegroundService(context)
                                                     myTripsViewModel.sendLocation()

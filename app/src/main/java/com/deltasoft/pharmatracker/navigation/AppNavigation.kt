@@ -90,7 +90,7 @@ fun AppNavigation(applicationContext: Context,
             OtpVerificationScreen(navController = navController, mainActivityViewModel = mainActivityViewModel, phoneNumber = phoneNumber)
         }
         composable(Screen.Home.route) {
-            HomeScreen(navController,applicationContext)
+            HomeScreen(navController,applicationContext,mainActivityViewModel = mainActivityViewModel)
         }
         composable(Screen.Profile.route) {
             ProfileScreen(navController,applicationContext,mainActivityViewModel = mainActivityViewModel)

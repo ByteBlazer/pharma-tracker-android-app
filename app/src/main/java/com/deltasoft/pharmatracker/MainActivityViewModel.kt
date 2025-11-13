@@ -12,7 +12,9 @@ import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.UUID
 
 class MainActivityViewModel(application: Application) : AndroidViewModel(application) {
     private var sharedPreferences: SharedPreferences
@@ -83,5 +85,12 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
 
     fun clearState() {
         _scheduledTripsState.value = ScheduledTripsState.Idle
+    }
+
+    private val _checkBatteryOptimizationClickEvent = MutableStateFlow<UUID?>(null)
+    val checkBatteryOptimizationClickEvent: StateFlow<UUID?> = _checkBatteryOptimizationClickEvent.asStateFlow()
+
+    fun onCheckBatteryOptimizationClickEvent() {
+        _checkBatteryOptimizationClickEvent.value = UUID.randomUUID()
     }
 }

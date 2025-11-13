@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.MainActivityViewModel
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.NavConstants
 import com.deltasoft.pharmatracker.navigation.Screen
@@ -40,6 +41,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     navController: NavHostController, context:Context,
+    mainActivityViewModel: MainActivityViewModel,
     homeViewModel: HomeViewModel = viewModel()) {
     val sharedPrefsUtil = SharedPreferencesUtil(context)
     val token = sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN)
@@ -194,7 +196,7 @@ fun HomeScreen(
                     NavConstants.ROUTE_SCAN_SCREEN -> BarCodeScanner()
                     NavConstants.ROUTE_ROUTE_SCREEN -> DispatchQueueScreen(navController = navController, homeViewModel = homeViewModel)
                     NavConstants.ROUTE_SCHEDULED_TRIPS_SCREEN -> ScheduledTripsScreen(homeViewModel = homeViewModel)
-                    NavConstants.ROUTE_MY_TRIPS_SCREEN -> MyTripsScreen(navController = navController,homeViewModel = homeViewModel)
+                    NavConstants.ROUTE_MY_TRIPS_SCREEN -> MyTripsScreen(navController = navController,homeViewModel = homeViewModel, mainActivityViewModel = mainActivityViewModel)
                 }
             }
         }
