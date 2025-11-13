@@ -125,7 +125,8 @@ class LocationPingService : Service() {
                     )
                 }
             }
-            handler.postDelayed(runnable,(getLocationHeartBeatInSeconds(applicationContext) * 1000).toLong())
+            handler.post(runnable)
+//            handler.postDelayed(runnable,(getLocationHeartBeatInSeconds(applicationContext) * 1000).toLong())
         } else {
             Log.d(TAG, "onStartCommand: Service already started")
         }
