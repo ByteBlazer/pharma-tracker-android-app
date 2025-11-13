@@ -207,6 +207,8 @@ fun MyTripsScreen(
             }else{
                 myTripsViewModel?.setLoading(false)
             }
+
+            mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
             isLocationPermissionClicked = false
         } else {
             // User denied or canceled the dialog
@@ -218,6 +220,7 @@ fun MyTripsScreen(
     LaunchedEffect(locationPermissionState.status) {
         if (locationPermissionState.status.isGranted && isLocationPermissionClicked) {
             if (AppUtils.isDeviceLocationOn(context)) {
+                mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
                 if (myTripsViewModel?.currentTrip?.status?.equals("SCHEDULED") == true){
                     // start new trip
                     myTripsViewModel.setLoading(true)
