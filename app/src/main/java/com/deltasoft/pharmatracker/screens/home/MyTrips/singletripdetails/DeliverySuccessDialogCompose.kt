@@ -2,10 +2,12 @@ package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 
 import DrawingPath
 import SignaturePad
+import android.graphics.Bitmap
 import android.location.Location
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,7 +47,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -268,6 +273,8 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                                       dismissButtonText: String = "Cancel",
                                             singleTripDetailsViewModel: SingleTripDetailsViewModel,
                                             doc: Doc?) {
+
+    val recentSignatureState by singleTripDetailsViewModel.recentSignatureState.collectAsState()
     // 1. State to hold the user's input
     var commentText by remember { mutableStateOf("") }
     var signatureEncodedString by remember { mutableStateOf<String?>("") }
@@ -312,6 +319,24 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
 
     var currentLocation by remember { mutableStateOf<Location?>(null) }
 
+    var recentSignature by remember { mutableStateOf<String?>(null) }
+    var recentSignatureBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+
+    LaunchedEffect(recentSignatureState) {
+        when (recentSignatureState) {
+            is RecentSignatureState.Idle -> {
+            }
+            is RecentSignatureState.Loading -> {
+            }
+            is RecentSignatureState.Success -> {
+                recentSignature = (recentSignatureState as RecentSignatureState.Success).signature.signature
+                recentSignatureBitmap = AppUtils.decodeBase64ToBitmap(recentSignature)?.asImageBitmap()
+            }
+            is RecentSignatureState.Error -> {
+            }
+        }
+    }
+
     if (showDialog) {
 
         // LaunchedEffect triggers whenever clickEvent changes
@@ -326,6 +351,8 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                 commentText = ""
                 paths = emptyList()
                 currentPath = Path()
+                recentSignature = null
+                recentSignatureBitmap = null
                 onDismiss.invoke()
             },
             properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false) ) {
@@ -362,30 +389,46 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                         ) {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopEnd) {
-                                SignaturePad(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(Color.White) // Signature area background
-                                        // Capture the size of the Composable in pixels
-                                        .onGloballyPositioned { layoutCoordinates ->
-                                            signaturePadSizePx = layoutCoordinates.size
-                                        },
-                                    paths = paths,
-                                    currentPath = currentPath,
-                                    onSignatureDrawn = { path, dragEnd ->
-                                        if (dragEnd) {
-                                            // Drag ended, save the current path to the list of finished paths
-                                            paths = paths + DrawingPath(path, signatureColor, signatureStrokeWidth)
-                                            currentPath = Path() // Start a new current path
-                                        } else {
-                                            // FIX: Create a new Path object by copying the content of the mutated 'path'
-                                            // This forces Compose to see a state change (new object reference) and recompose the Canvas.
-                                            currentPath = Path().apply { addPath(path) }
+                                if (recentSignatureBitmap == null) {
+                                    SignaturePad(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(Color.White) // Signature area background
+                                            // Capture the size of the Composable in pixels
+                                            .onGloballyPositioned { layoutCoordinates ->
+                                                signaturePadSizePx = layoutCoordinates.size
+                                            },
+                                        paths = paths,
+                                        currentPath = currentPath,
+                                        onSignatureDrawn = { path, dragEnd ->
+                                            if (dragEnd) {
+                                                // Drag ended, save the current path to the list of finished paths
+                                                paths = paths + DrawingPath(
+                                                    path,
+                                                    signatureColor,
+                                                    signatureStrokeWidth
+                                                )
+                                                currentPath = Path() // Start a new current path
+                                            } else {
+                                                // FIX: Create a new Path object by copying the content of the mutated 'path'
+                                                // This forces Compose to see a state change (new object reference) and recompose the Canvas.
+                                                currentPath = Path().apply { addPath(path) }
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                }else{
+                                    Image(
+                                        bitmap = recentSignatureBitmap!!,
+                                        contentDescription = "User Signature",
+                                        modifier = Modifier.fillMaxSize(),
+                                        // This ensures the entire signature fits within the box
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
                                 IconButton(
                                     onClick = {
+                                        recentSignature = null
+                                        recentSignatureBitmap = null
                                         paths = emptyList()
                                         currentPath = Path()
                                     },
@@ -484,11 +527,13 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
 
                                         // Define the shape with rounded corners
                                         val cornerShape = RoundedCornerShape(12.dp)
-                                        Row(Modifier.fillMaxWidth()
+                                        Row(Modifier
+                                            .fillMaxWidth()
 //                                            .border(
 //                                            border = yellowBorder,
 //                                            shape = cornerShape)
-                                            .background(Color.Yellow.copy(alpha = 0.2f)).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            .background(Color.Yellow.copy(alpha = 0.2f))
+                                            .padding(8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                                             Text("You seem to be far from this customer's usual delivery spot", style = MaterialTheme.typography.bodySmall,
                                                 modifier = Modifier.weight(1f))
 //                                            IconButton(
@@ -521,11 +566,13 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
 
                                     // Define the shape with rounded corners
                                     val cornerShape = RoundedCornerShape(12.dp)
-                                    Row(Modifier.fillMaxWidth()
+                                    Row(Modifier
+                                        .fillMaxWidth()
 //                                            .border(
 //                                            border = yellowBorder,
 //                                            shape = cornerShape)
-                                        .background(Color.Yellow.copy(alpha = 0.2f)).padding(8.dp),
+                                        .background(Color.Yellow.copy(alpha = 0.2f))
+                                        .padding(8.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween) {
                                         Text("$message Please retry", style = MaterialTheme.typography.bodySmall)
 //                                        IconButton(
@@ -569,6 +616,8 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                                 commentText = ""
                                 paths = emptyList()
                                 currentPath = Path()
+                                recentSignature = null
+                                recentSignatureBitmap = null
                                 onDismiss.invoke()
                             },
                                 colors = getButtonColors()
@@ -579,40 +628,57 @@ fun DeliverySuccessConfirmationDialogCustom(showDialog: Boolean,
                             }
                             Button(onClick = {
                                 // Combine all paths for final capture
-                                if (finalPaths.isNotEmpty() && signaturePadSizePx.width > 0) {
-                                    // FIX: Dynamically calculate target height based on measured aspect ratio
-                                    val ratio =
-                                        signaturePadSizePx.height.toFloat() / signaturePadSizePx.width.toFloat()
-                                    val calculatedTargetHeight =
-                                        (targetBitmapWidth.toFloat() * ratio).toInt()
-
-                                    signatureEncodedString = AppUtils.saveSignatureImage(
-                                        context,
-                                        finalPaths,
-                                        targetBitmapWidth,
-                                        calculatedTargetHeight, // Use calculated height for correct proportion
-                                        signaturePadSizePx.width,
-                                        signaturePadSizePx.height
+                                if (recentSignature.isNotNullOrEmpty()){
+                                    onConfirm.invoke(
+                                        commentText,
+                                        recentSignature ?: "",
+                                        isChecked,
+                                        currentLocation
                                     )
-                                    if (signatureEncodedString.isNotNullOrEmpty()) {
-                                        onConfirm.invoke(commentText, signatureEncodedString?:"",isChecked,currentLocation)
-                                        commentText = ""
-                                        paths = emptyList()
-                                        currentPath = Path()
-                                        isChecked = true
-                                    }else{
+                                    commentText = ""
+                                    paths = emptyList()
+                                    currentPath = Path()
+                                    isChecked = true
+                                    recentSignature = null
+                                    recentSignatureBitmap = null
+                                }else{
+                                    if (finalPaths.isNotEmpty() && signaturePadSizePx.width > 0) {
+                                        // FIX: Dynamically calculate target height based on measured aspect ratio
+                                        val ratio =
+                                            signaturePadSizePx.height.toFloat() / signaturePadSizePx.width.toFloat()
+                                        val calculatedTargetHeight =
+                                            (targetBitmapWidth.toFloat() * ratio).toInt()
+
+                                        signatureEncodedString = AppUtils.saveSignatureImage(
+                                            context,
+                                            finalPaths,
+                                            targetBitmapWidth,
+                                            calculatedTargetHeight, // Use calculated height for correct proportion
+                                            signaturePadSizePx.width,
+                                            signaturePadSizePx.height
+                                        )
+                                        if (signatureEncodedString.isNotNullOrEmpty()) {
+                                            onConfirm.invoke(commentText, signatureEncodedString?:"",isChecked,currentLocation)
+                                            commentText = ""
+                                            paths = emptyList()
+                                            currentPath = Path()
+                                            isChecked = true
+                                            recentSignature = null
+                                            recentSignatureBitmap = null
+                                        }else{
+                                            "Signature is mandatory".showToastMessage(context)
+                                            Log.w(
+                                                "SignaturePad",
+                                                "comment or signatureEncodedString is empty"
+                                            )
+                                        }
+                                    } else {
                                         "Signature is mandatory".showToastMessage(context)
                                         Log.w(
                                             "SignaturePad",
-                                            "comment or signatureEncodedString is empty"
+                                            "Cannot save: No signature drawn or size not yet measured."
                                         )
                                     }
-                                } else {
-                                    "Signature is mandatory".showToastMessage(context)
-                                    Log.w(
-                                        "SignaturePad",
-                                        "Cannot save: No signature drawn or size not yet measured."
-                                    )
                                 }
                             },
                                 colors = getButtonColors()

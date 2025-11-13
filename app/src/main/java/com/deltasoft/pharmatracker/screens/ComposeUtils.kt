@@ -1,5 +1,7 @@
 package com.deltasoft.pharmatracker.screens
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -54,6 +56,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -62,6 +65,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import com.deltasoft.pharmatracker.ui.theme.AppSecondary
 import com.deltasoft.pharmatracker.ui.theme.AppTertiary
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -704,6 +709,81 @@ fun CustomSearchField(
     }
 }
 
+const val MODE_SCAN = "SCAN"
+const val MODE_UNSCAN = "UNSCAN"
+
+@Composable
+fun ScanUnscanSegmentedControl(
+    isScanning: Boolean,
+    onToggle: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    // Define colors used in the design
+    thumbColor: Color = AppPrimary,
+    trackColor: Color = AppPrimary.copy(alpha = 0.3f),
+    activeTextColor: Color = Color.White,
+    inactiveTextColor: Color = Color.Black,
+) {
+    // List of items in the control
+    val items = listOf(MODE_SCAN, MODE_UNSCAN)
+    // Determine which item is selected (0 for SCAN, 1 for UNSCAN)
+    val selectedIndex = if (isScanning) 0 else 1
+
+    // Define dimensions
+    val containerWidth = 200.dp // Wider container for a smoother look
+    val itemWidth = containerWidth / items.size
+    val toggleHeight = 36.dp
+    val cornerRadius = toggleHeight / 2 // Fully rounded ends
+
+    // 1. Animate the indicator's horizontal position
+    val indicatorOffset by animateDpAsState(
+        targetValue = itemWidth * selectedIndex,
+        animationSpec = tween(durationMillis = 300),
+        label = "SegmentedControlOffset"
+    )
+
+    // The main container (the track)
+    Box(
+        modifier = modifier
+            .width(containerWidth)
+            .height(toggleHeight)
+            .clip(RoundedCornerShape(cornerRadius))
+            .background(trackColor)
+    ) {
+        // 2. Sliding Indicator/Thumb
+        // This Box must be the first element in the parent Box so the Text overlays it.
+        Box(
+            modifier = Modifier
+                .offset(x = indicatorOffset) // Animated horizontal movement
+                .width(itemWidth)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(cornerRadius)) // Match the container radius
+                .background(thumbColor)
+        )
+
+        // 3. Text Labels (positioned in a Row over the indicator)
+        Row(modifier = Modifier.fillMaxSize()) {
+            items.forEachIndexed { index, text ->
+                val isSelected = index == selectedIndex
+                Box(
+                    modifier = Modifier
+                        .width(itemWidth)
+                        .fillMaxHeight()
+                        // Toggle logic: If index is 0, it's SCAN (true); otherwise, it's UNSCAN (false)
+                        .clickable { onToggle(index == 0) }
+                        .zIndex(1f), // Ensure text is drawn on top of the thumb
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = text,
+                        color = if (isSelected) activeTextColor else inactiveTextColor,
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        }
+    }
+}
 
 
 

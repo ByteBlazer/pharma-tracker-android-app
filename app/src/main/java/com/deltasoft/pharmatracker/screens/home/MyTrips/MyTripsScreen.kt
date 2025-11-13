@@ -21,6 +21,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -62,18 +64,35 @@ import com.deltasoft.pharmatracker.screens.home.HomeViewModel
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTrip
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
+import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 
+import com.google.android.gms.location.*
+import com.google.android.gms.common.api.ResolvableApiException
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Context
+import android.app.Activity
+import android.content.IntentSender
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResult
+import com.deltasoft.pharmatracker.MainActivityViewModel
+
+private const val REQUEST_CHECK_SETTINGS = 1001
+
 private const val TAG = "MyTripsScreen"
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MyTripsScreen(
     navController: NavHostController,
-    homeViewModel: HomeViewModel, myTripsViewModel: MyTripsViewModel = viewModel()
+    homeViewModel: HomeViewModel,
+    mainActivityViewModel: MainActivityViewModel,
+    myTripsViewModel: MyTripsViewModel = viewModel()
 ) {
     val context = LocalContext.current
 
@@ -81,28 +100,28 @@ fun MyTripsScreen(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
 
-    val latitude by myTripsViewModel.latitude.collectAsState()
-    val longitude by myTripsViewModel.longitude.collectAsState()
+//    val latitude by myTripsViewModel.latitude.collectAsState()
+//    val longitude by myTripsViewModel.longitude.collectAsState()
 
     val loading by myTripsViewModel.loading.collectAsState()
 
-    DisposableEffect(myTripsViewModel) {
-        myTripsViewModel.registerReceiver(context)
-        onDispose {
-            myTripsViewModel.unregisterReceiver(context)
-        }
-    }
+//    DisposableEffect(myTripsViewModel) {
+//        myTripsViewModel.registerReceiver(context)
+//        onDispose {
+//            myTripsViewModel.unregisterReceiver(context)
+//        }
+//    }
 
-    LaunchedEffect(latitude,longitude) {
-        if (myTripsViewModel?.currentTrip != null && latitude != null && longitude != null){
-            myTripsViewModel?.clearAllValues()
-            navController.navigate(
-                Screen.SingleTripDetails.createRoute(
-                    selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
-                )
-            )
-        }
-    }
+//    LaunchedEffect(latitude,longitude) {
+//        if (myTripsViewModel?.currentTrip != null && latitude != null && longitude != null){
+//            myTripsViewModel?.clearAllValues()
+//            navController.navigate(
+//                Screen.SingleTripDetails.createRoute(
+//                    selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
+//                )
+//            )
+//        }
+//    }
 
 
     var isPermissionCheckedOnce by remember { mutableStateOf(false) }
@@ -110,6 +129,7 @@ fun MyTripsScreen(
 
     val apiState by myTripsViewModel.scheduledTripsState.collectAsState()
     val startTripState by myTripsViewModel.startTripState.collectAsState()
+    val sendLocationState by myTripsViewModel.sendLocationState.collectAsState()
     val refreshClickEvent by homeViewModel.myTripsListRefreshClickEvent.collectAsState()
 
     LaunchedEffect(startTripState) {
@@ -125,8 +145,9 @@ fun MyTripsScreen(
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.d(TAG, "State: Success - Message: $message")
                 myTripsViewModel.storeCurrentTripId()
-                myTripsViewModel.clearLocationValues()
-                myTripsViewModel.restartForegroundService(context)
+                myTripsViewModel.sendLocation()
+//                myTripsViewModel.clearLocationValues()
+//                myTripsViewModel.restartForegroundService(context)
             }
             is AppCommonApiState.Error -> {
                 val message = (startTripState as AppCommonApiState.Error).message
@@ -138,9 +159,41 @@ fun MyTripsScreen(
         }
     }
 
-    // NEW LaunchedEffect to react to permission status changes
-    LaunchedEffect(locationPermissionState.status) {
-        if (locationPermissionState.status.isGranted && isLocationPermissionClicked) {
+    LaunchedEffect(sendLocationState) {
+        when (sendLocationState) {
+            is AppCommonApiState.Idle -> {
+                Log.d(TAG, "State: Idle")
+            }
+            is AppCommonApiState.Loading -> {
+                Log.d(TAG, "State: Loading")
+            }
+            is AppCommonApiState.Success -> {
+                val message = (sendLocationState as AppCommonApiState.Success).message
+                if (myTripsViewModel?.currentTrip != null){
+                    myTripsViewModel.restartForegroundService(context)
+                    myTripsViewModel?.clearAllValues()
+                    navController.navigate(
+                        Screen.SingleTripDetails.createRoute(
+                            selectedScheduledTripId = myTripsViewModel.getCurrentTripId()
+                        )
+                    )
+                }
+
+            }
+            is AppCommonApiState.Error -> {
+                val message = (sendLocationState as AppCommonApiState.Error).message
+                myTripsViewModel?.setLoading(false)
+            }
+        }
+    }
+
+    // 1. Create the Activity Result Launcher
+    val locationSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            // Location successfully turned on by the user
+            Log.d(TAG, "MyTripsScreen:  Location successfully turned on by the user")
             if (myTripsViewModel?.currentTrip?.status?.equals("SCHEDULED") == true){
                 // start new trip
                 myTripsViewModel.setLoading(true)
@@ -148,12 +201,46 @@ fun MyTripsScreen(
             }else if (myTripsViewModel?.currentTrip?.status?.equals("STARTED") == true) {
                 // Resume trip
                 myTripsViewModel.setLoading(true)
-                myTripsViewModel.clearLocationValues()
-                myTripsViewModel.restartForegroundService(context)
+//                myTripsViewModel.clearLocationValues()
+                myTripsViewModel.sendLocation()
+//                myTripsViewModel.restartForegroundService(context)
             }else{
                 myTripsViewModel?.setLoading(false)
             }
+
+            mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
             isLocationPermissionClicked = false
+        } else {
+            // User denied or canceled the dialog
+            Log.d(TAG, "MyTripsScreen: User denied or canceled the dialog")
+        }
+    }
+
+    // NEW LaunchedEffect to react to permission status changes
+    LaunchedEffect(locationPermissionState.status) {
+        if (locationPermissionState.status.isGranted && isLocationPermissionClicked) {
+            if (AppUtils.isDeviceLocationOn(context)) {
+                mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
+                if (myTripsViewModel?.currentTrip?.status?.equals("SCHEDULED") == true){
+                    // start new trip
+                    myTripsViewModel.setLoading(true)
+                    myTripsViewModel.startTrip()
+                }else if (myTripsViewModel?.currentTrip?.status?.equals("STARTED") == true) {
+                    // Resume trip
+                    myTripsViewModel.setLoading(true)
+//                    myTripsViewModel.clearLocationValues()
+                    myTripsViewModel.sendLocation()
+//                    myTripsViewModel.restartForegroundService(context)
+                }else{
+                    myTripsViewModel?.setLoading(false)
+                }
+                isLocationPermissionClicked = false
+            } else {
+                checkLocationSettings(
+                    context,
+                    locationSettingsLauncher
+                )
+            }
         } else {
             Log.d(TAG, "Location permission DENIED or not yet requested.")
             myTripsViewModel?.setLoading(false)
@@ -199,14 +286,22 @@ fun MyTripsScreen(
                                 onItemClick = { schduledTrip ->
                                     myTripsViewModel.currentTrip = schduledTrip
                                     myTripsViewModel.stopService(context)
-                                    myTripsViewModel.clearLocationValues()
+//                                    myTripsViewModel.clearLocationValues()
                                     if (schduledTrip?.status.equals("SCHEDULED")) {
                                         // Start Trip
                                         when {
                                             locationPermissionState.status.isGranted -> {
-                                                myTripsViewModel.setLoading(true)
-                                                myTripsViewModel.startTrip()
-                                                isLocationPermissionClicked = false
+                                                if (AppUtils.isDeviceLocationOn(context)) {
+                                                    mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
+                                                    myTripsViewModel.setLoading(true)
+                                                    myTripsViewModel.startTrip()
+                                                    isLocationPermissionClicked = false
+                                                } else {
+                                                    checkLocationSettings(
+                                                        context,
+                                                        locationSettingsLauncher
+                                                    )
+                                                }
                                             }
 
                                             // If the user has denied the permission, show a rationale
@@ -234,9 +329,18 @@ fun MyTripsScreen(
                                         myTripsViewModel.storeCurrentTripId()
                                         when {
                                             locationPermissionState.status.isGranted -> {
-                                                myTripsViewModel.setLoading(true)
-                                                myTripsViewModel.restartForegroundService(context)
-                                                isLocationPermissionClicked = false
+                                                if (AppUtils.isDeviceLocationOn(context)) {
+                                                    mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
+                                                    myTripsViewModel.setLoading(true)
+//                                                    myTripsViewModel.restartForegroundService(context)
+                                                    myTripsViewModel.sendLocation()
+                                                    isLocationPermissionClicked = false
+                                                } else {
+                                                    checkLocationSettings(
+                                                        context,
+                                                        locationSettingsLauncher
+                                                    )
+                                                }
                                             }
 
                                             // If the user has denied the permission, show a rationale
@@ -280,6 +384,43 @@ fun MyTripsScreen(
 
 }
 
+fun checkLocationSettings(
+    context: Context,
+    launcher: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>
+) {
+    // Define the location requirements (e.g., high accuracy)
+    val locationRequest = LocationRequest.create().apply {
+        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+    }
+
+    val builder = LocationSettingsRequest.Builder()
+        .addLocationRequest(locationRequest)
+
+    val client: SettingsClient = LocationServices.getSettingsClient(context)
+    val task = client.checkLocationSettings(builder.build())
+
+    task.addOnFailureListener { exception ->
+
+        Log.d(TAG, "MyTripsScreen:  Location addOnFailureListener")
+        if (exception is ResolvableApiException) {
+            // Location settings are not satisfied. Show the user a dialog.
+            try {
+                // 2. Wrap the resolution intent in a request and launch it
+                val intentSenderRequest = IntentSenderRequest.Builder(exception.resolution).build()
+                launcher.launch(intentSenderRequest)
+            } catch (sendEx: IntentSender.SendIntentException) {
+                // Failed to resolve intent
+            }
+        }
+    }
+
+    task.addOnSuccessListener {
+
+        Log.d(TAG, "MyTripsScreen:  Location addOnSuccessListener")
+        // Location settings are already satisfied.
+        // You might want to notify the caller that it's already enabled.
+    }
+}
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable

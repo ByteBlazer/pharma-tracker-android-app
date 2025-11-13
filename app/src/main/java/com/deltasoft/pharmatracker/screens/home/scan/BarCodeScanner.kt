@@ -1,15 +1,17 @@
 package com.deltasoft.pharmatracker.screens.home.scan
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import android.util.Log
-import android.util.Size
+import android.view.WindowManager
+import androidx.camera.core.AspectRatio
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.BorderStroke
@@ -34,8 +36,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,24 +49,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.R
-import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.BorderSide
+import com.deltasoft.pharmatracker.screens.ScanUnscanSegmentedControl
 import com.deltasoft.pharmatracker.screens.drawOneSideBorder
-import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
+import com.deltasoft.pharmatracker.utils.AppConstants
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.AppVibratorManager
@@ -98,8 +103,28 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
     var lastApiCalledValue by remember { mutableStateOf<String?>(null) }
 
     val showDialog = remember { mutableStateOf(false) }
+    val showUnScanDialog = remember { mutableStateOf(false) }
     val dialogMessage = remember { mutableStateOf("") }
     val dialogMessageColor = remember { mutableStateOf(Color.Green) }
+
+    var scanMode by remember { mutableStateOf(true) }
+
+    val window = (context as? Activity)?.window
+    LaunchedEffect(isScanning) {
+        if (isScanning){
+            // Add the flag to keep the screen on
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }else{
+            // Clear the flag to allow the screen to turn off normally
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+    DisposableEffect(scanViewModel) {
+        onDispose {
+            // Clear the flag to allow the screen to turn off normally
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 
     LaunchedEffect(Unit) {
         scannedValue =""
@@ -128,13 +153,18 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 val code = (scanState as ScanDocState.Success).code
                 dialogMessage.value = message
                 dialogMessageColor.value = getColorFromCode(code)
-                showDialog.value = true
                 AppVibratorManager.vibrate(context)
-                AppUtils.playMediaSound(context,R.raw.positive_beep_1)
+                AppUtils.playMediaSound(context, R.raw.positive_beep_1)
+                if (scanMode) {
+                    scanMode = true
+                    showDialog.value = true
 
-                delay(2000L)
-                scannedValue = ""
-                lastApiCalledValue = ""
+                    delay(2000L)
+                    scannedValue = ""
+                    lastApiCalledValue = ""
+                }else{
+                    showUnScanDialog.value = true
+                }
             }
 
             is ScanDocState.Error -> {
@@ -257,7 +287,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
             if (scannedValue != lastApiCalledValue) {
                 Log.d(TAG, "BarCodeScanner: new value available, calling API")
                 lastApiCalledValue = scannedValue
-                scanViewModel.scanDoc(scannedValue)
+                scanViewModel.scanDoc(scannedValue,!scanMode)
             } else {
                 Log.d(TAG, "BarCodeScanner: same value detected, skipping API call")
             }
@@ -266,29 +296,35 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
         }
     }
 
-    LaunchedEffect(scanState) {
+//    LaunchedEffect(scanState) {
+//
+//        when (scanState) {
+//            is ScanDocState.Idle -> {
+////                CircularProgressIndicator()
+//            }
+//
+//            is ScanDocState.Loading -> {
+////                CircularProgressIndicator()
+//            }
+//
+//            is ScanDocState.Success -> {
+//                delay(2000)
+//                scannedValue = ""
+//            }
+//
+//            is ScanDocState.Error -> {
+//                delay(2000)
+//                scannedValue = ""
+//                val message = (scanState as ScanDocState.Error).message
+//            }
+//        }
+//    }
 
-        when (scanState) {
-            is ScanDocState.Idle -> {
-//                CircularProgressIndicator()
-            }
-
-            is ScanDocState.Loading -> {
-//                CircularProgressIndicator()
-            }
-
-            is ScanDocState.Success -> {
-                delay(2000)
-                scannedValue = ""
-            }
-
-            is ScanDocState.Error -> {
-                delay(2000)
-                scannedValue = ""
-                val message = (scanState as ScanDocState.Error).message
-            }
-        }
-    }
+    val redGradient = Brush.verticalGradient(
+        colors = listOf(Color.Red, Color(0xFFFF4081)), // From a bright red to a pinkish red
+        startY = 0f,
+        endY = Float.POSITIVE_INFINITY
+    )
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
@@ -296,20 +332,32 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-
+            ScanUnscanSegmentedControl(
+                isScanning = scanMode,
+                // 3. Pass the function to update the state
+                onToggle = { newState ->
+                    scanMode = !scanMode
+                }
+            )
             Column(Modifier.padding(bottom = 48.dp)) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1f),
+                        .aspectRatio(1f)
+                        .then(
+                            if (scanMode) Modifier else Modifier
+                                .background(brush = redGradient, RoundedCornerShape(12.dp))
+                                .padding(8.dp)
+                        ),
                     elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation))
                 ) {
                     // Only show the camera preview if scanning is active.
                     if (isScanning && scannedValue.isNullOrEmpty()) {
-                        CameraPreview(
+                        CameraPreviewNew(
                             onBarcodeScanned = { value ->
+                                Log.d("SREENATH", "BarCodeScanner: $value")
                                 scannedValue = value
                             }
                         )
@@ -322,7 +370,7 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                         ) {
                             if (!isScanning) {
                                 Text(
-                                    text = "Press start to scan",
+                                    text = if (scanMode) "Press start to scan" else "Press start to unscan",
                                     style = MaterialTheme.typography.headlineMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -386,7 +434,10 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
             }
         }
 
-        Box(modifier = Modifier.padding(top = 16.dp).padding(horizontal = 16.dp).align(Alignment.TopStart)) {
+        Box(modifier = Modifier
+            .padding(top = 16.dp)
+            .padding(horizontal = 16.dp)
+            .align(Alignment.TopStart)) {
             Column {
                 if (showDialog.value) {
                     Card(
@@ -429,6 +480,66 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 }
             }
         }
+        Box(modifier = Modifier
+            .padding(top = 16.dp)
+            .padding(horizontal = 16.dp)
+            .align(Alignment.Center)) {
+            Column {
+                if (showUnScanDialog.value) {
+                    Card(
+                        modifier = Modifier.padding(0.dp),
+                        border = BorderStroke(1.dp, dialogMessageColor.value),
+                        shape = CardDefaults.outlinedShape,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 50.dp)
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .drawOneSideBorder(
+                                    16.dp,
+                                    side = BorderSide.LEFT,
+                                    color = dialogMessageColor.value
+                                )
+                                .padding(16.dp),
+                            shape = CardDefaults.outlinedShape,
+                        ) {
+                            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(dialogMessage.value, modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelMedium)
+                                    IconButton(onClick = {
+                                        scanMode = true
+                                        scannedValue = ""
+                                        lastApiCalledValue = ""
+                                        showUnScanDialog.value = false
+                                    }, modifier = Modifier,
+                                        colors = getIconButtonColors()
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_close),
+                                            contentDescription = "close"
+                                        )
+                                    }
+                                }
+                                OutlinedButton(onClick = {
+                                    scanMode = true
+                                    scannedValue = ""
+                                    lastApiCalledValue = ""
+                                    showUnScanDialog.value = false
+                                }) {
+                                    Text(text = "OK")
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -453,12 +564,20 @@ fun getColorFromCode(code: Int): Color {
 
 }
 
+// State to manage the consecutive scanning for accuracy
+data class ScanState(
+    val lastValue: String = "",
+    val count: Int = 0
+)
 
 // Composable function for the camera preview and analysis.
 @Composable
-fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
+fun CameraPreview(onBarcodeScanned: (String) -> Unit,requiredConsecutiveScans: Int = AppConstants.REQUIRED_CONSECUTIVE_SCANS,zoomRatio: Float = AppConstants.ZOOM_RATIO) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+
+    // State to track consecutive successful scans
+    val scanState = remember { mutableStateOf(ScanState()) }
 
     // Embed the Android PreviewView into the Composable layout.
     AndroidView(
@@ -483,9 +602,21 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
                 val barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(options)
                 val analysisExecutor = Executors.newSingleThreadExecutor()
 
+                val resolutionSelector = ResolutionSelector.Builder()
+                    .setAspectRatioStrategy(
+                        AspectRatioStrategy(
+                            AspectRatio.RATIO_16_9,
+                            AspectRatioStrategy.FALLBACK_RULE_AUTO // Allows CameraX to select the best fit
+                        )
+                    )
+                    .build()
+
                 // Image analysis use case.
                 val imageAnalysis = ImageAnalysis.Builder()
-                    .setTargetResolution(Size(640, 480))
+//                    .setTargetResolution(Size(640, 480))
+//                    .setTargetResolution(Size(1280, 720))
+//                    .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+                    .setResolutionSelector(resolutionSelector)
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                     .also {
@@ -501,11 +632,37 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
                                 barcodeScanner.process(image)
                                     .addOnSuccessListener { barcodes ->
                                         if (barcodes.isNotEmpty()) {
-                                            val value = barcodes[0].rawValue ?: "No value found"
-                                            onBarcodeScanned(value)
-//                                            Log.d("BarcodeScanner", "Scanned value: $value")
+                                            val currentValue = barcodes[0].rawValue ?: ""
+
+                                            Log.d("SREENATH", "currentValue: $currentValue")
+                                            // 3. IMPLEMENT ACCURACY CHECK (Consecutive Scans)
+                                            if (currentValue.isNotBlank() && currentValue == scanState.value.lastValue) {
+                                                val newCount = scanState.value.count + 1
+                                                scanState.value = scanState.value.copy(count = newCount)
+
+                                                if (newCount >= requiredConsecutiveScans) {
+                                                    // Barcode verified, emit the result
+                                                    onBarcodeScanned(currentValue)
+
+                                                    // Optional: Reset state to prevent immediate re-triggering
+                                                    scanState.value = ScanState()
+                                                }
+                                            } else {
+                                                // New or different barcode detected, reset counter
+                                                scanState.value = ScanState(lastValue = currentValue, count = 1)
+                                            }
+                                        } else {
+                                            // No barcode found, reset state
+                                            scanState.value = ScanState()
                                         }
                                     }
+//                                    .addOnSuccessListener { barcodes ->
+//                                        if (barcodes.isNotEmpty()) {
+//                                            val value = barcodes[0].rawValue ?: "No value found"
+//                                            onBarcodeScanned(value)
+////                                            Log.d("BarcodeScanner", "Scanned value: $value")
+//                                        }
+//                                    }
                                     .addOnFailureListener { e ->
                                         Log.e("BarcodeScanner", "Barcode scanning failed", e)
                                     }
@@ -524,12 +681,14 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
                     cameraProvider.unbindAll()
 
                     // Bind the preview and image analysis use cases to the camera.
-                    cameraProvider.bindToLifecycle(
+                    val camera = cameraProvider.bindToLifecycle(
                         lifecycleOwner,
                         cameraSelector,
                         preview,
                         imageAnalysis
                     )
+                    // 4. SAFELY SET ZOOM RATIO
+                    setCameraZoom(camera, zoomRatio, context)
                 } catch (e: Exception) {
                     Log.e("BarcodeScanner", "Camera binding failed", e)
                 }
@@ -538,6 +697,18 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
             previewView
         }
     )
+}
+
+// Helper function to safely set the zoom ratio
+fun setCameraZoom(camera: Camera, desiredRatio: Float, context: Context) {
+    val zoomState = camera.cameraInfo.zoomState.value
+    if (zoomState != null) {
+        val minRatio = zoomState.minZoomRatio
+        val maxRatio = zoomState.maxZoomRatio
+        // Clamp the desired ratio to be within the valid range
+        val clampedRatio = desiredRatio.coerceIn(minRatio, maxRatio)
+        camera.cameraControl.setZoomRatio(clampedRatio)
+    }
 }
 
 
