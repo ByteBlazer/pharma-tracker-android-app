@@ -20,7 +20,9 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.deltasoft.pharmatracker.MyApp
 import com.deltasoft.pharmatracker.api.RetrofitClient
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
@@ -68,6 +70,13 @@ class LocationPingService : Service() {
         isServiceRunning = true
         createNotificationChannel()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        val isLocationAllowed = ContextCompat.checkSelfPermission(
+            applicationContext,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        MyApp.logToDataDog("✅ Location Ping Service started")
+        MyApp.logToDataDog("✅ Pi Ping Service started isDeviceLocationOn ${AppUtils.isDeviceLocationOn(applicationContext)}")
+        MyApp.logToDataDog("✅ Pi Ping Service started isLocationAllowed $isLocationAllowed")
     }
 
 
@@ -116,7 +125,8 @@ class LocationPingService : Service() {
                     )
                 }
             }
-            handler.postDelayed(runnable,(getLocationHeartBeatInSeconds(applicationContext) * 1000).toLong())
+            handler.post(runnable)
+//            handler.postDelayed(runnable,(getLocationHeartBeatInSeconds(applicationContext) * 1000).toLong())
         } else {
             Log.d(TAG, "onStartCommand: Service already started")
         }
@@ -145,8 +155,11 @@ class LocationPingService : Service() {
             .addOnSuccessListener { location: Location? ->
                 location?.let {
                     Log.d(TAG, "Fetched location: $it")
+
+                    MyApp.logToDataDog("✅ Fetch Location Success latitude: ${location.latitude}, longitude ${location.longitude}")
                     pingAPIWithLocation(it) { success ->
                         if (success) {
+                            MyApp.logToDataDog("✅ Send Location Api Success")
                             // Send location via broadcast
                             val broadcastIntent = Intent(ACTION_LOCATION_UPDATE).apply {
                                 putExtra(EXTRA_LATITUDE, it.latitude)
@@ -157,12 +170,14 @@ class LocationPingService : Service() {
                             Log.d(TAG, "API Ping successful")
                         } else {
                             Log.e(TAG, "API Ping failed")
+                            MyApp.logToDataDog("❌ Send Location Api Fail")
                         }
                     }
                 } ?: Log.e(TAG, "getCurrentLocation returned a null location.")
             }
             .addOnFailureListener { e ->
                 Log.e(TAG, "Failed to get current location", e)
+                MyApp.logToDataDog("❌ Fetch Location Fail ${e.message}")
             }
     }
 
@@ -199,6 +214,13 @@ class LocationPingService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        val isLocationAllowed = ContextCompat.checkSelfPermission(
+            applicationContext,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        MyApp.logToDataDog("❌ Pi Ping Service Stopped")
+        MyApp.logToDataDog("❌ Pi Ping Service Stopped isDeviceLocationOn ${AppUtils.isDeviceLocationOn(applicationContext)}")
+        MyApp.logToDataDog("❌ Pi Ping Service Stopped isLocationAllowed $isLocationAllowed")
         isServiceRunning = false
         serviceStarted = false
         Log.d(TAG, "onDestroy: ")

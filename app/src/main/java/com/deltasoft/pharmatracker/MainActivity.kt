@@ -43,6 +43,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.utils.AppUtils
 import kotlinx.coroutines.launch
@@ -168,6 +169,9 @@ class MainActivity : ComponentActivity() {
                                     scheduledTripsResponse?.trips?.any { it?.status.equals("STARTED") }?:false
                                 Log.d("VMListener", "anyTripIsCurrentlyActive $anyTripIsCurrentlyActive")
                                 if (anyTripIsCurrentlyActive){
+//                                    if (!LocationPingService.isServiceRunning) {
+//                                        AppUtils.restartForegroundService(applicationContext)
+//                                    }
                                     AppUtils.restartForegroundService(applicationContext)
                                 }else{
                                     AppUtils.stopService(applicationContext)
