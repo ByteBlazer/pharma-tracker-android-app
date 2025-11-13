@@ -46,6 +46,7 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location"/>
+        <receiver android:name=".screens.home.location.ServiceRestartReceiver" android:exported="false" />
     </application>
 
 </manifest>

@@ -1,9 +1,11 @@
 package com.deltasoft.pharmatracker.screens.home.location
 
 import android.Manifest
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -14,8 +16,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -24,10 +26,8 @@ import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-
-import com.google.android.gms.location.*
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,7 +38,6 @@ import java.io.IOException
 
 class LocationPingService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
 
     // Coroutine scope for network operations
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -47,10 +46,10 @@ class LocationPingService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var runnable: Runnable
 
-    private var locationHeartBeatFrequencyInSeconds : Int = 0
-    private var token : String = ""
+    private var locationHeartBeatFrequencyInSeconds: Int = 30
+    private var token: String = ""
 
-    private var sharedPrefsUtil : SharedPreferencesUtil? = null
+    private var sharedPrefsUtil: SharedPreferencesUtil? = null
 
     private var serviceStarted = false
 
@@ -60,15 +59,16 @@ class LocationPingService : Service() {
         const val ACTION_LOCATION_UPDATE = "com.deltasoft.pharmatracker.LOCATION_UPDATE"
         const val EXTRA_LATITUDE = "extra_latitude"
         const val EXTRA_LONGITUDE = "extra_longitude"
+        var isServiceRunning = false
     }
 
     override fun onCreate() {
         super.onCreate()
+
+        isServiceRunning = true
         createNotificationChannel()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        setupLocationCallback()
     }
-
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -78,7 +78,7 @@ class LocationPingService : Service() {
 //        sharedPrefsUtil?.saveBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING,true)
 
             locationHeartBeatFrequencyInSeconds =
-                sharedPrefsUtil?.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS) ?: 0
+                sharedPrefsUtil?.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS) ?: 30
             token = AppUtils.createBearerToken(
                 sharedPrefsUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: ""
             )
@@ -107,14 +107,17 @@ class LocationPingService : Service() {
                     if (AppUtils.isValidToken(token)) {
                         Log.d(TAG, "run: valid token")
                         requestSingleLocationUpdate()
-                    }else{
+                    } else {
                         Log.d(TAG, "run: invalid token")
                     }
-                    handler.postDelayed(this, (getLocationHeartBeatInSeconds(applicationContext) * 1000).toLong())
+                    handler.postDelayed(
+                        this,
+                        (getLocationHeartBeatInSeconds(applicationContext) * 1000).toLong()
+                    )
                 }
             }
-            handler.post(runnable)
-        }else{
+            handler.postDelayed(runnable,(getLocationHeartBeatInSeconds(applicationContext) * 1000).toLong())
+        } else {
             Log.d(TAG, "onStartCommand: Service already started")
         }
 
@@ -122,15 +125,10 @@ class LocationPingService : Service() {
     }
 
     private fun getLocationHeartBeatInSeconds(applicationContext: Context?): Int {
-        return  sharedPrefsUtil?.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS) ?: 0
+        return sharedPrefsUtil?.getInt(PrefsKey.LOCATION_HEART_BEAT_FREQUENCY_IN_SECONDS) ?: 30
     }
 
     private fun requestSingleLocationUpdate() {
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 0)
-//            .setExpirationDuration(1000) // This is the line that needs to be correct
-            .setWaitForAccurateLocation(false)
-            .build()
-
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -143,18 +141,10 @@ class LocationPingService : Service() {
             return
         }
 
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
-    }
-
-    private fun setupLocationCallback() {
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                super.onLocationResult(locationResult)
-                // We received a location, so we can now remove the updates
-                fusedLocationClient.removeLocationUpdates(this)
-
-                locationResult.lastLocation?.let {
-                    // Ping your API here, now with a callback
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+            .addOnSuccessListener { location: Location? ->
+                location?.let {
+                    Log.d(TAG, "Fetched location: $it")
                     pingAPIWithLocation(it) { success ->
                         if (success) {
                             // Send location via broadcast
@@ -162,16 +152,18 @@ class LocationPingService : Service() {
                                 putExtra(EXTRA_LATITUDE, it.latitude)
                                 putExtra(EXTRA_LONGITUDE, it.longitude)
                             }
-                            LocalBroadcastManager.getInstance(this@LocationPingService).sendBroadcast(broadcastIntent)
-                            Log.d(TAG, "API Ping successful (from callback)")
+                            LocalBroadcastManager.getInstance(this@LocationPingService)
+                                .sendBroadcast(broadcastIntent)
+                            Log.d(TAG, "API Ping successful")
                         } else {
-                            Log.e(TAG, "API Ping failed (from callback)")
+                            Log.e(TAG, "API Ping failed")
                         }
-                        // You can add more logic here based on the success status
                     }
-                }
+                } ?: Log.e(TAG, "getCurrentLocation returned a null location.")
             }
-        }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Failed to get current location", e)
+            }
     }
 
     // Modify the signature to include the callback
@@ -181,14 +173,18 @@ class LocationPingService : Service() {
 
         serviceScope.launch {
             try {
-                val locationData = LocationData(latitude = lat.toString(), longitude = lon.toString())
+                val locationData =
+                    LocationData(latitude = lat.toString(), longitude = lon.toString())
                 val response = RetrofitClient.apiService.sendLocation(token, locationData)
 
                 if (response.isSuccessful) {
                     Log.d(TAG, "Location sent successfully: Lat: $lat, Lon: $lon")
                     onResult(true) // Invoke callback with true for success
                 } else {
-                    Log.e(TAG, "Failed to send location. Code: ${response.code()}, Body: ${response.errorBody()?.string()}")
+                    Log.e(
+                        TAG,
+                        "Failed to send location. Code: ${response.code()}, Body: ${response.errorBody()?.string()}"
+                    )
                     onResult(false) // Invoke callback with false for failure
                 }
             } catch (e: IOException) {
@@ -203,15 +199,34 @@ class LocationPingService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        isServiceRunning = false
+        serviceStarted = false
         Log.d(TAG, "onDestroy: ")
         if (::runnable.isInitialized) {
             handler.removeCallbacks(runnable)
         }
-//        handler.removeCallbacks(runnable)
-        fusedLocationClient.removeLocationUpdates(locationCallback)
         serviceScope.cancel() // Cancel all coroutines when the service is destroyed
+    }
 
-//        sharedPrefsUtil?.saveBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING,false)
+    override fun onTaskRemoved(rootIntent: Intent?) {
+//        Log.w(TAG, "System Event: App swiped from Recents. Scheduling immediate restart via AlarmManager.")
+
+//        // 1. Create the intent for the broadcast receiver
+//        val restartServiceIntent = Intent(applicationContext, ServiceRestartReceiver::class.java).apply {
+//            action = "ACTION_RESTART_SERVICE"
+//        }
+//
+//        // 2. Schedule the restart using AlarmManager (more reliable than relying only on START_STICKY)
+//        val pendingIntent = PendingIntent.getBroadcast(
+//            this, 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+//        )
+//        val manager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+//
+//        // Schedule to fire after 1 second
+//        manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 1000, pendingIntent)
+
+        super.onTaskRemoved(rootIntent)
+//        Log.v(TAG, "System Event: onTaskRemoved() finished. Process will now be terminated by OS.")
     }
 
     override fun onBind(intent: Intent?): IBinder? {
