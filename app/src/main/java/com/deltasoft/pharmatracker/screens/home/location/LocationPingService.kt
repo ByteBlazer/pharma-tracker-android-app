@@ -67,6 +67,7 @@ class LocationPingService : Service() {
     override fun onCreate() {
         super.onCreate()
 
+        sharedPrefsUtil = SharedPreferencesUtil(this)
         isServiceRunning = true
         createNotificationChannel()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -74,9 +75,15 @@ class LocationPingService : Service() {
             applicationContext,
             android.Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-        MyApp.logToDataDog("✅ Location Ping Service started")
-        MyApp.logToDataDog("✅ Pi Ping Service started isDeviceLocationOn ${AppUtils.isDeviceLocationOn(applicationContext)}")
-        MyApp.logToDataDog("✅ Pi Ping Service started isLocationAllowed $isLocationAllowed")
+        MyApp.logToDataDog("✅ ${getLoggerPrependDate()} Location Ping Service started")
+        MyApp.logToDataDog("✅ ${getLoggerPrependDate()} Pi Ping Service started isDeviceLocationOn ${AppUtils.isDeviceLocationOn(applicationContext)}")
+        MyApp.logToDataDog("✅ ${getLoggerPrependDate()} Pi Ping Service started isLocationAllowed $isLocationAllowed")
+    }
+
+    private fun getLoggerPrependDate():String{
+        val userName = sharedPrefsUtil?.getString(PrefsKey.USER_NAME)?:""
+        val userId = sharedPrefsUtil?.getString(PrefsKey.USER_ID)?:""
+        return "$userName($userId)"
     }
 
 
@@ -156,10 +163,10 @@ class LocationPingService : Service() {
                 location?.let {
                     Log.d(TAG, "Fetched location: $it")
 
-                    MyApp.logToDataDog("✅ Fetch Location Success latitude: ${location.latitude}, longitude ${location.longitude}")
+                    MyApp.logToDataDog("✅ ${getLoggerPrependDate()} Fetch Location Success latitude: ${location.latitude}, longitude ${location.longitude}")
                     pingAPIWithLocation(it) { success ->
                         if (success) {
-                            MyApp.logToDataDog("✅ Send Location Api Success")
+                            MyApp.logToDataDog("✅ ${getLoggerPrependDate()} Send Location Api Success")
                             // Send location via broadcast
                             val broadcastIntent = Intent(ACTION_LOCATION_UPDATE).apply {
                                 putExtra(EXTRA_LATITUDE, it.latitude)
@@ -170,14 +177,14 @@ class LocationPingService : Service() {
                             Log.d(TAG, "API Ping successful")
                         } else {
                             Log.e(TAG, "API Ping failed")
-                            MyApp.logToDataDog("❌ Send Location Api Fail")
+                            MyApp.logToDataDog("❌ ${getLoggerPrependDate()} Send Location Api Fail")
                         }
                     }
                 } ?: Log.e(TAG, "getCurrentLocation returned a null location.")
             }
             .addOnFailureListener { e ->
                 Log.e(TAG, "Failed to get current location", e)
-                MyApp.logToDataDog("❌ Fetch Location Fail ${e.message}")
+                MyApp.logToDataDog("❌ ${getLoggerPrependDate()} Fetch Location Fail ${e.message}")
             }
     }
 
@@ -218,9 +225,9 @@ class LocationPingService : Service() {
             applicationContext,
             android.Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-        MyApp.logToDataDog("❌ Pi Ping Service Stopped")
-        MyApp.logToDataDog("❌ Pi Ping Service Stopped isDeviceLocationOn ${AppUtils.isDeviceLocationOn(applicationContext)}")
-        MyApp.logToDataDog("❌ Pi Ping Service Stopped isLocationAllowed $isLocationAllowed")
+        MyApp.logToDataDog("❌ ${getLoggerPrependDate()} Pi Ping Service Stopped")
+        MyApp.logToDataDog("❌ ${getLoggerPrependDate()} Pi Ping Service Stopped isDeviceLocationOn ${AppUtils.isDeviceLocationOn(applicationContext)}")
+        MyApp.logToDataDog("❌ ${getLoggerPrependDate()} Pi Ping Service Stopped isLocationAllowed $isLocationAllowed")
         isServiceRunning = false
         serviceStarted = false
         Log.d(TAG, "onDestroy: ")
