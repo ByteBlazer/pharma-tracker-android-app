@@ -2,11 +2,17 @@ package com.deltasoft.pharmatracker
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -37,6 +43,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.utils.AppUtils
 import kotlinx.coroutines.launch
@@ -107,6 +114,12 @@ class MainActivity : ComponentActivity() {
 //        Log.d(TAG, "App Signature: $appSignature")
 
         listenViewModel()
+
+//        if (isIgnoringBatteryOptimizations()) {
+//        } else {
+//            // Critical step for continuous tracking
+//            showBatteryOptimizationDialog()
+//        }
     }
 
     private fun listenViewModel() {
@@ -156,6 +169,9 @@ class MainActivity : ComponentActivity() {
                                     scheduledTripsResponse?.trips?.any { it?.status.equals("STARTED") }?:false
                                 Log.d("VMListener", "anyTripIsCurrentlyActive $anyTripIsCurrentlyActive")
                                 if (anyTripIsCurrentlyActive){
+//                                    if (!LocationPingService.isServiceRunning) {
+//                                        AppUtils.restartForegroundService(applicationContext)
+//                                    }
                                     AppUtils.restartForegroundService(applicationContext)
                                 }else{
                                     AppUtils.stopService(applicationContext)
@@ -172,6 +188,21 @@ class MainActivity : ComponentActivity() {
                                     viewModel.getMyTripsList(delay = 1000)
                                 }
                             }
+                        }
+                    }
+                }
+                launch {
+                    viewModel.checkBatteryOptimizationClickEvent.collect { timeInMills ->
+                        Log.d(TAG, "listenViewModel: timeInMills1 "+timeInMills)
+                        if (timeInMills != null) {
+                            Log.d(TAG, "listenViewModel: isIgnoringBatteryOptimizations() "+isIgnoringBatteryOptimizations())
+                            if (isIgnoringBatteryOptimizations()) {
+                            } else {
+                                // Critical step for continuous tracking
+                                showBatteryOptimizationDialog()
+                            }
+                        } else {
+                            Log.d("VMListener", "Login time is null.")
                         }
                     }
                 }
@@ -205,6 +236,38 @@ class MainActivity : ComponentActivity() {
                     AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build()
                 )
             }
+        }
+    }
+
+    private fun isIgnoringBatteryOptimizations(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            return pm.isIgnoringBatteryOptimizations(packageName)
+        }
+        return true
+    }
+
+    private fun showBatteryOptimizationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Critical: Continuous Tracking")
+            .setMessage("To ensure reliable location tracking while the app is in the background, please exempt this app from Android's battery restrictions.")
+            .setPositiveButton("Go to Settings") { _, _ ->
+                requestIgnoreBatteryOptimizations()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+                Toast.makeText(this, "Cannot go online without optimization exemption.", Toast.LENGTH_LONG).show()
+            }
+            .show()
+    }
+
+    private fun requestIgnoreBatteryOptimizations() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val intent = Intent().apply {
+                action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                data = Uri.parse("package:$packageName")
+            }
+            startActivity(intent)
         }
     }
 

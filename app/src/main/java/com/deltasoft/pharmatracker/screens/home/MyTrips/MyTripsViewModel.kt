@@ -6,10 +6,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.LocationState
 import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTrip
@@ -132,40 +135,40 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
 //        _isServiceRunning.value = sharedPreferences.getBoolean(PrefsKey.IS_LOCATION_SERVICE_RUNNING.name, false)
 //    }
 
-    private val _latitude = MutableStateFlow<Double?>(null)
-    val latitude = _latitude.asStateFlow()
+//    private val _latitude = MutableStateFlow<Double?>(null)
+//    val latitude = _latitude.asStateFlow()
+//
+//    private val _longitude = MutableStateFlow<Double?>(null)
+//    val longitude = _longitude.asStateFlow()
 
-    private val _longitude = MutableStateFlow<Double?>(null)
-    val longitude = _longitude.asStateFlow()
+//    private val locationUpdateReceiver = object : BroadcastReceiver() {
+//        override fun onReceive(context: Context?, intent: Intent?) {
+//            if (intent?.action == LocationPingService.ACTION_LOCATION_UPDATE) {
+//                val latitude = intent.getDoubleExtra(LocationPingService.EXTRA_LATITUDE, 0.0)
+//                val longitude = intent.getDoubleExtra(LocationPingService.EXTRA_LONGITUDE, 0.0)
+//                viewModelScope.launch {
+//                    _latitude.value = latitude
+//                    _longitude.value = longitude
+//                }
+//            }
+//        }
+//    }
 
-    private val locationUpdateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == LocationPingService.ACTION_LOCATION_UPDATE) {
-                val latitude = intent.getDoubleExtra(LocationPingService.EXTRA_LATITUDE, 0.0)
-                val longitude = intent.getDoubleExtra(LocationPingService.EXTRA_LONGITUDE, 0.0)
-                viewModelScope.launch {
-                    _latitude.value = latitude
-                    _longitude.value = longitude
-                }
-            }
-        }
-    }
+//    fun clearLocationValues() {
+//        _latitude.value = null
+//        _longitude.value = null
+//    }
 
-    fun clearLocationValues() {
-        _latitude.value = null
-        _longitude.value = null
-    }
+//    fun registerReceiver(context: Context) {
+//        LocalBroadcastManager.getInstance(context).registerReceiver(
+//            locationUpdateReceiver,
+//            IntentFilter(LocationPingService.ACTION_LOCATION_UPDATE)
+//        )
+//    }
 
-    fun registerReceiver(context: Context) {
-        LocalBroadcastManager.getInstance(context).registerReceiver(
-            locationUpdateReceiver,
-            IntentFilter(LocationPingService.ACTION_LOCATION_UPDATE)
-        )
-    }
-
-    fun unregisterReceiver(context: Context) {
-        LocalBroadcastManager.getInstance(context).unregisterReceiver(locationUpdateReceiver)
-    }
+//    fun unregisterReceiver(context: Context) {
+//        LocalBroadcastManager.getInstance(context).unregisterReceiver(locationUpdateReceiver)
+//    }
 
     fun startMyService(context: Context) {
         val serviceIntent = Intent(context, LocationPingService::class.java)
@@ -201,9 +204,43 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
         _scheduledTripsState.value = ScheduledTripsState.Idle
         _scheduledList.value = arrayListOf()
         _startTripState.value = AppCommonApiState.Idle
-        _latitude.value = null
-        _longitude.value = null
+//        _latitude.value = null
+//        _longitude.value = null
         _loading.value = false
+    }
+
+    private val _sendLocationState = MutableStateFlow<AppCommonApiState>(AppCommonApiState.Idle)
+    val sendLocationState = _sendLocationState.asStateFlow()
+
+    fun sendLocation() {
+        val context = application.applicationContext
+        _sendLocationState.value = AppCommonApiState.Loading
+        try {
+            AppUtils.fetchCurrentLocation(
+                context = context,
+                onSuccess = { location ->
+                    repository?.sendLocation(token = token, location = location)
+                },
+                onFailure = { exception ->
+                    // Handle failure
+                    Log.e("LocationVM", "Location error: ${exception.message}")
+                    _sendLocationState.value = AppCommonApiState.Error("Location error ${exception.message}")
+                }
+            )
+        } catch (e: Exception) {
+            _sendLocationState.value = AppCommonApiState.Error("Send Location failed: ${e.message}")
+        }
+    }
+    fun updateSendLocationState(message: String, success: Boolean = false) {
+        if (success){
+            _sendLocationState.value = AppCommonApiState.Success(message)
+        }else{
+            _sendLocationState.value = AppCommonApiState.Error(message)
+        }
+    }
+
+    fun clearSendLocationState() {
+        _sendLocationState.value = AppCommonApiState.Idle
     }
 
 }

@@ -1,7 +1,9 @@
 package com.deltasoft.pharmatracker.screens.home.MyTrips
 
+import android.location.Location
 import com.deltasoft.pharmatracker.api.ApiResponse
 import com.deltasoft.pharmatracker.api.RetrofitClient
+import com.deltasoft.pharmatracker.screens.home.location.LocationData
 import com.deltasoft.pharmatracker.utils.AppConstants
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
@@ -67,6 +69,36 @@ class MyTripsRepository(var viewModel: MyTripsViewModel) {
                 // Handle network errors
                 println("Network error: ${e.message}")
                 viewModel.updateStartTripState(AppConstants.NETWORK_LOSS_MESSAGE)
+            }
+        }
+    }
+
+    fun sendLocation(token: String, location: Location) {
+        viewModelScope.launch {
+            try {
+                val locationData = LocationData(latitude = location.latitude.toString(), longitude = location.longitude.toString())
+                val response = RetrofitClient.apiService.sendLocation(token, locationData)
+                if (response.isSuccessful) {
+                    viewModel.updateSendLocationState("Location send successfully",true)
+                } else {
+                    val errorBodyString = response.errorBody()?.string()
+                    if (errorBodyString != null) {
+                        try {
+                            val errorResponse =
+                                Gson().fromJson(errorBodyString, ApiResponse::class.java)
+                            val errorMessage = errorResponse.message
+                            viewModel.updateSendLocationState(errorMessage ?: "")
+                        } catch (e: Exception) {
+                            // Catch JSON parsing errors if the error body format is unexpected
+                            println("Failed to parse error body: ${e.message}")
+                            viewModel.updateSendLocationState("${e.message}")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle network errors
+                println("Network error: ${e.message}")
+                viewModel.updateSendLocationState(AppConstants.NETWORK_LOSS_MESSAGE)
             }
         }
     }
