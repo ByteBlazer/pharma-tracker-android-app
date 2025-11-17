@@ -2,13 +2,13 @@ package com.deltasoft.pharmatracker
 
 import android.app.Application
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import com.deltasoft.pharmatracker.screens.home.UserType
+import androidx.lifecycle.application
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTripsResponse
-import com.deltasoft.pharmatracker.screens.splash.SplashRepository
 import com.deltasoft.pharmatracker.utils.AppUtils
+import com.deltasoft.pharmatracker.utils.AppUtils.isNotNullOrEmpty
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 
 class MainActivityViewModel(application: Application) : AndroidViewModel(application) {
+    private val TAG = "MainActivityViewModel"
     private var sharedPreferences: SharedPreferences
     private var sharedPreferencesUtil: SharedPreferencesUtil
 
@@ -43,6 +44,10 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
     private val _scheduledTripsState =
         MutableStateFlow<ScheduledTripsState>(ScheduledTripsState.Idle)
     val scheduledTripsState = _scheduledTripsState.asStateFlow()
+
+    fun clearScheduledTripsState(){
+        _scheduledTripsState.value = ScheduledTripsState.Idle
+    }
 
     fun getMyTripsList(delay: Long = 0) {
         token =
@@ -92,5 +97,40 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
 
     fun onCheckBatteryOptimizationClickEvent() {
         _checkBatteryOptimizationClickEvent.value = UUID.randomUUID()
+    }
+
+    fun checkAndSendLocationToServer(tag:String=""){
+        Log.d(TAG, "checkAndSendLocationToServer: $tag")
+        val lastLogInTimeInMills = sharedPreferencesUtil.getLong(PrefsKey.LAST_LOCATION_UPDATE_TIME_IN_MILLS, defaultValue = System.currentTimeMillis())
+        val currentTimeInMills = System.currentTimeMillis()
+        token =
+            AppUtils.createBearerToken(
+                sharedPreferencesUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: ""
+            )
+
+        Log.d(TAG, "checkAndSendLocationToServer: lastLogInTimeInMills $lastLogInTimeInMills")
+        if (((currentTimeInMills-lastLogInTimeInMills) > 30000) && AppUtils.isValidToken(sharedPreferencesUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: "")){
+            Log.d(TAG, "checkAndSendLocationToServer: verify success ${(currentTimeInMills-lastLogInTimeInMills)}")
+            sendLocation()
+        }else{
+            Log.d(TAG, "checkAndSendLocationToServer: verify failed ${(currentTimeInMills-lastLogInTimeInMills)}")
+        }
+    }
+
+    fun sendLocation() {
+        val context = application.applicationContext
+        try {
+            AppUtils.fetchCurrentLocation(
+                context = context,
+                onSuccess = { location ->
+                    Log.d(TAG, "checkAndSendLocationToServer: location fetch success")
+                    repository?.sendLocation(token = token, location = location,sharedPreferencesUtil)
+                },
+                onFailure = { exception ->
+                }
+            )
+        } catch (e: Exception) {
+
+        }
     }
 }

@@ -117,7 +117,8 @@ fun AppNavigation(applicationContext: Context,
             val selectedScheduledTripId = backStackEntry.arguments?.getString(NavConstants.ARG_SELECTED_SCHEDULED_TRIP_ID)
 
             if (selectedScheduledTripId != null) {
-                SingleTripDetailsScreen(navController=navController,selectedScheduledTripId = selectedScheduledTripId)
+                SingleTripDetailsScreen(navController=navController,selectedScheduledTripId = selectedScheduledTripId,
+                    mainActivityViewModel = mainActivityViewModel)
             }
         }
     }

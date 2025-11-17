@@ -233,6 +233,8 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
     }
     fun updateSendLocationState(message: String, success: Boolean = false) {
         if (success){
+            Log.d("TAG", "checkAndSendLocationToServer: lastLogInTimeInMills updated mytripsviewmodel")
+            SharedPreferencesUtil(context = application.applicationContext)?.saveLong(PrefsKey.LAST_LOCATION_UPDATE_TIME_IN_MILLS,System.currentTimeMillis())
             _sendLocationState.value = AppCommonApiState.Success(message)
         }else{
             _sendLocationState.value = AppCommonApiState.Error(message)
