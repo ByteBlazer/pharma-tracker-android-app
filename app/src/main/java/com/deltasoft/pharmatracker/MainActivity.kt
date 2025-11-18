@@ -292,7 +292,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         if (isFineLocationPermissionGranted(this@MainActivity) && LocationPingService.isServiceRunning) {
-            viewModel?.checkAndSendLocationToServer(TAG)
+            viewModel?.checkAndSendLocationToServer(TAG, restartService = false)
         }
     }
 }

@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
+import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTripsResponse
 import com.deltasoft.pharmatracker.utils.AppUtils
@@ -99,7 +100,7 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
         _checkBatteryOptimizationClickEvent.value = UUID.randomUUID()
     }
 
-    fun checkAndSendLocationToServer(tag:String=""){
+    fun checkAndSendLocationToServer(tag:String="",restartService : Boolean = true){
         Log.d(TAG, "checkAndSendLocationToServer: $tag")
         val lastLogInTimeInMills = sharedPreferencesUtil.getLong(PrefsKey.LAST_LOCATION_UPDATE_TIME_IN_MILLS, defaultValue = System.currentTimeMillis())
         val currentTimeInMills = System.currentTimeMillis()
@@ -111,6 +112,9 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
         Log.d(TAG, "checkAndSendLocationToServer: lastLogInTimeInMills $lastLogInTimeInMills")
         if (((currentTimeInMills-lastLogInTimeInMills) > 30000) && AppUtils.isValidToken(sharedPreferencesUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: "")){
             Log.d(TAG, "checkAndSendLocationToServer: verify success ${(currentTimeInMills-lastLogInTimeInMills)}")
+            if (restartService && !LocationPingService.isServiceRunning){
+                AppUtils.restartForegroundService(application.applicationContext)
+            }
             sendLocation()
         }else{
             Log.d(TAG, "checkAndSendLocationToServer: verify failed ${(currentTimeInMills-lastLogInTimeInMills)}")

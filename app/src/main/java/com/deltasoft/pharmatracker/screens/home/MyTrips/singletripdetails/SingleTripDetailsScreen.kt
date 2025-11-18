@@ -150,7 +150,7 @@ fun SingleTripDetailsScreen(
                 Log.d(TAG, "State: Loading")
             }
             is AppCommonApiState.Success -> {
-                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG endTripState success")
+                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG endTripState success", restartService = false)
                 val message = (endTripState as AppCommonApiState.Success).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 singleTripDetailsViewModel.stopService(context)
@@ -159,7 +159,7 @@ fun SingleTripDetailsScreen(
 
             }
             is AppCommonApiState.Error -> {
-                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG endTripState error")
+                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG endTripState error",restartService = false)
                 val message = (endTripState as AppCommonApiState.Error).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "State: Error - Message: $message")
