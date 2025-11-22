@@ -1,7 +1,12 @@
 package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -61,8 +66,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.deltasoft.pharmatracker.MainActivityViewModel
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
@@ -77,6 +84,7 @@ import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.Doc
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.DocGroup
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
+import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
@@ -89,6 +97,7 @@ private const val TAG = "SingleTripDetailsScreen"
 fun SingleTripDetailsScreen(
     navController: NavHostController,
     selectedScheduledTripId: String,
+    mainActivityViewModel: MainActivityViewModel,
     singleTripDetailsViewModel: SingleTripDetailsViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -115,6 +124,59 @@ fun SingleTripDetailsScreen(
     val initialTopAppBarTitle = stringResource(R.string.single_trip_details_heading)
     var topAppBarTitle by remember { mutableStateOf(initialTopAppBarTitle) }
 
+
+    var showBgLocationDialog by remember { mutableStateOf(false) }
+    val backgroundPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                // Background granted. Proceed!
+
+            } else {
+                // Background denied. User needs to know location will stop in background.
+            }
+        }
+    )
+
+    val isBackgroundPermissionNeeded = remember(context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        } else {
+            // Below Android 10, background access is implicit with foreground permission
+            false
+        }
+    }
+
+    LaunchedEffect(isBackgroundPermissionNeeded) {
+        if (isBackgroundPermissionNeeded) {
+            // 2. If needed, show the Rationale Dialog
+            showBgLocationDialog = true
+        } else {
+            // Permission is already granted or not needed (API < 29). Proceed.
+            showBgLocationDialog=false
+        }
+    }
+
+    AppConfirmationDialog(
+        showDialog = showBgLocationDialog,
+        onConfirm = {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                backgroundPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            }
+            showBgLocationDialog = false
+        },
+        onDismiss = {
+            showBgLocationDialog = false
+        },
+        title = stringResource(R.string.bg_location_permission_title),
+        message = stringResource(R.string.bg_location_permission_message),
+        confirmButtonText = stringResource(R.string.background_location_confirm_btn_txt),
+        dismissButtonText = stringResource(R.string.background_location_dismiss_btn_txt)
+    )
+
     LaunchedEffect(dropOffTripState) {
         when (dropOffTripState) {
             is AppCommonApiState.Idle -> {
@@ -124,12 +186,14 @@ fun SingleTripDetailsScreen(
                 Log.d(TAG, "State: Loading")
             }
             is AppCommonApiState.Success -> {
+                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG dropOffTripState success")
                 val message = (dropOffTripState as AppCommonApiState.Success).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.d(TAG, "State: Success - Message: $message")
                 singleTripDetailsViewModel?.getSingleTripDetails()
             }
             is AppCommonApiState.Error -> {
+                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG dropOffTripState error")
                 val message = (dropOffTripState as AppCommonApiState.Error).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "State: Error - Message: $message")
@@ -146,14 +210,16 @@ fun SingleTripDetailsScreen(
                 Log.d(TAG, "State: Loading")
             }
             is AppCommonApiState.Success -> {
+                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG endTripState success", restartService = false)
                 val message = (endTripState as AppCommonApiState.Success).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                singleTripDetailsViewModel.stopService(context)
+                LocationServiceUtils.stopService(context)
                 navController.popBackStack()
                 Log.d(TAG, "State: Success - Message: $message")
 
             }
             is AppCommonApiState.Error -> {
+                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG endTripState error",restartService = false)
                 val message = (endTripState as AppCommonApiState.Error).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "State: Error - Message: $message")
@@ -170,6 +236,7 @@ fun SingleTripDetailsScreen(
                 Log.d(TAG, "State: Loading")
             }
             is AppCommonApiState.Success -> {
+                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG markAsDeliveredState success")
                 val message = (markAsDeliveredState as AppCommonApiState.Success).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 singleTripDetailsViewModel?.getSingleTripDetails()
@@ -177,6 +244,7 @@ fun SingleTripDetailsScreen(
 
             }
             is AppCommonApiState.Error -> {
+                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG markAsDeliveredState error")
                 val message = (markAsDeliveredState as AppCommonApiState.Error).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "State: Error - Message: $message")
@@ -194,6 +262,7 @@ fun SingleTripDetailsScreen(
                 Log.d(TAG, "State: Loading")
             }
             is AppCommonApiState.Success -> {
+                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG markAsUnDeliveredState success")
                 val message = (markAsUnDeliveredState as AppCommonApiState.Success).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 singleTripDetailsViewModel?.getSingleTripDetails()
@@ -201,6 +270,7 @@ fun SingleTripDetailsScreen(
 
             }
             is AppCommonApiState.Error -> {
+                mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG markAsUnDeliveredState error")
                 val message = (markAsUnDeliveredState as AppCommonApiState.Error).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "State: Error - Message: $message")

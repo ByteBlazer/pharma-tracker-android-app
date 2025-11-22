@@ -43,9 +43,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.deltasoft.pharmatracker.navigation.Screen
-import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
+import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.utils.AppUtils
+import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
+import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
 import kotlinx.coroutines.launch
 
 private const val TAG = "MainActivity"
@@ -134,7 +136,7 @@ class MainActivity : ComponentActivity() {
                             val timeDifference = currentTime - timeInMills
                             val isRecent = timeDifference <= 5 * 1000L
 
-                            if (isRecent) {
+                            if (isRecent && AppUtils.isValidToken(SharedPreferencesUtil(this@MainActivity.applicationContext)?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: "")) {
                                 Log.d("VMListener", "✅ Login is recent (within 5s).")
                                 if (isFineLocationPermissionGranted(this@MainActivity)) {
                                     Log.d("VMListener", "✅ Location permission given")
@@ -169,12 +171,12 @@ class MainActivity : ComponentActivity() {
                                     scheduledTripsResponse?.trips?.any { it?.status.equals("STARTED") }?:false
                                 Log.d("VMListener", "anyTripIsCurrentlyActive $anyTripIsCurrentlyActive")
                                 if (anyTripIsCurrentlyActive){
-//                                    if (!LocationPingService.isServiceRunning) {
-//                                        AppUtils.restartForegroundService(applicationContext)
-//                                    }
-                                    AppUtils.restartForegroundService(applicationContext)
+                                    viewModel.clearScheduledTripsState()
+                                    if(LocationServiceUtils.isLocationServiceNotRunning()) {
+                                        LocationServiceUtils.restartForegroundService(applicationContext)
+                                    }
                                 }else{
-                                    AppUtils.stopService(applicationContext)
+                                    LocationServiceUtils.stopService(applicationContext)
                                 }
                             }
                             is ScheduledTripsState.Error -> {
@@ -285,6 +287,9 @@ class MainActivity : ComponentActivity() {
                     AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build()
                 )
             }
+        }
+        if (isFineLocationPermissionGranted(this@MainActivity) && LocationServiceUtils.isLocationServiceRunning()) {
+            viewModel?.checkAndSendLocationToServer(TAG, restartService = false)
         }
     }
 }

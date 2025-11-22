@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
-import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.utils.createappsignature.AppSignatureHashHelper
 import com.deltasoft.pharmatracker.utils.jwtdecode.JwtDecodeUtil
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
@@ -315,59 +314,6 @@ object AppUtils {
                 Toast.LENGTH_LONG
             ).show()
         }
-    }
-
-    fun startMyService(context: Context) {
-        val serviceIntent = Intent(context, LocationPingService::class.java)
-        ContextCompat.startForegroundService(context, serviceIntent)
-    }
-
-    fun stopService(context: Context) {
-        val serviceIntent = Intent(context, LocationPingService::class.java)
-        context.stopService(serviceIntent)
-    }
-
-
-    fun restartForegroundService(context: Context) {
-        val serviceIntent = Intent(context, LocationPingService::class.java)
-
-        // A. Stop the service first (This will call onDestroy() in your Service)
-        context.stopService(serviceIntent)
-
-        // B. Start the service again immediately (This will call onCreate() and then onStartCommand())
-        // Use startForegroundService for a foreground service, especially on newer Android versions (API 26+)
-        ContextCompat.startForegroundService(context, serviceIntent)
-    }
-
-    @SuppressLint("MissingPermission")
-    fun fetchCurrentLocation(
-        context: Context,
-        onSuccess: (Location) -> Unit, // Callback for successful result
-        onFailure: (Exception) -> Unit  // Callback for failure
-    ) {
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-        val cancellationTokenSource = CancellationTokenSource()
-
-        // Request settings for high accuracy
-        val request = CurrentLocationRequest.Builder()
-            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
-            .build()
-
-        fusedLocationClient.getCurrentLocation(request, cancellationTokenSource.token)
-            .addOnSuccessListener { location: Location? ->
-                if (location != null) {
-                    onSuccess(location)
-                } else {
-                    onFailure(Exception("Location data is null (GPS may be disabled)."))
-                }
-            }
-            .addOnFailureListener { exception ->
-                onFailure(exception)
-            }
-    }
-
-    fun getFusedLocationClient(context: Context): FusedLocationProviderClient {
-        return LocationServices.getFusedLocationProviderClient(context)
     }
 
 

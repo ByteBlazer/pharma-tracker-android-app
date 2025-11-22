@@ -166,6 +166,8 @@ class LocationPingService : Service() {
                     MyApp.logToDataDog("✅ ${getLoggerPrependDate()} Fetch Location Success latitude: ${location.latitude}, longitude ${location.longitude}")
                     pingAPIWithLocation(it) { success ->
                         if (success) {
+                            Log.d(TAG, "checkAndSendLocationToServer: lastLogInTimeInMills updated locationping service")
+                            sharedPrefsUtil?.saveLong(PrefsKey.LAST_LOCATION_UPDATE_TIME_IN_MILLS,System.currentTimeMillis())
                             MyApp.logToDataDog("✅ ${getLoggerPrependDate()} Send Location Api Success")
                             // Send location via broadcast
                             val broadcastIntent = Intent(ACTION_LOCATION_UPDATE).apply {
