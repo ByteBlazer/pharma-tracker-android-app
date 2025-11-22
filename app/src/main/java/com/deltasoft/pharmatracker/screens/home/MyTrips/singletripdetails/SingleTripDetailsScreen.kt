@@ -1,7 +1,12 @@
 package com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -61,6 +66,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.deltasoft.pharmatracker.MainActivityViewModel
@@ -116,6 +122,59 @@ fun SingleTripDetailsScreen(
 
     val initialTopAppBarTitle = stringResource(R.string.single_trip_details_heading)
     var topAppBarTitle by remember { mutableStateOf(initialTopAppBarTitle) }
+
+
+    var showBgLocationDialog by remember { mutableStateOf(false) }
+    val backgroundPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                // Background granted. Proceed!
+
+            } else {
+                // Background denied. User needs to know location will stop in background.
+            }
+        }
+    )
+
+    val isBackgroundPermissionNeeded = remember(context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        } else {
+            // Below Android 10, background access is implicit with foreground permission
+            false
+        }
+    }
+
+    LaunchedEffect(isBackgroundPermissionNeeded) {
+        if (isBackgroundPermissionNeeded) {
+            // 2. If needed, show the Rationale Dialog
+            showBgLocationDialog = true
+        } else {
+            // Permission is already granted or not needed (API < 29). Proceed.
+            showBgLocationDialog=false
+        }
+    }
+
+    AppConfirmationDialog(
+        showDialog = showBgLocationDialog,
+        onConfirm = {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                backgroundPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            }
+            showBgLocationDialog = false
+        },
+        onDismiss = {
+            showBgLocationDialog = false
+        },
+        title = stringResource(R.string.bg_location_permission_title),
+        message = stringResource(R.string.bg_location_permission_message),
+        confirmButtonText = stringResource(R.string.background_location_confirm_btn_txt),
+        dismissButtonText = stringResource(R.string.background_location_dismiss_btn_txt)
+    )
 
     LaunchedEffect(dropOffTripState) {
         when (dropOffTripState) {
