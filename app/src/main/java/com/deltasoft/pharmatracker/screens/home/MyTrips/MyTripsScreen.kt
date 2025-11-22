@@ -82,6 +82,7 @@ import android.content.IntentSender
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
 import com.deltasoft.pharmatracker.MainActivityViewModel
+import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 
 private const val REQUEST_CHECK_SETTINGS = 1001
 
@@ -170,7 +171,7 @@ fun MyTripsScreen(
             is AppCommonApiState.Success -> {
                 val message = (sendLocationState as AppCommonApiState.Success).message
                 if (myTripsViewModel?.currentTrip != null){
-                    myTripsViewModel.restartForegroundService(context)
+                    LocationServiceUtils.restartForegroundService(context)
                     myTripsViewModel?.clearAllValues()
                     navController.navigate(
                         Screen.SingleTripDetails.createRoute(
@@ -285,7 +286,7 @@ fun MyTripsScreen(
                                 scheduledTripsResponse?.message,
                                 onItemClick = { schduledTrip ->
                                     myTripsViewModel.currentTrip = schduledTrip
-                                    myTripsViewModel.stopService(context)
+                                    LocationServiceUtils.stopService(context)
 //                                    myTripsViewModel.clearLocationValues()
                                     if (schduledTrip?.status.equals("SCHEDULED")) {
                                         // Start Trip

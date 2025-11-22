@@ -50,6 +50,7 @@ import com.deltasoft.pharmatracker.MainActivityViewModel
 import com.deltasoft.pharmatracker.R
 import com.deltasoft.pharmatracker.navigation.Screen
 import com.deltasoft.pharmatracker.screens.App_CommonTopBar
+import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 import com.deltasoft.pharmatracker.screens.otp.OtpVerificationState
 import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
@@ -82,7 +83,7 @@ fun ProfileScreen(
     LogoutConfirmationDialog(
         showDialog = showDialog,
         onConfirm = {
-            AppUtils.stopService(context)
+            LocationServiceUtils.stopService(context)
             sharedPrefsUtil.saveString(PrefsKey.USER_ACCESS_TOKEN,"")
             mainActivityViewModel.setLastLogInTimeInMills(null)
             navController.navigate(Screen.Login.createRoute(phone)) {

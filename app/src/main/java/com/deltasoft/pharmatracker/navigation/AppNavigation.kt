@@ -15,6 +15,7 @@ import com.deltasoft.pharmatracker.api.AuthManager
 import com.deltasoft.pharmatracker.screens.splash.SplashScreen
 import com.deltasoft.pharmatracker.screens.home.HomeScreen
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.SingleTripDetailsScreen
+import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 import com.deltasoft.pharmatracker.screens.home.profile.ProfileScreen
 import com.deltasoft.pharmatracker.screens.home.queue.scheduletrip.ScheduleNewTrip
 import com.deltasoft.pharmatracker.screens.login.LoginScreen
@@ -54,7 +55,7 @@ fun AppNavigation(applicationContext: Context,
                     // --- Session Cleanup ---
                     val sharedPrefsUtil = SharedPreferencesUtil(applicationContext)
                     val phone = sharedPrefsUtil.getString(PrefsKey.PHONE_NUMBER)
-                    AppUtils.stopService(applicationContext)
+                    LocationServiceUtils.stopService(applicationContext)
                     sharedPrefsUtil.saveString(PrefsKey.USER_ACCESS_TOKEN,"")
                     mainActivityViewModel.setLastLogInTimeInMills(null)
 

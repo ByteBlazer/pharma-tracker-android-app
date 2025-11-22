@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
-import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
+import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTripsResponse
 import com.deltasoft.pharmatracker.utils.AppUtils
@@ -112,8 +112,8 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
         Log.d(TAG, "checkAndSendLocationToServer: lastLogInTimeInMills $lastLogInTimeInMills")
         if (((currentTimeInMills-lastLogInTimeInMills) > 30000) && AppUtils.isValidToken(sharedPreferencesUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: "")){
             Log.d(TAG, "checkAndSendLocationToServer: verify success ${(currentTimeInMills-lastLogInTimeInMills)}")
-            if (restartService && !LocationPingService.isServiceRunning){
-                AppUtils.restartForegroundService(application.applicationContext)
+            if (restartService && LocationServiceUtils.isLocationServiceNotRunning()){
+                LocationServiceUtils.restartForegroundService(application.applicationContext)
             }
             sendLocation()
         }else{
@@ -124,7 +124,7 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
     fun sendLocation() {
         val context = application.applicationContext
         try {
-            AppUtils.fetchCurrentLocation(
+            LocationServiceUtils.fetchCurrentLocation(
                 context = context,
                 onSuccess = { location ->
                     Log.d(TAG, "checkAndSendLocationToServer: location fetch success")

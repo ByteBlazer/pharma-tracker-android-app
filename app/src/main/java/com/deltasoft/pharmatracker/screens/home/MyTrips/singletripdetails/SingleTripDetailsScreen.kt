@@ -84,6 +84,7 @@ import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.Doc
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.DocGroup
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
+import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
@@ -212,7 +213,7 @@ fun SingleTripDetailsScreen(
                 mainActivityViewModel.checkAndSendLocationToServer(tag = "$TAG endTripState success", restartService = false)
                 val message = (endTripState as AppCommonApiState.Success).message
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                singleTripDetailsViewModel.stopService(context)
+                LocationServiceUtils.stopService(context)
                 navController.popBackStack()
                 Log.d(TAG, "State: Success - Message: $message")
 

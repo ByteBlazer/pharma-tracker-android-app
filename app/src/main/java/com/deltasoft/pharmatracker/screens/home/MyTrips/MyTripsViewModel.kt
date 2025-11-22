@@ -13,7 +13,7 @@ import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.LocationState
-import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
+import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTrip
 import com.deltasoft.pharmatracker.screens.home.trips.entity.ScheduledTripsResponse
@@ -170,33 +170,12 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
 //        LocalBroadcastManager.getInstance(context).unregisterReceiver(locationUpdateReceiver)
 //    }
 
-    fun startMyService(context: Context) {
-        val serviceIntent = Intent(context, LocationPingService::class.java)
-        context.startForegroundService(serviceIntent)
-    }
-
-    fun stopService(context: Context) {
-        val serviceIntent = Intent(context, LocationPingService::class.java)
-        context.stopService(serviceIntent)
-    }
-
     fun storeCurrentTripId() {
         sharedPreferencesUtil?.saveString(PrefsKey.CURRENT_TRIP_ID,(currentTrip?.tripId?:0).toString())
     }
 
     fun getCurrentTripId():String {
         return sharedPreferencesUtil?.getString(PrefsKey.CURRENT_TRIP_ID,"")?:""
-    }
-
-    fun restartForegroundService(context: Context) {
-        val serviceIntent = Intent(context, LocationPingService::class.java)
-
-        // A. Stop the service first (This will call onDestroy() in your Service)
-        context.stopService(serviceIntent)
-
-        // B. Start the service again immediately (This will call onCreate() and then onStartCommand())
-        // Use startForegroundService for a foreground service, especially on newer Android versions (API 26+)
-        ContextCompat.startForegroundService(context, serviceIntent)
     }
 
     fun clearAllValues() {
@@ -216,7 +195,7 @@ class MyTripsViewModel(application: Application) : AndroidViewModel(application)
         val context = application.applicationContext
         _sendLocationState.value = AppCommonApiState.Loading
         try {
-            AppUtils.fetchCurrentLocation(
+            LocationServiceUtils.fetchCurrentLocation(
                 context = context,
                 onSuccess = { location ->
                     repository?.sendLocation(token = token, location = location)
