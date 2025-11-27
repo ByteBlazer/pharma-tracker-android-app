@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+
         MyApp.logToDataDog("MainActivity has started")
         MyApp.logToDataDog("The API Base URL is: " + BuildConfig.BASE_API_URL)
 
