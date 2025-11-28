@@ -112,10 +112,10 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
         Log.d(TAG, "checkAndSendLocationToServer: lastLogInTimeInMills $lastLogInTimeInMills")
         if (((currentTimeInMills-lastLogInTimeInMills) > 30000) && AppUtils.isValidToken(sharedPreferencesUtil?.getString(PrefsKey.USER_ACCESS_TOKEN) ?: "")){
             Log.d(TAG, "checkAndSendLocationToServer: verify success ${(currentTimeInMills-lastLogInTimeInMills)}")
-            if (restartService && LocationServiceUtils.isLocationServiceNotRunning()){
-                MyApp.logToDataDog("❌ ${getLoggerPrependDate()} Api Service restarted")
-                LocationServiceUtils.restartForegroundService(application.applicationContext)
-            }
+//            if (restartService && LocationServiceUtils.isLocationServiceNotRunning()){
+//                MyApp.logToDataDog("❌ ${getLoggerPrependDate()} Api Service restarted")
+//                LocationServiceUtils.restartForegroundService(application.applicationContext)
+//            }
             sendLocation()
         }else{
             Log.d(TAG, "checkAndSendLocationToServer: verify failed ${(currentTimeInMills-lastLogInTimeInMills)}")
