@@ -140,5 +140,11 @@ dependencies {
     implementation("com.google.android.play:app-update:2.1.0")
 // For Kotlin users also add the Kotlin extensions library for Play In-App Update:
     implementation("com.google.android.play:app-update-ktx:2.1.0")
+
+
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // 2. WorkManager Kotlin Coroutines Extension
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }
 

@@ -10,7 +10,6 @@ import com.deltasoft.pharmatracker.screens.home.MyTrips.AppCommonApiState
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsDeliveredRequest
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.MarkAsUnDeliveredRequest
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
-import com.deltasoft.pharmatracker.screens.home.location.LocationPingService
 import com.deltasoft.pharmatracker.utils.AppUtils
 import com.deltasoft.pharmatracker.utils.sharedpreferences.PrefsKey
 import com.deltasoft.pharmatracker.utils.sharedpreferences.SharedPreferencesUtil
@@ -21,6 +20,7 @@ import android.util.Log
 
 import androidx.lifecycle.application
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.RecentSignatureResponse
+import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 
 
 class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(application) {
@@ -155,7 +155,7 @@ class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(ap
      */
     fun requestLocation(docId: String,signatureEncodedString: String,deliveryComment:String? = null,updateCustomerLocation:Boolean) {
         val context = application.applicationContext
-        AppUtils.fetchCurrentLocation(
+        LocationServiceUtils.fetchCurrentLocation(
             context = context,
             onSuccess = { location ->
                 Log.d("LocationVM", "Location error: latitude ${location.latitude} longitude ${location.longitude}")
@@ -208,11 +208,6 @@ class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(ap
         _markAsUnDeliveredState.value = AppCommonApiState.Idle
     }
 
-    fun stopService(context: Context) {
-        val serviceIntent = Intent(context, LocationPingService::class.java)
-        context.stopService(serviceIntent)
-    }
-
     private val _latestLocationState = MutableStateFlow<LocationState>(LocationState.Idle)
     val latestLocationState = _latestLocationState.asStateFlow()
 
@@ -223,7 +218,7 @@ class SingleTripDetailsViewModel(application: Application) : AndroidViewModel(ap
     fun fetchLatestLocation() {
         val context = application.applicationContext
         _latestLocationState.value = LocationState.Loading
-        AppUtils.fetchCurrentLocation(
+        LocationServiceUtils.fetchCurrentLocation(
             context = context,
             onSuccess = { location ->
                 Log.d("LocationVM", "Location success: latitude ${location.latitude} longitude ${location.longitude}")

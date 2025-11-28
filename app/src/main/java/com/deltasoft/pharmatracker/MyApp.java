@@ -12,6 +12,7 @@ import com.datadog.android.rum.Rum;
 import com.datadog.android.rum.RumConfiguration;
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy;
 import com.deltasoft.pharmatracker.api.RetrofitClient;
+import com.deltasoft.pharmatracker.utils.AppLifecycleTracker;
 
 public class MyApp extends Application {
 
@@ -25,6 +26,8 @@ public class MyApp extends Application {
             setupDataDogLogging();
             setupDataDogSessionRecording();
         }
+
+        registerActivityLifecycleCallbacks(AppLifecycleTracker.INSTANCE);
 
         RetrofitClient.INSTANCE.initialize(getApplicationContext());
     }

@@ -25,6 +25,11 @@
     <string name="drop_off_confirm_title">Drop Off At Hub</string>
     <string name="drop_off_confirm_message">Are you sure you want to drop off this lot at hub?</string>
 
+    <string name="bg_location_permission_title">Need background location permission</string>
+    <string name="bg_location_permission_message">For us to track your route and provide necessary features while the app is closed, you need to grant \"Allow all the time\" access. Otherwise, location tracking will stop when you close the app.</string>
+    <string name="background_location_confirm_btn_txt">Continue to Settings</string>
+    <string name="background_location_dismiss_btn_txt">Not now</string>
+
     <string name="delivery_success_confirm_title">Confirm Delivery</string>
     <string name="delivery_success_confirm_message">Delivery Successful</string>
     <string name="delivery_failed_confirm_title">Report Issue</string>
