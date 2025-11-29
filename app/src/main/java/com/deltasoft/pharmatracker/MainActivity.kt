@@ -77,6 +77,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Launcher for Notification permission (Android 13+)
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            // Proceed regardless, notification will just not show if denied, but service still runs.
+            // In a real app, you should block until this is granted for better UX.
+
+        }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -123,7 +132,21 @@ class MainActivity : ComponentActivity() {
 //            // Critical step for continuous tracking
 //            showBatteryOptimizationDialog()
 //        }
+
+//        checkNotificationPermission()
     }
+
+    private fun checkNotificationPermission() {
+        // For Android 13 (Tiramisu) and above, we need to ask to post notifications
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+
+            } else {
+                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
 
     private fun listenViewModel() {
         lifecycleScope.launch {
