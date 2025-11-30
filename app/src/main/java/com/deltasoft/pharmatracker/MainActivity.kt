@@ -38,11 +38,17 @@ import com.google.android.play.core.ktx.isFlexibleUpdateAllowed
 import com.google.android.play.core.ktx.isImmediateUpdateAllowed
 import com.google.android.play.core.ktx.startUpdateFlowForResult
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.utils.AppUtils
@@ -100,6 +106,24 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavigation(applicationContext = applicationContext, mainActivityViewModel = viewModel)
+//                    showAskNotificationPermissionDialog = isNeedToRequestNotificationPermission()
+
+                    var showAskNotificationPermissionDialog by remember { mutableStateOf(false) }
+                    AppConfirmationDialog(
+                        showDialog = showAskNotificationPermissionDialog,
+                        onConfirm = {
+                            checkNotificationPermission()
+                            showAskNotificationPermissionDialog = false
+                        },
+                        onDismiss = {
+                            showAskNotificationPermissionDialog = false
+                        },
+                        title = stringResource(R.string.notification_permission_dialog_title),
+                        message = stringResource(R.string.notification_permission_dialog_message),
+                        confirmButtonText = stringResource(R.string.txt_continue),
+                        dismissButtonText = stringResource(R.string.background_location_dismiss_btn_txt)
+                    )
+
                 }
             }
         }
@@ -133,9 +157,19 @@ class MainActivity : ComponentActivity() {
 //            showBatteryOptimizationDialog()
 //        }
 
-//        checkNotificationPermission()
+        checkNotificationPermission()
     }
 
+    private fun isNeedToRequestNotificationPermission() : Boolean{
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        }else{
+            false
+        }
+    }
     private fun checkNotificationPermission() {
         // For Android 13 (Tiramisu) and above, we need to ask to post notifications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

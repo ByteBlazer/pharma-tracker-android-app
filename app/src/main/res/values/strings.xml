@@ -49,4 +49,11 @@
     <string name="row_item_title_pin_code">Pin Code</string>
     <string name="row_item_title_phone">Phone</string>
     <string name="row_item_title_status">Status</string>
+
+    <string name="notification_permission_dialog_title">Notifications permission required</string>
+    <string name="notification_permission_dialog_message">We need notification access to keep your Live Tracking running in the background while you are on a trip.</string>
+    <string name="txt_continue">Continue</string>
+    <string name="camera_permission_dialog_title">Camera permission required</string>
+    <string name="camera_permission_dialog_message">We need to access your device camera so that you can scan invoice barcodes.</string>
+
 </resources>
