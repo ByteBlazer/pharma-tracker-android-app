@@ -106,14 +106,14 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavigation(applicationContext = applicationContext, mainActivityViewModel = viewModel)
-//                    showAskNotificationPermissionDialog = isNeedToRequestNotificationPermission()
 
                     var showAskNotificationPermissionDialog by remember { mutableStateOf(false) }
+//                    showAskNotificationPermissionDialog = isNeedToRequestNotificationPermission()
                     AppConfirmationDialog(
                         showDialog = showAskNotificationPermissionDialog,
                         onConfirm = {
-                            checkNotificationPermission()
                             showAskNotificationPermissionDialog = false
+                            checkNotificationPermission()
                         },
                         onDismiss = {
                             showAskNotificationPermissionDialog = false
@@ -157,7 +157,7 @@ class MainActivity : ComponentActivity() {
 //            showBatteryOptimizationDialog()
 //        }
 
-        checkNotificationPermission()
+//        checkNotificationPermission()
     }
 
     private fun isNeedToRequestNotificationPermission() : Boolean{
