@@ -22,6 +22,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.deltasoft.pharmatracker.MainActivity
 import com.deltasoft.pharmatracker.MyApp
 import com.deltasoft.pharmatracker.api.RetrofitClient
 import com.deltasoft.pharmatracker.utils.AppUtils
@@ -101,10 +102,19 @@ class LocationPingService : Service() {
 
             Log.d(TAG, "delay in sec: " + getLocationHeartBeatInSeconds(applicationContext))
 
+            val notificationIntent = Intent(this, MainActivity::class.java)
+            val pendingIntent: PendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                notificationIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
             val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("API Pinging Service")
-                .setContentText("Pinging API and getting location...")
+                .setContentTitle("Active Trip: Sharing Location")
+                .setContentText("Your location is being sent to the server for order tracking.")
                 .setSmallIcon(com.deltasoft.pharmatracker.R.drawable.ic_share_location)
+                .setContentIntent(pendingIntent)
                 .build()
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

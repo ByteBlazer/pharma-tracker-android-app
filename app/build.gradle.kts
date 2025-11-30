@@ -146,5 +146,9 @@ dependencies {
 
     // 2. WorkManager Kotlin Coroutines Extension
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // Lifecycle scopes for ease of use in Activities/Services
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-service:2.7.0")
 }
 
