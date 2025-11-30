@@ -55,5 +55,7 @@
     <string name="txt_continue">Continue</string>
     <string name="camera_permission_dialog_title">Camera permission required</string>
     <string name="camera_permission_dialog_message">We need to access your device camera so that you can scan invoice barcodes.</string>
+    <string name="location_permission_dialog_title">Location permission required</string>
+    <string name="location_permission_dialog_message">We need access to your device location for the duration of this delivery trip, so that your location can be relayed at regular intervals.</string>
 
 </resources>

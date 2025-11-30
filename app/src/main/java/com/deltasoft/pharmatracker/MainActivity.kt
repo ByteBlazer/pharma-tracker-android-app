@@ -311,7 +311,8 @@ class MainActivity : ComponentActivity() {
         AlertDialog.Builder(this)
             .setTitle("Critical: Continuous Tracking")
             .setMessage("To ensure reliable location tracking while the app is in the background, please exempt this app from Android's battery restrictions.")
-            .setPositiveButton("Go to Settings") { _, _ ->
+            .setPositiveButton("Go to Settings") { dialog, _ ->
+                dialog.dismiss()
                 requestIgnoreBatteryOptimizations()
             }
             .setNegativeButton("Cancel") { dialog, _ ->

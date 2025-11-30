@@ -81,7 +81,9 @@ import android.app.Activity
 import android.content.IntentSender
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
+import androidx.compose.ui.res.stringResource
 import com.deltasoft.pharmatracker.MainActivityViewModel
+import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 
 private const val REQUEST_CHECK_SETTINGS = 1001
@@ -248,6 +250,53 @@ fun MyTripsScreen(
         }
     }
 
+    var showAskLocationPermissionDialog by remember { mutableStateOf(false) }
+    AppConfirmationDialog(
+        showDialog = showAskLocationPermissionDialog,
+        onConfirm = {
+            showAskLocationPermissionDialog = false
+            when {
+                locationPermissionState.status.isGranted -> {
+                    if (AppUtils.isDeviceLocationOn(context)) {
+
+                    } else {
+                        checkLocationSettings(
+                            context,
+                            locationSettingsLauncher
+                        )
+                    }
+                }
+
+                // If the user has denied the permission, show a rationale
+                //    or guide them to settings.
+                locationPermissionState.status.shouldShowRationale -> {
+                    isLocationPermissionClicked = true
+                    locationPermissionState.launchPermissionRequest()
+                    isPermissionCheckedOnce = true
+                }
+
+                // If it's the first time or they've denied permanently,
+                //    show a button to request permission.
+                else -> {
+                    isLocationPermissionClicked = true
+                    if (!locationPermissionState.status.isGranted && !locationPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
+                        AppUtils.openAppSettings(context)
+                    } else {
+                        locationPermissionState.launchPermissionRequest()
+                        isPermissionCheckedOnce = true
+                    }
+                }
+            }
+        },
+        onDismiss = {
+            showAskLocationPermissionDialog = false
+        },
+        title = stringResource(R.string.location_permission_dialog_title),
+        message = stringResource(R.string.location_permission_dialog_message),
+        confirmButtonText = stringResource(R.string.txt_continue),
+        dismissButtonText = stringResource(R.string.background_location_dismiss_btn_txt)
+    )
+
     LaunchedEffect(refreshClickEvent) {
         myTripsViewModel.getMyTripsList()
     }
@@ -290,80 +339,97 @@ fun MyTripsScreen(
 //                                    myTripsViewModel.clearLocationValues()
                                     if (schduledTrip?.status.equals("SCHEDULED")) {
                                         // Start Trip
-                                        when {
-                                            locationPermissionState.status.isGranted -> {
-                                                if (AppUtils.isDeviceLocationOn(context)) {
-                                                    mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
-                                                    myTripsViewModel.setLoading(true)
-                                                    myTripsViewModel.startTrip()
-                                                    isLocationPermissionClicked = false
-                                                } else {
-                                                    checkLocationSettings(
-                                                        context,
-                                                        locationSettingsLauncher
-                                                    )
-                                                }
-                                            }
-
-                                            // If the user has denied the permission, show a rationale
-                                            //    or guide them to settings.
-                                            locationPermissionState.status.shouldShowRationale -> {
-                                                isLocationPermissionClicked = true
-                                                locationPermissionState.launchPermissionRequest()
-                                                isPermissionCheckedOnce = true
-                                            }
-
-                                            // If it's the first time or they've denied permanently,
-                                            //    show a button to request permission.
-                                            else -> {
-                                                isLocationPermissionClicked = true
-                                                if (!locationPermissionState.status.isGranted && !locationPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
-                                                    AppUtils.openAppSettings(context)
-                                                } else {
-                                                    locationPermissionState.launchPermissionRequest()
-                                                    isPermissionCheckedOnce = true
-                                                }
-                                            }
+                                        if (locationPermissionState.status.isGranted && AppUtils.isDeviceLocationOn(context)){
+                                            mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
+                                            myTripsViewModel.setLoading(true)
+                                            myTripsViewModel.startTrip()
+                                            isLocationPermissionClicked = false
+                                        }else{
+                                            showAskLocationPermissionDialog = true
                                         }
+//                                        when {
+//                                            locationPermissionState.status.isGranted -> {
+//                                                if (AppUtils.isDeviceLocationOn(context)) {
+//                                                    mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
+//                                                    myTripsViewModel.setLoading(true)
+//                                                    myTripsViewModel.startTrip()
+//                                                    isLocationPermissionClicked = false
+//                                                } else {
+//                                                    checkLocationSettings(
+//                                                        context,
+//                                                        locationSettingsLauncher
+//                                                    )
+//                                                }
+//                                            }
+//
+//                                            // If the user has denied the permission, show a rationale
+//                                            //    or guide them to settings.
+//                                            locationPermissionState.status.shouldShowRationale -> {
+//                                                isLocationPermissionClicked = true
+//                                                locationPermissionState.launchPermissionRequest()
+//                                                isPermissionCheckedOnce = true
+//                                            }
+//
+//                                            // If it's the first time or they've denied permanently,
+//                                            //    show a button to request permission.
+//                                            else -> {
+//                                                isLocationPermissionClicked = true
+//                                                if (!locationPermissionState.status.isGranted && !locationPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
+//                                                    AppUtils.openAppSettings(context)
+//                                                } else {
+//                                                    locationPermissionState.launchPermissionRequest()
+//                                                    isPermissionCheckedOnce = true
+//                                                }
+//                                            }
+//                                        }
                                     } else {
                                         //Resume Trip
                                         myTripsViewModel.storeCurrentTripId()
-                                        when {
-                                            locationPermissionState.status.isGranted -> {
-                                                if (AppUtils.isDeviceLocationOn(context)) {
-                                                    mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
-                                                    myTripsViewModel.setLoading(true)
+                                        if (locationPermissionState.status.isGranted && AppUtils.isDeviceLocationOn(context)){
+                                            mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
+                                            myTripsViewModel.setLoading(true)
 //                                                    myTripsViewModel.restartForegroundService(context)
-                                                    myTripsViewModel.sendLocation()
-                                                    isLocationPermissionClicked = false
-                                                } else {
-                                                    checkLocationSettings(
-                                                        context,
-                                                        locationSettingsLauncher
-                                                    )
-                                                }
-                                            }
-
-                                            // If the user has denied the permission, show a rationale
-                                            //    or guide them to settings.
-                                            locationPermissionState.status.shouldShowRationale -> {
-                                                isLocationPermissionClicked = true
-                                                locationPermissionState.launchPermissionRequest()
-                                                isPermissionCheckedOnce = true
-                                            }
-
-                                            // If it's the first time or they've denied permanently,
-                                            //    show a button to request permission.
-                                            else -> {
-                                                isLocationPermissionClicked = true
-                                                if (!locationPermissionState.status.isGranted && !locationPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
-                                                    AppUtils.openAppSettings(context)
-                                                } else {
-                                                    locationPermissionState.launchPermissionRequest()
-                                                    isPermissionCheckedOnce = true
-                                                }
-                                            }
+                                            myTripsViewModel.sendLocation()
+                                            isLocationPermissionClicked = false
+                                        }else{
+                                            showAskLocationPermissionDialog = true
                                         }
+//                                        when {
+//                                            locationPermissionState.status.isGranted -> {
+//                                                if (AppUtils.isDeviceLocationOn(context)) {
+//                                                    mainActivityViewModel.onCheckBatteryOptimizationClickEvent()
+//                                                    myTripsViewModel.setLoading(true)
+////                                                    myTripsViewModel.restartForegroundService(context)
+//                                                    myTripsViewModel.sendLocation()
+//                                                    isLocationPermissionClicked = false
+//                                                } else {
+//                                                    checkLocationSettings(
+//                                                        context,
+//                                                        locationSettingsLauncher
+//                                                    )
+//                                                }
+//                                            }
+//
+//                                            // If the user has denied the permission, show a rationale
+//                                            //    or guide them to settings.
+//                                            locationPermissionState.status.shouldShowRationale -> {
+//                                                isLocationPermissionClicked = true
+//                                                locationPermissionState.launchPermissionRequest()
+//                                                isPermissionCheckedOnce = true
+//                                            }
+//
+//                                            // If it's the first time or they've denied permanently,
+//                                            //    show a button to request permission.
+//                                            else -> {
+//                                                isLocationPermissionClicked = true
+//                                                if (!locationPermissionState.status.isGranted && !locationPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
+//                                                    AppUtils.openAppSettings(context)
+//                                                } else {
+//                                                    locationPermissionState.launchPermissionRequest()
+//                                                    isPermissionCheckedOnce = true
+//                                                }
+//                                            }
+//                                        }
                                     }
                                 })
                         }
