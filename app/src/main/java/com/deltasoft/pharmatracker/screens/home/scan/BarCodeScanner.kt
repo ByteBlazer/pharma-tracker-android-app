@@ -55,12 +55,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.BorderSide
 import com.deltasoft.pharmatracker.screens.ScanUnscanSegmentedControl
 import com.deltasoft.pharmatracker.screens.drawOneSideBorder
@@ -109,6 +111,11 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 
     var scanMode by remember { mutableStateOf(true) }
 
+
+    val cameraPermissionState = rememberPermissionState(
+        Manifest.permission.CAMERA
+    )
+
     val window = (context as? Activity)?.window
     LaunchedEffect(isScanning) {
         if (isScanning){
@@ -132,6 +139,49 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
         showDialog.value = false
         scanViewModel.clearScanDocState()
     }
+
+    var cameraPermissionDialog by remember { mutableStateOf(false) }
+    AppConfirmationDialog(
+        showDialog = cameraPermissionDialog,
+        onConfirm = {
+            cameraPermissionDialog = false
+            when {
+                // 2. If the permission is granted, show the camera preview or button
+                cameraPermissionState.status.isGranted -> {
+                    isScanning = !isScanning
+                    showDialog.value = false
+                    isCameraPermissionClicked = false
+                }
+
+                // 3. If the user has denied the permission, show a rationale
+                //    or guide them to settings.
+                cameraPermissionState.status.shouldShowRationale -> {
+                    isCameraPermissionClicked = true
+                    cameraPermissionState.launchPermissionRequest()
+                    isPermissionCheckedOnce = true
+                }
+
+                // 4. If it's the first time or they've denied permanently,
+                //    show a button to request permission.
+                else -> {
+                    isCameraPermissionClicked = true
+                    if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
+                        AppUtils.openAppSettings(context)
+                    } else {
+                        cameraPermissionState.launchPermissionRequest()
+                        isPermissionCheckedOnce = true
+                    }
+                }
+            }
+        },
+        onDismiss = {
+            cameraPermissionDialog = false
+        },
+        title = stringResource(R.string.camera_permission_dialog_title),
+        message = stringResource(R.string.camera_permission_dialog_message),
+        confirmButtonText = stringResource(R.string.txt_continue),
+        dismissButtonText = stringResource(R.string.background_location_dismiss_btn_txt)
+    )
 
     val scanState by scanViewModel.scanDocState.collectAsState()
 
@@ -214,9 +264,6 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 //        }
 //    }
 
-    val cameraPermissionState = rememberPermissionState(
-        Manifest.permission.CAMERA
-    )
 
     // NEW LaunchedEffect to react to permission status changes
     LaunchedEffect(cameraPermissionState.status) {
@@ -391,34 +438,41 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 ) {
                     Button(
                         onClick = {
-                            when {
-                                // 2. If the permission is granted, show the camera preview or button
-                                cameraPermissionState.status.isGranted -> {
-                                    isScanning = !isScanning
-                                    showDialog.value = false
-                                    isCameraPermissionClicked = false
-                                }
-
-                                // 3. If the user has denied the permission, show a rationale
-                                //    or guide them to settings.
-                                cameraPermissionState.status.shouldShowRationale -> {
-                                    isCameraPermissionClicked = true
-                                    cameraPermissionState.launchPermissionRequest()
-                                    isPermissionCheckedOnce = true
-                                }
-
-                                // 4. If it's the first time or they've denied permanently,
-                                //    show a button to request permission.
-                                else -> {
-                                    isCameraPermissionClicked = true
-                                    if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
-                                        AppUtils.openAppSettings(context)
-                                    } else {
-                                        cameraPermissionState.launchPermissionRequest()
-                                        isPermissionCheckedOnce = true
-                                    }
-                                }
+                            if (cameraPermissionState.status.isGranted){
+                                isScanning = !isScanning
+                                showDialog.value = false
+                                isCameraPermissionClicked = false
+                            }else{
+                                cameraPermissionDialog = true
                             }
+//                            when {
+//                                // 2. If the permission is granted, show the camera preview or button
+//                                cameraPermissionState.status.isGranted -> {
+//                                    isScanning = !isScanning
+//                                    showDialog.value = false
+//                                    isCameraPermissionClicked = false
+//                                }
+//
+//                                // 3. If the user has denied the permission, show a rationale
+//                                //    or guide them to settings.
+//                                cameraPermissionState.status.shouldShowRationale -> {
+//                                    isCameraPermissionClicked = true
+//                                    cameraPermissionState.launchPermissionRequest()
+//                                    isPermissionCheckedOnce = true
+//                                }
+//
+//                                // 4. If it's the first time or they've denied permanently,
+//                                //    show a button to request permission.
+//                                else -> {
+//                                    isCameraPermissionClicked = true
+//                                    if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
+//                                        AppUtils.openAppSettings(context)
+//                                    } else {
+//                                        cameraPermissionState.launchPermissionRequest()
+//                                        isPermissionCheckedOnce = true
+//                                    }
+//                                }
+//                            }
                         },
                         colors = getButtonColors()
                     ) {
