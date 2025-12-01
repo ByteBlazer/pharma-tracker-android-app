@@ -97,7 +97,7 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
     val checkBatteryOptimizationClickEvent: StateFlow<UUID?> = _checkBatteryOptimizationClickEvent.asStateFlow()
 
     fun onCheckBatteryOptimizationClickEvent() {
-        _checkBatteryOptimizationClickEvent.value = UUID.randomUUID()
+//        _checkBatteryOptimizationClickEvent.value = UUID.randomUUID()
     }
 
     fun checkAndSendLocationToServer(tag:String="",restartService : Boolean = true){
