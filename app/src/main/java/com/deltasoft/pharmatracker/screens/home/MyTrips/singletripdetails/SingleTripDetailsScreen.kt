@@ -938,41 +938,56 @@ fun SingleDocNew(
                     style = MaterialTheme.typography.titleSmall
                 )
             }
-            Row(Modifier.fillMaxWidth()) {
-                if (doc.customerPhone.isNotNullOrEmpty()) {
-                    Box(Modifier
-                        .fillMaxWidth()
-                        .weight(1f)) {
-                        SingleIconWithTextAnnotatedItemWithOnCLick(
-                            icon = R.drawable.ic_phone,
-                            value = doc.customerPhone ?: "",
-                            style = MaterialTheme.typography.titleMedium,
-                            onClick = {
-                                AppUtils.dialPhoneNumber(
-                                    context = context,
-                                    phoneNumber = doc.customerPhone ?: ""
-                                )
-                            }
-                        )
-                    }
-                    Spacer(Modifier.width(16.dp))
-                }
-                Box(Modifier
-                    .fillMaxWidth()
-                    .weight(1f)) {
-                    SingleIconWithTextAnnotatedItemWithOnCLick(
-                        icon = R.drawable.ic_location,
-                        value = "Navigate",
-                        style = MaterialTheme.typography.titleMedium,
-                        onClick = {
-                            AppUtils.startGoogleMapsDirections(
-                                context = context,
-                                latitude = doc.customerGeoLatitude ?: "",
-                                longitude = doc.customerGeoLongitude ?: "",
-                                destinationName = doc.customerFirmName ?: ""
+            if (doc.customerPhone.isNotNullOrEmpty() || AppUtils.isValidLocation(
+                    latitude = doc.customerGeoLatitude,
+                    longitude = doc.customerGeoLongitude
+                )) {
+                Row(Modifier.fillMaxWidth()) {
+                    if (doc.customerPhone.isNotNullOrEmpty()) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        ) {
+                            SingleIconWithTextAnnotatedItemWithOnCLick(
+                                icon = R.drawable.ic_phone,
+                                value = doc.customerPhone ?: "",
+                                style = MaterialTheme.typography.titleMedium,
+                                onClick = {
+                                    AppUtils.dialPhoneNumber(
+                                        context = context,
+                                        phoneNumber = doc.customerPhone ?: ""
+                                    )
+                                }
                             )
                         }
-                    )
+                        Spacer(Modifier.width(16.dp))
+                    }
+                    if (AppUtils.isValidLocation(
+                            latitude = doc.customerGeoLatitude,
+                            longitude = doc.customerGeoLongitude
+                        )
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        ) {
+                            SingleIconWithTextAnnotatedItemWithOnCLick(
+                                icon = R.drawable.ic_location,
+                                value = "Navigate",
+                                style = MaterialTheme.typography.titleMedium,
+                                onClick = {
+                                    AppUtils.startGoogleMapsDirections(
+                                        context = context,
+                                        latitude = doc.customerGeoLatitude ?: "",
+                                        longitude = doc.customerGeoLongitude ?: "",
+                                        destinationName = doc.customerFirmName ?: ""
+                                    )
+                                }
+                            )
+                        }
+                    }
                 }
             }
             val deliveryIcon = if (doc.status?.equals(
