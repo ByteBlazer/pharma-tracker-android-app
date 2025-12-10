@@ -646,4 +646,32 @@ object AppUtils {
             }
         }
     }
+    fun isValidLocation(latitude: String?, longitude: String?): Boolean {
+        // 1. Basic Null and Empty Check
+        if (latitude.isNullOrBlank() || longitude.isNullOrBlank()) {
+            return false
+        }
+
+        // 2. Safe Parsing (String -> Double)
+        // toDoubleOrNull() returns null if the string is not a valid number
+        val lat = latitude.toDoubleOrNull()
+        val lng = longitude.toDoubleOrNull()
+
+        // If parsing failed (e.g., string was "abc"), return false
+        if (lat == null || lng == null) {
+            return false
+        }
+
+        // 3. "Null Island" Check (0.0, 0.0)
+        // Often APIs send "0" or "0.0" as a string when data is missing
+        if (lat == 0.0 && lng == 0.0) {
+            return false
+        }
+
+        // 4. Geographic Range Check
+        val isLatValid = lat >= -90.0 && lat <= 90.0
+        val isLngValid = lng >= -180.0 && lng <= 180.0
+
+        return isLatValid && isLngValid
+    }
 }
