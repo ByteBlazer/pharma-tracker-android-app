@@ -38,11 +38,17 @@ import com.google.android.play.core.ktx.isFlexibleUpdateAllowed
 import com.google.android.play.core.ktx.isImmediateUpdateAllowed
 import com.google.android.play.core.ktx.startUpdateFlowForResult
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.deltasoft.pharmatracker.navigation.Screen
+import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
 import com.deltasoft.pharmatracker.screens.home.trips.ScheduledTripsState
 import com.deltasoft.pharmatracker.utils.AppUtils
@@ -77,6 +83,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Launcher for Notification permission (Android 13+)
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            // Proceed regardless, notification will just not show if denied, but service still runs.
+            // In a real app, you should block until this is granted for better UX.
+
+        }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -91,6 +106,24 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavigation(applicationContext = applicationContext, mainActivityViewModel = viewModel)
+
+                    var showAskNotificationPermissionDialog by remember { mutableStateOf(false) }
+//                    showAskNotificationPermissionDialog = isNeedToRequestNotificationPermission()
+                    AppConfirmationDialog(
+                        showDialog = showAskNotificationPermissionDialog,
+                        onConfirm = {
+                            showAskNotificationPermissionDialog = false
+                            checkNotificationPermission()
+                        },
+                        onDismiss = {
+                            showAskNotificationPermissionDialog = false
+                        },
+                        title = stringResource(R.string.notification_permission_dialog_title),
+                        message = stringResource(R.string.notification_permission_dialog_message),
+                        confirmButtonText = stringResource(R.string.txt_continue),
+                        dismissButtonText = stringResource(R.string.background_location_dismiss_btn_txt)
+                    )
+
                 }
             }
         }
@@ -123,7 +156,31 @@ class MainActivity : ComponentActivity() {
 //            // Critical step for continuous tracking
 //            showBatteryOptimizationDialog()
 //        }
+
+//        checkNotificationPermission()
     }
+
+    private fun isNeedToRequestNotificationPermission() : Boolean{
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        }else{
+            false
+        }
+    }
+    private fun checkNotificationPermission() {
+        // For Android 13 (Tiramisu) and above, we need to ask to post notifications
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+
+            } else {
+                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
 
     private fun listenViewModel() {
         lifecycleScope.launch {
@@ -254,7 +311,8 @@ class MainActivity : ComponentActivity() {
         AlertDialog.Builder(this)
             .setTitle("Critical: Continuous Tracking")
             .setMessage("To ensure reliable location tracking while the app is in the background, please exempt this app from Android's battery restrictions.")
-            .setPositiveButton("Go to Settings") { _, _ ->
+            .setPositiveButton("Go to Settings") { dialog, _ ->
+                dialog.dismiss()
                 requestIgnoreBatteryOptimizations()
             }
             .setNegativeButton("Cancel") { dialog, _ ->

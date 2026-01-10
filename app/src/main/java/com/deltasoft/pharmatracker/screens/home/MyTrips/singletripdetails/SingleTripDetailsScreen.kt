@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -85,6 +86,7 @@ import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.DocGroup
 import com.deltasoft.pharmatracker.screens.home.MyTrips.singletripdetails.entity.SingleTripDetailsResponse
 import com.deltasoft.pharmatracker.screens.home.location.LocationServiceUtils
+import com.deltasoft.pharmatracker.ui.theme.AppPrimary
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getTextButtonColors
@@ -160,22 +162,79 @@ fun SingleTripDetailsScreen(
         }
     }
 
-    AppConfirmationDialog(
-        showDialog = showBgLocationDialog,
-        onConfirm = {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                backgroundPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+//    AppConfirmationDialog(
+//        showDialog = showBgLocationDialog,
+//        onConfirm = {
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//                backgroundPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+//            }
+//            showBgLocationDialog = false
+//        },
+//        onDismiss = {
+//            showBgLocationDialog = false
+//        },
+//        title = stringResource(R.string.bg_location_permission_title),
+//        message = stringResource(R.string.bg_location_permission_message1)+" \n"+
+//                stringResource(R.string.bg_location_permission_message2),
+//        confirmButtonText = stringResource(R.string.background_location_confirm_btn_txt),
+//        dismissButtonText = stringResource(R.string.background_location_dismiss_btn_txt)
+//    )
+
+    if (showBgLocationDialog) {
+        AlertDialog(
+            onDismissRequest = {showBgLocationDialog = false},
+            title = {
+                Text(
+                    text = stringResource(R.string.bg_location_permission_title), style = MaterialTheme.typography.bodyLarge,
+                    color = AppPrimary, fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column {
+                    // THE MANDATORY TEXT
+                    Text(
+                        text = stringResource(R.string.bg_location_permission_message1),
+                        fontWeight = FontWeight.Bold // Make it stand out
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // YOUR HELPFUL INSTRUCTION
+                    Text(
+                        text = stringResource(R.string.bg_location_permission_message2)
+                    )
+                }
+//                Text(
+//                    text = message,
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    color = MaterialTheme.colorScheme.onSurface
+//                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        backgroundPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    }
+                    showBgLocationDialog = false
+                }) {
+                    Text(
+                        stringResource(R.string.background_location_confirm_btn_txt),
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showBgLocationDialog = false
+                }) {
+                    Text(
+                        stringResource(R.string.background_location_dismiss_btn_txt),
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
+                    )
+                }
             }
-            showBgLocationDialog = false
-        },
-        onDismiss = {
-            showBgLocationDialog = false
-        },
-        title = stringResource(R.string.bg_location_permission_title),
-        message = stringResource(R.string.bg_location_permission_message),
-        confirmButtonText = stringResource(R.string.background_location_confirm_btn_txt),
-        dismissButtonText = stringResource(R.string.background_location_dismiss_btn_txt)
-    )
+        )
+    }
 
     LaunchedEffect(dropOffTripState) {
         when (dropOffTripState) {
@@ -879,41 +938,56 @@ fun SingleDocNew(
                     style = MaterialTheme.typography.titleSmall
                 )
             }
-            Row(Modifier.fillMaxWidth()) {
-                if (doc.customerPhone.isNotNullOrEmpty()) {
-                    Box(Modifier
-                        .fillMaxWidth()
-                        .weight(1f)) {
-                        SingleIconWithTextAnnotatedItemWithOnCLick(
-                            icon = R.drawable.ic_phone,
-                            value = doc.customerPhone ?: "",
-                            style = MaterialTheme.typography.titleMedium,
-                            onClick = {
-                                AppUtils.dialPhoneNumber(
-                                    context = context,
-                                    phoneNumber = doc.customerPhone ?: ""
-                                )
-                            }
-                        )
-                    }
-                    Spacer(Modifier.width(16.dp))
-                }
-                Box(Modifier
-                    .fillMaxWidth()
-                    .weight(1f)) {
-                    SingleIconWithTextAnnotatedItemWithOnCLick(
-                        icon = R.drawable.ic_location,
-                        value = "Navigate",
-                        style = MaterialTheme.typography.titleMedium,
-                        onClick = {
-                            AppUtils.startGoogleMapsDirections(
-                                context = context,
-                                latitude = doc.customerGeoLatitude ?: "",
-                                longitude = doc.customerGeoLongitude ?: "",
-                                destinationName = doc.customerFirmName ?: ""
+            if (doc.customerPhone.isNotNullOrEmpty() || AppUtils.isValidLocation(
+                    latitude = doc.customerGeoLatitude,
+                    longitude = doc.customerGeoLongitude
+                )) {
+                Row(Modifier.fillMaxWidth()) {
+                    if (doc.customerPhone.isNotNullOrEmpty()) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        ) {
+                            SingleIconWithTextAnnotatedItemWithOnCLick(
+                                icon = R.drawable.ic_phone,
+                                value = doc.customerPhone ?: "",
+                                style = MaterialTheme.typography.titleMedium,
+                                onClick = {
+                                    AppUtils.dialPhoneNumber(
+                                        context = context,
+                                        phoneNumber = doc.customerPhone ?: ""
+                                    )
+                                }
                             )
                         }
-                    )
+                        Spacer(Modifier.width(16.dp))
+                    }
+                    if (AppUtils.isValidLocation(
+                            latitude = doc.customerGeoLatitude,
+                            longitude = doc.customerGeoLongitude
+                        )
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        ) {
+                            SingleIconWithTextAnnotatedItemWithOnCLick(
+                                icon = R.drawable.ic_location,
+                                value = "Navigate",
+                                style = MaterialTheme.typography.titleMedium,
+                                onClick = {
+                                    AppUtils.startGoogleMapsDirections(
+                                        context = context,
+                                        latitude = doc.customerGeoLatitude ?: "",
+                                        longitude = doc.customerGeoLongitude ?: "",
+                                        destinationName = doc.customerFirmName ?: ""
+                                    )
+                                }
+                            )
+                        }
+                    }
                 }
             }
             val deliveryIcon = if (doc.status?.equals(

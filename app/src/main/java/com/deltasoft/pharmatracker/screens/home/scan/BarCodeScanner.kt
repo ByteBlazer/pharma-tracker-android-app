@@ -16,9 +16,11 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -26,19 +28,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -55,15 +66,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deltasoft.pharmatracker.R
+import com.deltasoft.pharmatracker.screens.AppConfirmationDialog
 import com.deltasoft.pharmatracker.screens.BorderSide
+import com.deltasoft.pharmatracker.screens.CustomSearchField
 import com.deltasoft.pharmatracker.screens.ScanUnscanSegmentedControl
 import com.deltasoft.pharmatracker.screens.drawOneSideBorder
+import com.deltasoft.pharmatracker.screens.login.LoginState
 import com.deltasoft.pharmatracker.ui.theme.getButtonColors
 import com.deltasoft.pharmatracker.ui.theme.getIconButtonColors
 import com.deltasoft.pharmatracker.utils.AppConstants
@@ -80,6 +98,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
 
@@ -109,6 +128,17 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 
     var scanMode by remember { mutableStateOf(true) }
 
+    var showSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true // Ensures it goes straight to expanded or hidden
+    )
+
+
+
+    val cameraPermissionState = rememberPermissionState(
+        Manifest.permission.CAMERA
+    )
+
     val window = (context as? Activity)?.window
     LaunchedEffect(isScanning) {
         if (isScanning){
@@ -132,6 +162,49 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
         showDialog.value = false
         scanViewModel.clearScanDocState()
     }
+
+    var cameraPermissionDialog by remember { mutableStateOf(false) }
+    AppConfirmationDialog(
+        showDialog = cameraPermissionDialog,
+        onConfirm = {
+            cameraPermissionDialog = false
+            when {
+                // 2. If the permission is granted, show the camera preview or button
+                cameraPermissionState.status.isGranted -> {
+                    isScanning = !isScanning
+                    showDialog.value = false
+                    isCameraPermissionClicked = false
+                }
+
+                // 3. If the user has denied the permission, show a rationale
+                //    or guide them to settings.
+                cameraPermissionState.status.shouldShowRationale -> {
+                    isCameraPermissionClicked = true
+                    cameraPermissionState.launchPermissionRequest()
+                    isPermissionCheckedOnce = true
+                }
+
+                // 4. If it's the first time or they've denied permanently,
+                //    show a button to request permission.
+                else -> {
+                    isCameraPermissionClicked = true
+                    if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
+                        AppUtils.openAppSettings(context)
+                    } else {
+                        cameraPermissionState.launchPermissionRequest()
+                        isPermissionCheckedOnce = true
+                    }
+                }
+            }
+        },
+        onDismiss = {
+            cameraPermissionDialog = false
+        },
+        title = stringResource(R.string.camera_permission_dialog_title),
+        message = stringResource(R.string.camera_permission_dialog_message),
+        confirmButtonText = stringResource(R.string.txt_continue),
+        dismissButtonText = stringResource(R.string.background_location_dismiss_btn_txt)
+    )
 
     val scanState by scanViewModel.scanDocState.collectAsState()
 
@@ -214,9 +287,6 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
 //        }
 //    }
 
-    val cameraPermissionState = rememberPermissionState(
-        Manifest.permission.CAMERA
-    )
 
     // NEW LaunchedEffect to react to permission status changes
     LaunchedEffect(cameraPermissionState.status) {
@@ -326,6 +396,48 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
         endY = Float.POSITIVE_INFINITY
     )
 
+    if (showSheet) {
+        ModalBottomSheet(
+            // When the user swipes down or taps the scrim
+            onDismissRequest = {
+                showSheet = false
+            },
+            sheetState = sheetState,
+            // Optional: A default drag handle is provided by Material 3
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                var barcode by remember { mutableStateOf("") }
+                OutlinedTextField(
+                    value = barcode,
+                    onValueChange = { newText ->
+                        barcode = newText
+                    },
+                    label = { Text("Barcode") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
+                    maxLines = 1,
+                )
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        scannedValue = barcode
+                        barcode =""
+                        showSheet = false
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = getButtonColors()
+                ) {
+                    Text(text = "GO")
+                }
+            }
+
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             modifier = Modifier
@@ -391,34 +503,41 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                 ) {
                     Button(
                         onClick = {
-                            when {
-                                // 2. If the permission is granted, show the camera preview or button
-                                cameraPermissionState.status.isGranted -> {
-                                    isScanning = !isScanning
-                                    showDialog.value = false
-                                    isCameraPermissionClicked = false
-                                }
-
-                                // 3. If the user has denied the permission, show a rationale
-                                //    or guide them to settings.
-                                cameraPermissionState.status.shouldShowRationale -> {
-                                    isCameraPermissionClicked = true
-                                    cameraPermissionState.launchPermissionRequest()
-                                    isPermissionCheckedOnce = true
-                                }
-
-                                // 4. If it's the first time or they've denied permanently,
-                                //    show a button to request permission.
-                                else -> {
-                                    isCameraPermissionClicked = true
-                                    if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
-                                        AppUtils.openAppSettings(context)
-                                    } else {
-                                        cameraPermissionState.launchPermissionRequest()
-                                        isPermissionCheckedOnce = true
-                                    }
-                                }
+                            if (cameraPermissionState.status.isGranted){
+                                isScanning = !isScanning
+                                showDialog.value = false
+                                isCameraPermissionClicked = false
+                            }else{
+                                cameraPermissionDialog = true
                             }
+//                            when {
+//                                // 2. If the permission is granted, show the camera preview or button
+//                                cameraPermissionState.status.isGranted -> {
+//                                    isScanning = !isScanning
+//                                    showDialog.value = false
+//                                    isCameraPermissionClicked = false
+//                                }
+//
+//                                // 3. If the user has denied the permission, show a rationale
+//                                //    or guide them to settings.
+//                                cameraPermissionState.status.shouldShowRationale -> {
+//                                    isCameraPermissionClicked = true
+//                                    cameraPermissionState.launchPermissionRequest()
+//                                    isPermissionCheckedOnce = true
+//                                }
+//
+//                                // 4. If it's the first time or they've denied permanently,
+//                                //    show a button to request permission.
+//                                else -> {
+//                                    isCameraPermissionClicked = true
+//                                    if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale && isPermissionCheckedOnce) {
+//                                        AppUtils.openAppSettings(context)
+//                                    } else {
+//                                        cameraPermissionState.launchPermissionRequest()
+//                                        isPermissionCheckedOnce = true
+//                                    }
+//                                }
+//                            }
                         },
                         colors = getButtonColors()
                     ) {
@@ -429,6 +548,17 @@ fun BarCodeScanner(scanViewModel: ScanViewModel = viewModel()) {
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(if (isScanning) "STOP" else "START", fontWeight = FontWeight.Bold)
+                    }
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    TextButton(
+                        onClick = {
+                            showSheet =true
+                        },
+                        modifier = Modifier,
+//                    colors = TODO(),
+                    ) {
+                        Text("Enter barcode manually")
                     }
                 }
             }
