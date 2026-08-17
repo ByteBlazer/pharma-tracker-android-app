@@ -1,13 +1,18 @@
 <resources>
     <string name="app_name">Pharma Tracker</string>
 
-    <!--Login screen-->
+    <!--Login screen / app migration-->
     <string name="login_heading">Login</string>
     <string name="login_description_message_part1">We will send you a </string>
     <string name="login_description_message_part2_bold">OTP</string>
     <string name="login_description_message_part3"> on this mobile number</string>
     <string name="login_text_field_placeholder">Mobile number</string>
     <string name="login_button_text">GET OTP</string>
+    <string name="migration_banner_title">This app has moved</string>
+    <string name="migration_banner_body">Pharma Tracker has been replaced by the new MPC Pharma app. Please download and install MPC Pharma to continue your work.</string>
+    <string name="migration_download_button">Download MPC Pharma</string>
+    <string name="migration_uninstall_note">After you have logged into the new MPC Pharma app, you may uninstall this app.</string>
+    <string name="mpc_pharma_play_store_url" translatable="false">https://play.google.com/store/apps/details?id=com.mpc.pharma.mpc_pharma</string>
 
 
     <!--Schedule New trip-->

@@ -48,7 +48,6 @@ fun SplashScreen(navController: NavHostController, context: Context,
                  splashViewModel: SplashViewModel = viewModel()
 ) {
     val sharedPrefsUtil = SharedPreferencesUtil(context)
-    val token = sharedPrefsUtil.getString(PrefsKey.USER_ACCESS_TOKEN)
     val phoneNumber = sharedPrefsUtil.getString(PrefsKey.PHONE_NUMBER)
 
 //    val apiState by splashViewModel.scheduledTripsState.collectAsState()
@@ -101,25 +100,12 @@ fun SplashScreen(navController: NavHostController, context: Context,
 //    }
 
     LaunchedEffect(key1 = true) {
-        if (AppUtils.isValidToken(token)) {
-            AppUtils.storePayLoadDetailsToSharedPreferences(sharedPrefsUtil, token)
-            delay(1000)
-            navController.navigate(Screen.Home.route) {
-                mainActivityViewModel.setLastLogInTimeInMills(System.currentTimeMillis())
-                popUpTo(Screen.Splash.route) {
-                    inclusive = true
-                }
-            }
-        } else {
-            mainActivityViewModel.setLastLogInTimeInMills(null)
-            val phn = if (phoneNumber.isNotNullOrEmpty()) phoneNumber else null
-            navController.navigate(Screen.Login.createRoute(phn)) {
-                popUpTo(
-                    Screen.Splash
-                        .route
-                ) {
-                    inclusive = true
-                }
+        delay(1000)
+        mainActivityViewModel.setLastLogInTimeInMills(null)
+        val phn = if (phoneNumber.isNotNullOrEmpty()) phoneNumber else null
+        navController.navigate(Screen.Login.createRoute(phn)) {
+            popUpTo(Screen.Splash.route) {
+                inclusive = true
             }
         }
     }
